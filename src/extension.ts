@@ -3,8 +3,6 @@
 import * as vscode from "vscode";
 
 export function trivyCommand(projectRootPath: string): string {
-  console.log(projectRootPath);
-
   var child_process = require("child_process");
   try {
     return child_process
@@ -13,11 +11,11 @@ export function trivyCommand(projectRootPath: string): string {
   } catch (result) {
     switch (result.status) {
       case 0: {
-        vscode.window.showInformationMessage("No vulnerabilities found.");
+        vscode.window.showInformationMessage("Trivy: No vulnerabilities found.");
         return "";
       }
       case 10: {
-        vscode.window.showErrorMessage("Vulnerabilities found, check logs");
+        vscode.window.showErrorMessage("Trivy: Vulnerabilities found, check logs for details.");
         return result.stdout.toString();
       }
       default: {
@@ -29,7 +27,6 @@ export function trivyCommand(projectRootPath: string): string {
         return result.stdout.toString();
       }
     }
-    // console.log(error.stdout);
   }
 }
 
@@ -39,11 +36,11 @@ export function activate(context: vscode.ExtensionContext) {
   // This line of code will only be executed once when your extension is activated
   console.log('Congratulations, your extension "trivy-vulnerability-scanner" is now active!');
 
-  var outputChannel = vscode.window.createOutputChannel("trivy");
+  var outputChannel = vscode.window.createOutputChannel("Trivy Scan");
 
   const editor = vscode.window.activeTextEditor;
   if (editor === undefined) {
-    // vscode.window.showErrorMessage("Please select ");
+    vscode.window.showErrorMessage("Trivy: Unable to find active window");
     return;
   }
 
@@ -52,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   if (projectRootPath === undefined) {
-    vscode.window.showErrorMessage("Unable to find project root path");
+    vscode.window.showErrorMessage("Trivy: Unable to find project root path");
     return;
   }
 
