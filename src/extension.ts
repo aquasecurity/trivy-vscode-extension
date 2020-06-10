@@ -2,11 +2,11 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
-export function trivyCommand(projectRootPath: string): string {
+export function runCommand(command: string, projectRootPath: string): string {
   var child_process = require("child_process");
   try {
     return child_process
-      .execSync("trivy filesystem --exit-code=10 " + projectRootPath)
+      .execSync(command + " " + projectRootPath)
       .toString();
   } catch (result) {
     switch (result.status) {
@@ -59,9 +59,10 @@ export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand("trivy-vulnerability-scanner.scan", () => {
     // The code you place here will be executed every time your command is executed
 
-    var result = trivyCommand(projectRootPath.uri.fsPath.toString());
+    const trivyCommand = "trivy filesystem --quiet --exit-code=10";
+    var result = runCommand(trivyCommand, projectRootPath.uri.fsPath.toString());
     if (result.length > 0) {
-      // outputChannel.show(); // TODO: Un-comment if logs should automatically appear
+      outputChannel.show(); // TODO: Un-comment if logs should automatically appear
       outputChannel.appendLine(result);
     }
     context.subscriptions.push(disposable);
