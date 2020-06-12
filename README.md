@@ -3,9 +3,9 @@
 Trivy Vulnerability Scanner is a VS Code plugin that helps you find vulnerabilities in your software projects
 without leaving the comfort of your VS Code window.
 
-## Features
+## Demo 
 
-![Trivy Scan in Action](trivy-scan.gif)
+![Trivy Scan in Action](https://github.com/aquasecurity/trivy-vscode-extension/blob/master/trivy-scan.gif?raw=true)
 
 ## Requirements
 
