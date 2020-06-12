@@ -34,18 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   var outputChannel = vscode.window.createOutputChannel("Trivy Scan");
 
-  const editor = vscode.window.activeTextEditor;
-  if (editor === undefined) {
-    vscode.window.showErrorMessage("Trivy: Unable to find active window");
-    return;
-  }
-
-  const projectRootPath = vscode.workspace.getWorkspaceFolder(
-    editor.document.uri
-  );
-
+  const projectRootPath = vscode.workspace.rootPath;
   if (projectRootPath === undefined) {
-    vscode.window.showErrorMessage("Trivy: Unable to find project root path");
+    vscode.window.showErrorMessage("Trivy: Must open a project file to scan.");
     return;
   }
 
@@ -56,9 +47,9 @@ export function activate(context: vscode.ExtensionContext) {
     // The code you place here will be executed every time your command is executed
 
     const trivyCommand = "trivy filesystem --quiet --exit-code=10";
-    var result = runCommand(trivyCommand, projectRootPath.uri.fsPath.toString());
+    var result = runCommand(trivyCommand, projectRootPath.toString());
     if (result.length > 0) {
-      outputChannel.show(); // TODO: Un-comment if logs should automatically appear
+      outputChannel.show();
       outputChannel.appendLine(result);
     } else { // return code is 0
       vscode.window.showInformationMessage("Trivy: No vulnerabilities found."); 
