@@ -7,8 +7,13 @@ import * as trivyExtension from '../../extension';
 
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
+	
+	test('Not a vulnerable project', () => {
+		var got = trivyExtension.runCommand("trivy filesystem --quiet --exit-code=10", "src/test/golden/not-vulnerable");
+		assert.strictEqual(got, ``, "should be equal and no vulnerablities found");
+	});
 
-	test('Run a filesystem scan', () => {
+	test('Vulnerable project', () => {
 		var got = trivyExtension.runCommand("trivy filesystem --quiet --exit-code=10", "src/test/golden/vulnerable");
 		assert.strictEqual(got, `
 package-lock.json
@@ -50,6 +55,6 @@ Total: 9 (UNKNOWN: 0, LOW: 1, MEDIUM: 5, HIGH: 3, CRITICAL: 0)
 |         | CVE-2018-3721    | LOW      |                   | 4.17.5        | lodash: Prototype pollution in |
 |         |                  |          |                   |               | utilities function             |
 +---------+------------------+----------+-------------------+---------------+--------------------------------+
-`, "should be equal")
+`, "should be equal and vulnerablities found");
 	});
 });

@@ -10,10 +10,6 @@ export function runCommand(command: string, projectRootPath: string): string {
       .toString();
   } catch (result) {
     switch (result.status) {
-      case 0: {
-        vscode.window.showInformationMessage("Trivy: No vulnerabilities found.");
-        return "";
-      }
       case 10: {
         vscode.window.showErrorMessage("Trivy: Vulnerabilities found, check logs for details.");
         return result.stdout.toString();
@@ -64,6 +60,8 @@ export function activate(context: vscode.ExtensionContext) {
     if (result.length > 0) {
       outputChannel.show(); // TODO: Un-comment if logs should automatically appear
       outputChannel.appendLine(result);
+    } else { // return code is 0
+      vscode.window.showInformationMessage("Trivy: No vulnerabilities found."); 
     }
     context.subscriptions.push(disposable);
   });
