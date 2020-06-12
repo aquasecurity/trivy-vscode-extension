@@ -5,7 +5,7 @@
 	"description": "A VSCode extension for Trivy.",
 	"repository": "https://github.com/aquasecurity/trivy-vscode-extension",
 	"icon": "images/aqualogo.png",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"engines": {
 		"vscode": "^1.45.0"
 	},

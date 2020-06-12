@@ -21,6 +21,6 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
-### 0.1.0
+### 0.1.1
 
 Initial release with basic project scanning.
