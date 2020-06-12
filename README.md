@@ -21,6 +21,10 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Major Release Notes
 
+### 0.2.0
+
+Automatic detection of old Trivy versions.
+
 ### 0.1.1
 
 Initial release with basic project scanning.
