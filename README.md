@@ -9,7 +9,7 @@ without leaving the comfort of your VS Code window.
 
 ## Requirements
 
-1. [Trivy](https://github.com/aquasecurity/trivy#installation)
+1. [Trivy](https://github.com/aquasecurity/trivy#installation) version v0.9.1 and above.
 
 ## Known Issues
 
@@ -19,7 +19,7 @@ If you find one, please file a GitHub Issue [here](https://github.com/aquasecuri
 
 Have a feature you desire? Please let us know by filing an issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).
 
-## Release Notes
+## Major Release Notes
 
 ### 0.1.1
 
