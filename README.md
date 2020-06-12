@@ -13,7 +13,7 @@ without leaving the comfort of your VS Code window.
 
 ## Known Issues
 
-None so far. If you find one, please file a GitHub Issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).
+If you find one, please file a GitHub Issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).
 
 ## Feature Requests
 
