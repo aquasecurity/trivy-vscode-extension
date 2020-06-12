@@ -1,7 +1,9 @@
 {
 	"name": "trivy-vulnerability-scanner",
 	"displayName": "Trivy Vulnerability Scanner",
+	"publisher": "AquaSecurityOfficial",
 	"description": "A VSCode extension for Trivy.",
+	"repository": "https://github.com/aquasecurity/trivy-vscode-extension",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.45.0"
