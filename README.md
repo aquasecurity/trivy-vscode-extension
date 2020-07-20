@@ -1,3 +1,5 @@
+![Deploy Extension](https://github.com/aquasecurity/trivy-vscode-extension/workflows/Deploy%20Extension/badge.svg)
+
 # Trivy Vulnerability Scanner Plugin
 
 Trivy Vulnerability Scanner is a VS Code plugin that helps you find vulnerabilities in your software projects
