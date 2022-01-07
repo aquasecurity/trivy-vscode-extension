@@ -82,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      const trivyScanCmd = "trivy --quiet filesystem --exit-code=10";
+      const trivyScanCmd = "trivy --quiet filesystem --security-checks config,vuln --exit-code=10";
       var scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
       if (scanResult.length > 0) {
         outputChannel.show();
