@@ -10,7 +10,7 @@ export function runCommand(command: string, projectRootPath: string): string {
   var child_process = require("child_process");
   try {
     return child_process.execSync(command + " " + projectRootPath).toString();
-  } catch (result) {
+  } catch (result: any) {
     switch (result.status) {
       case 10: {
         vscode.window.showErrorMessage(
@@ -21,8 +21,8 @@ export function runCommand(command: string, projectRootPath: string): string {
       default: {
         vscode.window.showErrorMessage(
           "Failed to run Trivy scan, error: " +
-            result.status +
-            " check logs for details."
+          result.status +
+          " check logs for details."
         );
         return result.stdout.toString();
       }
@@ -64,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
       } catch (e) {
         vscode.window.showErrorMessage(
           "Unsupported Trivy version found." +
-            " Please upgrade to v0.9.1 or higher."
+          " Please upgrade to v0.9.1 or higher."
         );
         return;
       }
@@ -75,9 +75,9 @@ export function activate(context: vscode.ExtensionContext) {
       if (ok === null) {
         vscode.window.showErrorMessage(
           "Trivy: Version " +
-            result.Version +
-            " is unsupported." +
-            " Please upgrade to v0.9.1 or newer."
+          result.Version +
+          " is unsupported." +
+          " Please upgrade to v0.9.1 or newer."
         );
         return;
       }
@@ -99,4 +99,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
