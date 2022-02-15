@@ -28,6 +28,10 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Major Release Notes
 
+### 0.8.0
+
+Add Findings viewer
+
 ### 0.2.0
 
 Automatic detection of old Trivy versions.
