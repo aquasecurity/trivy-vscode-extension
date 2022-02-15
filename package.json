@@ -82,7 +82,7 @@
       },
       {
         "view": "trivy.helpview",
-        "contents": "No check selected. Run tfsec and choose a failed check from the explorer"
+        "contents": "No check selected. Run Trivy and choose a failed check from the explorer"
       }
     ],
     "menus": {

@@ -33,7 +33,7 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 		this.loadResultData();
 	}
 
-	// when there is a tfsec output file, load the results
+	// when there is trivy output file, load the results
 	async loadResultData() {
 		var _self = this;
 		_self.resultData = [];
@@ -64,7 +64,7 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 				_self._onDidChangeTreeData.fire();
 			});
 		} else {
-			vscode.window.showInformationMessage("No workspace detected to load tfsec results from");
+			vscode.window.showInformationMessage("No workspace detected to load Trivy results from");
 		}
 		this.taintResults = false;
 	}
@@ -101,7 +101,7 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 			const title = `${result.id}`;
 			const collapsedState = vscode.TreeItemCollapsibleState.None;
 
-			var item = new TrivyTreeItem(title, result, collapsedState, TrivyTreeItemType.vulnerabilityCode, this.createFileOpenCommand(result, element));
+			var item = new TrivyTreeItem(title, result, collapsedState, TrivyTreeItemType.vulnerabilityCode, this.createFileOpenCommand(result));
 			results.push(item);
 		}
 
@@ -122,7 +122,7 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 			const title = `${result.filename}:[${result.startLine}-${result.endLine}]`;
 			const collapsedState = vscode.TreeItemCollapsibleState.None;
 
-			var item = new TrivyTreeItem(title, result, collapsedState, TrivyTreeItemType.misconfigInstance, this.createFileOpenCommand(result, element));
+			var item = new TrivyTreeItem(title, result, collapsedState, TrivyTreeItemType.misconfigInstance, this.createFileOpenCommand(result));
 			results.push(item);
 		}
 
@@ -203,7 +203,7 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 	}
 
 
-	private createFileOpenCommand(result: TrivyResult, element: TrivyTreeItem): vscode.Command | undefined {
+	private createFileOpenCommand(result: TrivyResult): vscode.Command | undefined {
 		const issueRange = new vscode.Range(new vscode.Position(result.startLine - 1, 0), new vscode.Position(result.endLine, 0));
 		if (vscode.workspace.workspaceFolders === undefined || vscode.workspace.workspaceFolders.length < 1) {
 			return;

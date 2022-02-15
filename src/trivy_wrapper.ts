@@ -99,10 +99,10 @@ export class TrivyWrapper {
         }
     }
 
-    showCurrentTfsecVersion() {
+    showCurrentTrivyVersion() {
         const currentVersion = this.getInstalledTrivyVersion();
         if (currentVersion) {
-            vscode.window.showInformationMessage(`Current tfsec version is ${currentVersion}`);
+            vscode.window.showInformationMessage(`Current Trivy version is ${currentVersion}`);
         }
     }
 
@@ -127,7 +127,7 @@ export class TrivyWrapper {
         }
         catch (err) {
             this.outputChannel.show();
-            this.outputChannel.appendLine(`trivy not found. Check the tfsec extension settings to ensure the path is correct. [${binaryPath}]`);
+            this.outputChannel.appendLine(`trivy not found. Check the Trivy extension settings to ensure the path is correct. [${binaryPath}]`);
             return false;
         }
         return true;
@@ -136,7 +136,7 @@ export class TrivyWrapper {
     private getInstalledTrivyVersion(): string {
 
         if (!this.checkTrivyInstalled) {
-            vscode.window.showErrorMessage("tfsec could not be found, check Output window");
+            vscode.window.showErrorMessage("Trivy could not be found, check Output window");
             return "";
         }
 

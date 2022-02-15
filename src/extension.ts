@@ -1,9 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import path from "path";
 import * as vscode from "vscode";
 import { TrivyHelpProvider } from "./explorer/trivy_helpview";
-import { TrivyResult } from "./explorer/trivy_result";
 import { TrivyTreeItem, TrivyTreeItemType } from "./explorer/trivy_treeitem";
 import { TrivyTreeViewProvider } from "./explorer/trivy_treeview";
 import { TrivyWrapper } from "./trivy_wrapper";
