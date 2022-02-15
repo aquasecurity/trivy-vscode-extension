@@ -9,6 +9,11 @@ without leaving the comfort of your VS Code window.
 
 ![Trivy Scan in Action](https://github.com/aquasecurity/trivy-vscode-extension/blob/master/trivy-scan.gif?raw=true)
 
+### Findings Explorer
+
+The Trivy VS Code plugin now has a findings explorer which allows you to more easily navigate the config and vulnerability findings in your project
+![Trivy Findings Explorer](findings-explorer.gif)
+
 ## Requirements
 
 1. [Trivy](https://github.com/aquasecurity/trivy#installation) version v0.9.1 and above.
