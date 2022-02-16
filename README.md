@@ -28,9 +28,9 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Major Release Notes
 
-### 0.8.0
+### 0.3.0
 
-Add Findings viewer
+Add Findings viewer and help
 
 ### 0.2.0
 

@@ -1,6 +1,6 @@
 # Change Log
 
-### 0.8.0
+### 0.3.0
 
 Add Findings viewer
 
