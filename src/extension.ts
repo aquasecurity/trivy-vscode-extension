@@ -2,7 +2,6 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { TrivyHelpProvider } from "./explorer/trivy_helpview";
-import { TrivyTreeItem, TrivyTreeItemType } from "./explorer/trivy_treeitem";
 import { TrivyTreeViewProvider } from "./explorer/trivy_treeview";
 import { TrivyWrapper } from "./trivy_wrapper";
 
@@ -66,31 +65,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(issueTree);
   context.subscriptions.push(vscode.window.registerWebviewViewProvider("trivy.helpview", helpProvider));
   context.subscriptions.push(vscode.commands.registerCommand("trivy-vulnerability-scanner.explorer-run", () => trivyWrapper.run()));
-  context.subscriptions.push(vscode.commands.registerCommand('trivy.refresh', () => misconfigProvider.refresh()));
-  context.subscriptions.push(vscode.commands.registerCommand('trivy.open-and-find', (fileUri: string, element: TrivyTreeItem) => {
-
-    switch (element.itemType) {
-      case TrivyTreeItemType.vulnerablePackage:
-        vscode.window.showTextDocument(vscode.Uri.file(fileUri)).then(e => {
-          if (!e) {
-            return;
-          }
-          const regEx = new RegExp(element.title, "g");
-          const text = e.document.getText();
-
-          let match;
-          while ((match = regEx.exec(text))) {
-            if (match[0] === undefined) { break; }
-            const startPos = e.document.positionAt(match.index);
-            const endPos = e.document.positionAt(match.index + match[0].length);
-            e.selection = new vscode.Selection(startPos, endPos);
-            break;
-          }
-        });
-        break;
-    }
-
-  }));
+  context.subscriptions.push(vscode.commands.registerCommand('trivy-vulnerability-scanner.version', () => trivyWrapper.showCurrentTrivyVersion()));
+  context.subscriptions.push(vscode.commands.registerCommand('trivy-vulnerability-scanner.refresh', () => misconfigProvider.refresh()));
 
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with registerCommand

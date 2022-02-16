@@ -14,7 +14,8 @@
   "activationEvents": [
     "onView:trivy.issueview",
     "onCommand:trivy-vulnerability-scanner.scan",
-    "onCommand:trivy-vulnerability-scanner.explorer-run"
+    "onCommand:trivy-vulnerability-scanner.explorer-run",
+    "onCommand:trivy-vulnerability-scanner.version"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -24,7 +25,12 @@
         "trivy.binaryPath": {
           "type": "string",
           "default": "trivy",
-          "description": "Path to trivy if not already on the PATH"
+          "description": "Path to Trivy if not already on the PATH"
+        },
+        "trivy.debug": {
+          "type": "boolean",
+          "default": "false",
+          "description": "Run Trivy with vebose flag to get more information"
         }
       }
     },
@@ -42,12 +48,12 @@
         }
       },
       {
-        "command": "trivy.refresh",
-        "title": "trivy: Refresh the issue list"
+        "command": "trivy-vulnerability-scanner.refresh",
+        "title": "Trivy: Refresh the issue list"
       },
       {
-        "command": "trivy.open-and-find",
-        "title": "Trivy: Open and find"
+        "command": "trivy-vulnerability-scanner.version",
+        "title": "Trivy: Get the current version of Trivy"
       }
     ],
     "viewsContainers": {
