@@ -1,16 +1,15 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-
-interface TrivyVersion {
-  Version: string;
-}
+import { TrivyHelpProvider } from "./explorer/trivy_helpview";
+import { TrivyTreeViewProvider } from "./explorer/trivy_treeview";
+import { TrivyWrapper } from "./trivy_wrapper";
 
 export function runCommand(command: string, projectRootPath: string): string {
   var child_process = require("child_process");
   try {
     return child_process.execSync(command + " " + projectRootPath).toString();
-  } catch (result) {
+  } catch (result: any) {
     switch (result.status) {
       case 10: {
         vscode.window.showErrorMessage(
@@ -21,8 +20,8 @@ export function runCommand(command: string, projectRootPath: string): string {
       default: {
         vscode.window.showErrorMessage(
           "Failed to run Trivy scan, error: " +
-            result.status +
-            " check logs for details."
+          result.status +
+          " check logs for details."
         );
         return result.stdout.toString();
       }
@@ -40,48 +39,41 @@ export function activate(context: vscode.ExtensionContext) {
 
   var outputChannel = vscode.window.createOutputChannel("Trivy Scan");
 
-  const projectRootPath = vscode.workspace.rootPath;
+  const projectRootPath = vscode.workspace.getWorkspaceFolder;
   if (projectRootPath === undefined) {
     vscode.window.showErrorMessage("Trivy: Must open a project file to scan.");
     return;
   }
 
+  const helpProvider = new TrivyHelpProvider();
+  const misconfigProvider = new TrivyTreeViewProvider(context);
+  const trivyWrapper = new TrivyWrapper(outputChannel, misconfigProvider.resultsStoragePath);
+
+  // creating the issue tree explicitly to allow access to events
+  let issueTree = vscode.window.createTreeView("trivy.issueview", {
+    treeDataProvider: misconfigProvider,
+  });
+
+
+  issueTree.onDidChangeSelection(function (event) {
+    const treeItem = event.selection[0];
+    if (treeItem) {
+      helpProvider.update(treeItem);
+    }
+  });
+
+  context.subscriptions.push(issueTree);
+  context.subscriptions.push(vscode.window.registerWebviewViewProvider("trivy.helpview", helpProvider));
+  context.subscriptions.push(vscode.commands.registerCommand("trivy-vulnerability-scanner.explorer-run", () => trivyWrapper.run()));
+  context.subscriptions.push(vscode.commands.registerCommand('trivy-vulnerability-scanner.version', () => trivyWrapper.showCurrentTrivyVersion()));
+  context.subscriptions.push(vscode.commands.registerCommand('trivy-vulnerability-scanner.refresh', () => misconfigProvider.refresh()));
+
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with registerCommand
   // The commandId parameter must match the command field in package.json
-  let disposable = vscode.commands.registerCommand(
+  context.subscriptions.push(vscode.commands.registerCommand(
     "trivy-vulnerability-scanner.scan",
     () => {
-      // The code you place here will be executed every time your command is executed
-
-      const trivyVersionCmd = "trivy --format=json --version";
-      var version = runCommand(trivyVersionCmd, "").toString();
-
-      // Check for ancient versions which don't support --format=json
-      var result: TrivyVersion;
-      try {
-        result = JSON.parse(version);
-      } catch (e) {
-        vscode.window.showErrorMessage(
-          "Unsupported Trivy version found." +
-            " Please upgrade to v0.9.1 or higher."
-        );
-        return;
-      }
-
-      // Check for relatively old versions which support --format=json
-      const ok = result.Version.match("\\d\\.[9]\\.\\d+|\\d\\.\\d{2,}\\.\\d+");
-      console.log("ok: " + ok);
-      if (ok === null) {
-        vscode.window.showErrorMessage(
-          "Trivy: Version " +
-            result.Version +
-            " is unsupported." +
-            " Please upgrade to v0.9.1 or newer."
-        );
-        return;
-      }
-
       const trivyScanCmd = "trivy --quiet filesystem --security-checks config,vuln --exit-code=10";
       var scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
       if (scanResult.length > 0) {
@@ -93,10 +85,9 @@ export function activate(context: vscode.ExtensionContext) {
           "Trivy: No vulnerabilities found."
         );
       }
-      context.subscriptions.push(disposable);
     }
-  );
+  ));
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
