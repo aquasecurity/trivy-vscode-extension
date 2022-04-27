@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "A VS Code extension for Trivy.",
   "icon": "images/aqualogo.png",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -20,7 +20,7 @@
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
-      "title": "trivy",
+      "title": "Trivy",
       "properties": {
         "trivy.binaryPath": {
           "type": "string",
@@ -29,8 +29,30 @@
         },
         "trivy.debug": {
           "type": "boolean",
-          "default": "false",
+          "default": false,
           "description": "Run Trivy with vebose flag to get more information"
+        },
+        "trivy.offlineScan": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run Trivy as an offline scan"
+        },
+        "trivy.fixedOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "Only return Trivy results for vulnerabilities with fixes"
+        },
+        "trivy.minimumReportedSeverity": {
+          "type": "string",
+          "default": "UNKNOWN",
+          "enum": [
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "UNKNOWN"
+          ],
+          "description": "Return Trivy results with severity greater than or equal to this setting."
         }
       }
     },
