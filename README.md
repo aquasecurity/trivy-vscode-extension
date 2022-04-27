@@ -28,6 +28,14 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Major Release Notes
 
+### 0.4.1
+
+Fix typo in the configuration settings
+
+### 0.4.0
+
+Add additional settings for offline and minimum severity
+
 ### 0.3.0
 
 Add Findings viewer and help
