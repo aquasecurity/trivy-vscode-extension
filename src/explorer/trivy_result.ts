@@ -53,8 +53,8 @@ const processResult = (result: any): TrivyResult[] => {
 			let endLine = 1;
 
 			if (element.IacMetadata !== null) {
-				startLine = element.IacMetadata.StartLine ? element.IacMetadata.StartLine : 1;
-				endLine = element.IacMetadata.EndLine ? element.IacMetadata.EndLine : 1;
+				startLine = element.CauseMetadata.StartLine ? element.CauseMetadata.StartLine : element.IacMetadata ? element.IacMetadata.StartLine : 1;
+				endLine = element.CauseMetadata.EndLine ? element.CauseMetadata.EndLine : element.IacMetadata ? element.IacMetadata.StartLine : 1;
 			};
 
 			const trivyResult = new TrivyResult(element.ID,
