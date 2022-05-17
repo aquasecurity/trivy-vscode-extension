@@ -1,5 +1,8 @@
 # Change Log
 
+### 0.5.1
+Fix json check
+
 ### 0.5.0
 
 Add support for newer format of json results
