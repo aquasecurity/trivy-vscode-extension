@@ -49,13 +49,8 @@ const processResult = (result: any): TrivyResult[] => {
 		for (let i = 0; i < result.Misconfigurations.length; i++) {
 			const element = result.Misconfigurations[i];
 
-			let startLine = 1;
-			let endLine = 1;
-
-			if (element.IacMetadata !== null) {
-				startLine = element.IacMetadata.StartLine ? element.IacMetadata.StartLine : 1;
-				endLine = element.IacMetadata.EndLine ? element.IacMetadata.EndLine : 1;
-			};
+			let startLine = element.CauseMetadata ? element.CauseMetadata.StartLine : element.IacMetadata ? element.IacMetadata.StartLine : 1;
+			let endLine = element.CauseMetadata ? element.CauseMetadata.EndLine : element.IacMetadata ? element.IacMetadata.StartLine : 1;
 
 			const trivyResult = new TrivyResult(element.ID,
 				element.Title,

@@ -26,7 +26,14 @@ If you find one, please file a GitHub Issue [here](https://github.com/aquasecuri
 
 Have a feature you desire? Please let us know by filing an issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).
 
-## Major Release Notes
+## Release Notes
+
+### 0.5.1
+Fix json check
+
+### 0.5.0
+
+Add support for newer format of json results
 
 ### 0.4.1
 
