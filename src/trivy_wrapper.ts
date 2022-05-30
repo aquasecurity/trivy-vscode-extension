@@ -3,7 +3,6 @@ import * as child from 'child_process';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
 import { unlinkSync, readdirSync } from 'fs';
-import { join } from 'path';
 
 export class TrivyWrapper {
     private workingPath: string[] = [];
@@ -129,8 +128,12 @@ export class TrivyWrapper {
             command.push('--debug');
         }
 
+        let requireChecks = "config,vuln";
+        if (config.get<boolean>("secretScanning")) {
+            requireChecks = `${requireChecks},secret`;
+        }
         command.push("fs");
-        command.push("--security-checks=config,vuln");
+        command.push(`--security-checks=${requireChecks}`);
         command.push(this.getRequiredSeverities(config));
 
         if (config.get<boolean>("offlineScan")) {
@@ -140,6 +143,8 @@ export class TrivyWrapper {
         if (config.get<boolean>("fixedOnly")) {
             command.push('--ignore-unfixed');
         }
+
+        
 
         command.push('--format=json');
         const resultsPath = path.join(this.resultsStoragePath, `${uuid()}_results.json`);

@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "A VS Code extension for Trivy.",
   "icon": "images/aqualogo.png",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -31,6 +31,11 @@
           "type": "boolean",
           "default": false,
           "description": "Run Trivy with vebose flag to get more information"
+        },
+        "trivy.secretScanning": {
+          "type": "boolean",
+          "default": false,
+          "description": "Trivy should also scan for secrets, requires Trivy >=v0.27.0"
         },
         "trivy.offlineScan": {
           "type": "boolean",

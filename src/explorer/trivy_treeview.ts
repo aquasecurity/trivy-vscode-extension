@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { processResult, TrivyResult, Vulnerability } from './trivy_result';
+import { Misconfiguration, processResult, Secret, TrivyResult, Vulnerability } from './trivy_result';
 import { TrivyTreeItem, TrivyTreeItemType } from './trivy_treeitem';
 import { sortBySeverity } from './utils';
 
@@ -108,6 +108,27 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 		return results;
 	}
 
+	getSecretInstances(element: TrivyTreeItem): TrivyTreeItem[] {
+		let results: TrivyTreeItem[] = [];
+		const filtered = this.resultData.filter(c => c.id === element.code && c.filename === element.filename);
+
+		for (let index = 0; index < filtered.length; index++) {
+			const result = filtered[index];
+
+			if (result === undefined) {
+				continue;
+			}
+
+			const title = result.id;
+			const collapsedState = vscode.TreeItemCollapsibleState.None;
+
+			var item = new TrivyTreeItem(title, result, collapsedState, TrivyTreeItemType.secretInstance, this.createFileOpenCommand(result));
+			results.push(item);
+		}
+
+		return results;
+	}
+
 	getMisconfigurationInstances(element: TrivyTreeItem): TrivyTreeItem[] {
 		let results: TrivyTreeItem[] = [];
 		const filtered = this.resultData.filter(c => c.id === element.code && c.filename === element.filename);
@@ -137,6 +158,8 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 				return this.getVulnerabilityChildren(element);
 			case TrivyTreeItemType.misconfigCode:
 				return this.getMisconfigurationInstances(element);
+			case TrivyTreeItemType.secretFile:
+				return this.getSecretInstances(element);
 		}
 
 
@@ -160,24 +183,33 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 				continue;
 			}
 
-			if (element.itemType === TrivyTreeItemType.misconfigFile) {
-				if (resolvedNodes.includes(result.id)) {
-					continue;
-				}
-				resolvedNodes.push(result.id);
-				trivyResults.push(new TrivyTreeItem(result.id, result, vscode.TreeItemCollapsibleState.Collapsed, TrivyTreeItemType.misconfigCode));
-
-			} else if (element.itemType === TrivyTreeItemType.vulnerabilityFile) {
-				const extraData = result.extraData;
-
-				if (extraData instanceof Vulnerability) {
-					if (resolvedNodes.includes(extraData.pkgName)) {
+			switch (element.itemType) {
+				case TrivyTreeItemType.misconfigFile:
+					if (resolvedNodes.includes(result.id)) {
 						continue;
 					}
-					resolvedNodes.push(extraData.pkgName);
-					trivyResults.push(new TrivyTreeItem(extraData.pkgName, result, vscode.TreeItemCollapsibleState.Collapsed, TrivyTreeItemType.vulnerablePackage));
-				}
+
+					resolvedNodes.push(result.id);
+					if (result.extraData instanceof Secret) {
+						trivyResults.push(new TrivyTreeItem(result.id, result, vscode.TreeItemCollapsibleState.None, TrivyTreeItemType.secretInstance,  this.createFileOpenCommand(result)));
+					} else {
+						trivyResults.push(new TrivyTreeItem(result.id, result, vscode.TreeItemCollapsibleState.Collapsed, TrivyTreeItemType.misconfigCode));
+					}
+					
+					break;
+				case TrivyTreeItemType.vulnerabilityFile:
+					const extraData = result.extraData;
+
+					if (extraData instanceof Vulnerability) {
+						if (resolvedNodes.includes(extraData.pkgName)) {
+							continue;
+						}
+						resolvedNodes.push(extraData.pkgName);
+						trivyResults.push(new TrivyTreeItem(extraData.pkgName, result, vscode.TreeItemCollapsibleState.Collapsed, TrivyTreeItemType.vulnerablePackage));
+					}
+					break;
 			}
+		
 		}
 		return trivyResults;
 	}
@@ -196,7 +228,9 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 			}
 
 			resolvedNodes.push(result.filename);
-			const itemType = result.extraData instanceof Vulnerability ? TrivyTreeItemType.vulnerabilityFile : TrivyTreeItemType.misconfigFile;
+
+			const itemType = result.extraData instanceof Vulnerability ? TrivyTreeItemType.vulnerabilityFile :
+				result.extraData instanceof Misconfiguration ? TrivyTreeItemType.misconfigFile : TrivyTreeItemType.secretFile;
 			results.push(new TrivyTreeItem(result.filename, result, vscode.TreeItemCollapsibleState.Collapsed, itemType));
 		}
 		return results;
@@ -220,7 +254,7 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 			arguments: [
 				vscode.Uri.file(fileUri),
 				{
-					selection: (result.startLine === result.endLine && result.startLine === 1) ? null : issueRange,
+					selection: (result.startLine === result.endLine && result.startLine === 0) ? null : issueRange,
 				}
 			]
 		};

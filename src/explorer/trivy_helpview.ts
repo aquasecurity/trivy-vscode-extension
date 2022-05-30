@@ -1,5 +1,5 @@
 import { CancellationToken, Webview, WebviewView, WebviewViewProvider, WebviewViewResolveContext } from "vscode";
-import { Misconfiguration, TrivyResult, Vulnerability } from "./trivy_result";
+import { Misconfiguration, TrivyResult, Vulnerability, Secret } from "./trivy_result";
 import { TrivyTreeItem, TrivyTreeItemType } from "./trivy_treeitem";
 
 
@@ -35,17 +35,23 @@ export class TrivyHelpProvider implements WebviewViewProvider {
             case TrivyTreeItemType.vulnerabilityCode:
                 html = getVulnerabilityHtml(item.check);
                 break;
+            case TrivyTreeItemType.secretInstance:
+                html = getSecretHtml(item.check);
+                break;
             default:
                 return "";
         }
 
-        html += "<ul>";
-        for (let i = 0; i < codeData.references.length; i++) {
-            const reference = codeData.references[i];
-            html += `<li><a href="${reference}">${reference}</a></li>
+        if (codeData.references) {
+
+            html += "<ul>";
+            for (let i = 0; i < codeData.references.length; i++) {
+                const reference = codeData.references[i];
+                html += `<li><a href="${reference}">${reference}</a></li>
             `;
+            }
+            html += "</ul>";
         }
-        html += "</ul>";
 
         this.view.html = html;
         return;
@@ -106,6 +112,26 @@ function getMisconfigurationHtml(result: TrivyResult): string {
     ${result.filename}
 
     <h3>More Information</h3>
+    `;
+}
+
+function getSecretHtml(result: TrivyResult): string {
+    const secret = result.extraData as Secret;
+    if (secret === undefined) {
+        return "";
+    }
+    return `
+    <h2>${result.title}</h2>
+
+    <h3>Severity</h3>
+    ${result.severity}
+
+    <h3>Match</h3>
+    ${secret.match}
+
+    <h3>Filename</h3>
+    ${result.filename}
+
     `;
 }
 
