@@ -28,6 +28,9 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 0.6.0
+Add support for secrets - turn on in the extension settings
+
 ### 0.5.1
 Fix json check
 

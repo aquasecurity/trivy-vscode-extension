@@ -1,5 +1,8 @@
 # Change Log
 
+### 0.6.0
+Add support for secrets - turn on in the extension settings
+
 ### 0.5.1
 Fix json check
 

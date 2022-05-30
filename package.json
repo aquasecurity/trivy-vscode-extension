@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "A VS Code extension for Trivy.",
   "icon": "images/aqualogo.png",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "engines": {
     "vscode": "^1.54.0"
   },
