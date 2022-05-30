@@ -34,18 +34,27 @@ export class TrivyTreeItem extends vscode.TreeItem {
 		switch (itemType) {
 			case TrivyTreeItemType.misconfigFile:
 			case TrivyTreeItemType.vulnerabilityFile:
+			case TrivyTreeItemType.secretFile:
 			case TrivyTreeItemType.misconfigInstance:
 				this.filename = check.filename;
 				this.tooltip = `${check.description}`;
 				this.iconPath = vscode.ThemeIcon.File;
 				this.resourceUri = vscode.Uri.parse(check.filename);
 				break;
+			case TrivyTreeItemType.secretInstance:
+			case TrivyTreeItemType.secretCode:
+				this.tooltip = check.id;
+				this.iconPath = {
+					light: path.join(__filename, '..', '..', 'resources', 'light', 'key.svg'),
+					dark: path.join(__filename, '..', '..', 'resources', 'dark', 'key.svg')
+				};
+				break;
 			case TrivyTreeItemType.misconfigCode:
 			case TrivyTreeItemType.vulnerabilityCode:
 				this.tooltip = check.title;
 				this.iconPath = {
-					light: path.join(__filename, '..', '..', '..', 'resources', this.severityIcon(this.severity)),
-					dark: path.join(__filename, '..', '..', '..', 'resources', this.severityIcon(this.severity))
+					light: path.join(__filename, '..', '..', 'resources', this.severityIcon(this.severity)),
+					dark: path.join(__filename, '..', '..', 'resources', this.severityIcon(this.severity))
 				};
 				break;
 		}
@@ -72,5 +81,8 @@ export enum TrivyTreeItemType {
 	vulnerablePackage = 2,
 	vulnerabilityCode = 3,
 	misconfigFile = 4,
-	vulnerabilityFile = 5
+	vulnerabilityFile = 5,
+	secretFile = 6,
+	secretInstance = 7,
+	secretCode = 8
 }

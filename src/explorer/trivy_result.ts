@@ -1,7 +1,7 @@
 
 export class TrivyResult {
 
-	public extraData: Vulnerability | Misconfiguration;
+	public extraData: Vulnerability | Misconfiguration | Secret;
 	constructor(public id: string,
 		public title: string,
 		public description: string,
@@ -10,7 +10,7 @@ export class TrivyResult {
 		public endLine: number,
 		public severity: string,
 		public references: string[],
-		extra: Vulnerability | Misconfiguration) {
+		extra: Vulnerability | Misconfiguration | Secret) {
 		this.extraData = extra;
 	}
 }
@@ -36,9 +36,17 @@ export class Misconfiguration {
 		this.message = misconfiguration.Message;
 		this.resolution = misconfiguration.Resolution;
 		this.status = misconfiguration.Status;
-
-
 	}
+}
+
+export class Secret {
+	public category: string;
+	public match: string;
+	constructor(secret: any) {
+		this.category = secret.Category;
+		this.match = secret.Match;
+	}
+
 }
 
 const processResult = (result: any): TrivyResult[] => {
@@ -51,6 +59,9 @@ const processResult = (result: any): TrivyResult[] => {
 
 			let startLine = element.CauseMetadata ? element.CauseMetadata.StartLine : element.IacMetadata ? element.IacMetadata.StartLine : 1;
 			let endLine = element.CauseMetadata ? element.CauseMetadata.EndLine : element.IacMetadata ? element.IacMetadata.StartLine : 1;
+
+			startLine = (startLine && startLine > 0) ? startLine : 1;
+			endLine = (endLine && endLine > 0) ? endLine : 1;
 
 			const trivyResult = new TrivyResult(element.ID,
 				element.Title,
@@ -80,6 +91,25 @@ const processResult = (result: any): TrivyResult[] => {
 		}
 
 	}
+
+	if (result.Secrets) {
+
+		for (let i = 0; i < result.Secrets.length; i++) {
+			const element = result.Secrets[i];
+
+			const trivyResult = new TrivyResult(element.RuleID,
+				element.Title,
+				element.Description,
+				result.Target,
+				element.StartLine, 
+				element.EndLine,
+				element.Severity,
+				element.References, new Secret(element));
+			results.push(trivyResult);
+		}
+
+	}
+
 	return results;
 };
 
