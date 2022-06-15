@@ -28,6 +28,9 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 0.6.1
+Handle findings inside tarballs
+
 ### 0.6.0
 Add support for secrets - turn on in the extension settings
 
