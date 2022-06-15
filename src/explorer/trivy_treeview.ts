@@ -248,6 +248,12 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 		}
 
 		let fileUri = path.join(wsFolder.uri.fsPath, result.filename);
+
+		if (!fs.existsSync(fileUri)) {
+			return;
+		}
+
+
 		return {
 			command: "vscode.open",
 			title: "",
