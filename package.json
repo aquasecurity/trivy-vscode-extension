@@ -47,6 +47,16 @@
           "default": false,
           "description": "Only return Trivy results for vulnerabilities with fixes"
         },
+        "trivy.server.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Connect to a trivy server, on a remote machine"
+        },
+        "trivy.server.url": {
+          "type": "string",
+          "default": "",
+          "description": "The remote trivy URL to connect to"
+        },
         "trivy.minimumReportedSeverity": {
           "type": "string",
           "default": "UNKNOWN",
