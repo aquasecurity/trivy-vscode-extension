@@ -144,6 +144,11 @@ export class TrivyWrapper {
             command.push('--ignore-unfixed');
         }
 
+        if (config.get<boolean>("server.enable")) {
+            command.push('--server');
+            command.push(`${config.get<string>("server.url")}`);
+        }
+
         
 
         command.push('--format=json');
