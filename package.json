@@ -68,6 +68,11 @@
             "UNKNOWN"
           ],
           "description": "Return Trivy results with severity greater than or equal to this setting."
+        },
+        "trivy.configPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Trivy non-default config file, --config."
         }
       }
     },
