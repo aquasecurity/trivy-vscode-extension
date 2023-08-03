@@ -135,11 +135,11 @@ export class TrivyWrapper {
             command.push(configPath);
         }
 
-        if (config.get<boolean>('configPathOnly')) {
+        if (!config.get<boolean>('configPathOnly')) {
             if (config.get<boolean>('debug')) {
                 command.push('--debug');
             }
-            
+
             command.push(this.getRequiredSeverities(config));
 
             if (config.get<boolean>("offlineScan")) {
