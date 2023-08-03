@@ -72,7 +72,12 @@
         "trivy.configPath": {
           "type": "string",
           "default": "",
-          "description": "Path to Trivy non-default config file, --config."
+          "description": "Path to Trivy non-default config file via --config."
+        },
+        "trivy.configPathOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "Only use the config file. This DISABLES other settings in this extension."
         }
       }
     },

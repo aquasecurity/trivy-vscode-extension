@@ -123,35 +123,37 @@ export class TrivyWrapper {
         const config = vscode.workspace.getConfiguration('trivy');
         var command = [];
 
-
-        if (config.get<boolean>('debug')) {
-            command.push('--debug');
-        }
-
         let requireChecks = "config,vuln";
         if (config.get<boolean>("secretScanning")) {
             requireChecks = `${requireChecks},secret`;
         }
         command.push("fs");
         command.push(`--security-checks=${requireChecks}`);
-        command.push(this.getRequiredSeverities(config));
-
-        if (config.get<boolean>("offlineScan")) {
-            command.push('--offline-scan');
-        }
-
-        if (config.get<boolean>("fixedOnly")) {
-            command.push('--ignore-unfixed');
-        }
-
-        if (config.get<boolean>("server.enable")) {
-            command.push('--server');
-            command.push(`${config.get<string>("server.url")}`);
-        }
 
         let configPath = this.getConfigPath(config);
         if (configPath) {
             command.push(configPath);
+        }
+
+        if (config.get<boolean>('configPathOnly')) {
+            if (config.get<boolean>('debug')) {
+                command.push('--debug');
+            }
+            
+            command.push(this.getRequiredSeverities(config));
+
+            if (config.get<boolean>("offlineScan")) {
+                command.push('--offline-scan');
+            }
+
+            if (config.get<boolean>("fixedOnly")) {
+                command.push('--ignore-unfixed');
+            }
+
+            if (config.get<boolean>("server.enable")) {
+                command.push('--server');
+                command.push(`${config.get<string>("server.url")}`);
+            }
         }
 
         command.push('--format=json');
