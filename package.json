@@ -68,6 +68,11 @@
             "UNKNOWN"
           ],
           "description": "Return Trivy results with severity greater than or equal to this setting."
+        },
+        "trivy.configPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Trivy non-default config file, --config."
         }
       }
     },
@@ -170,6 +175,7 @@
     "@types/uuid": "^8.3.4",
     "semver": "^7.3.5",
     "typescipt": "^1.0.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "vscode": "^1.1.37"
   }
 }

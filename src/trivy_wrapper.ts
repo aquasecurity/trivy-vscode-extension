@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as child from 'child_process';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
-import { unlinkSync, readdirSync } from 'fs';
+import { unlinkSync, readdirSync, existsSync } from 'fs';
 
 export class TrivyWrapper {
     private workingPath: string[] = [];
@@ -149,7 +149,10 @@ export class TrivyWrapper {
             command.push(`${config.get<string>("server.url")}`);
         }
 
-        
+        let configPath = this.getConfigPath(config);
+        if (configPath) {
+            command.push(configPath);
+        }
 
         command.push('--format=json');
         const resultsPath = path.join(this.resultsStoragePath, `${uuid()}_results.json`);
@@ -179,6 +182,18 @@ export class TrivyWrapper {
         }
 
         return `--severity=${requiredSeverities.join(",")}`;
+    }
+
+    private getConfigPath(config: vscode.WorkspaceConfiguration): string {
+
+        let configPathArg = "";
+
+        const configPath = config.get<string>("configPath") || "";
+        if (configPath && existsSync(configPath)) {
+            configPathArg = `--config=${configPath}`;
+        }
+
+        return configPathArg;
     }
 }
 
