@@ -133,7 +133,7 @@ export class TrivyWrapper {
             requireChecks = `${requireChecks},secret`;
         }
         command.push("fs");
-        command.push(`--security-checks=${requireChecks}`);
+        command.push(`--scanners=${requireChecks}`);
         command.push(this.getRequiredSeverities(config));
 
         if (config.get<boolean>("offlineScan")) {

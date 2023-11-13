@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand(
     "trivy-vulnerability-scanner.scan",
     () => {
-      const trivyScanCmd = "trivy --quiet filesystem --security-checks config,vuln --exit-code=10";
+      const trivyScanCmd = "trivy --quiet filesystem --scanners config,vuln --exit-code=10";
       var scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
       if (scanResult.length > 0) {
         outputChannel.show();
