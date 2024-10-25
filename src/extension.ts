@@ -6,7 +6,7 @@ import { TrivyTreeViewProvider } from "./explorer/trivy_treeview";
 import { TrivyWrapper } from "./trivy_wrapper";
 
 export function runCommand(command: string, projectRootPath: string): string {
-  var child_process = require("child_process");
+  let child_process = require("child_process");
   try {
     return child_process.execSync(command + " " + projectRootPath).toString();
   } catch (result: any) {
@@ -20,8 +20,8 @@ export function runCommand(command: string, projectRootPath: string): string {
       default: {
         vscode.window.showErrorMessage(
           "Failed to run Trivy scan, error: " +
-          result.status +
-          " check logs for details."
+            result.status +
+            " check logs for details."
         );
         return result.stdout.toString();
       }
@@ -47,13 +47,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   const helpProvider = new TrivyHelpProvider();
   const misconfigProvider = new TrivyTreeViewProvider(context);
-  const trivyWrapper = new TrivyWrapper(outputChannel, misconfigProvider.resultsStoragePath);
+  const trivyWrapper = new TrivyWrapper(
+    outputChannel,
+    misconfigProvider.resultsStoragePath
+  );
 
   // creating the issue tree explicitly to allow access to events
   let issueTree = vscode.window.createTreeView("trivy.issueview", {
     treeDataProvider: misconfigProvider,
   });
-
 
   issueTree.onDidChangeSelection(function (event) {
     const treeItem = event.selection[0];
@@ -63,19 +65,40 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   context.subscriptions.push(issueTree);
-  context.subscriptions.push(vscode.window.registerWebviewViewProvider("trivy.helpview", helpProvider));
-  context.subscriptions.push(vscode.commands.registerCommand("trivy-vulnerability-scanner.explorer-run", () => trivyWrapper.run()));
-  context.subscriptions.push(vscode.commands.registerCommand('trivy-vulnerability-scanner.version', () => trivyWrapper.showCurrentTrivyVersion()));
-  context.subscriptions.push(vscode.commands.registerCommand('trivy-vulnerability-scanner.refresh', () => misconfigProvider.refresh()));
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider("trivy.helpview", helpProvider)
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "trivy-vulnerability-scanner.explorer-run",
+      () => trivyWrapper.run()
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "trivy-vulnerability-scanner.update-trivy",
+      () => trivyWrapper.updateTrivyVersion()
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand("trivy-vulnerability-scanner.version", () =>
+      trivyWrapper.showCurrentTrivyVersion()
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand("trivy-vulnerability-scanner.refresh", () =>
+      misconfigProvider.refresh()
+    )
+  );
 
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with registerCommand
   // The commandId parameter must match the command field in package.json
-  context.subscriptions.push(vscode.commands.registerCommand(
-    "trivy-vulnerability-scanner.scan",
-    () => {
-      const trivyScanCmd = "trivy --quiet filesystem --security-checks config,vuln --exit-code=10";
-      var scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
+  context.subscriptions.push(
+    vscode.commands.registerCommand("trivy-vulnerability-scanner.scan", () => {
+      const trivyScanCmd =
+        "trivy --quiet filesystem --security-checks config,vuln --exit-code=10";
+      let scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
       if (scanResult.length > 0) {
         outputChannel.show();
         outputChannel.appendLine(scanResult);
@@ -85,9 +108,9 @@ export function activate(context: vscode.ExtensionContext) {
           "Trivy: No vulnerabilities found."
         );
       }
-    }
-  ));
+    })
+  );
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}
