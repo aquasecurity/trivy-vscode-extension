@@ -2,14 +2,25 @@ on:
   pull_request:
     branches:
       - master
-      
+
 name: Test extension
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - run: npm install
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Install npm dependencies
+        run: npm install
 
       - name: Run tests
-        run: npm test
+        run: TRIVY_DISABLE_VEX_NOTICE=true xvfb-run -a npm test

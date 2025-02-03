@@ -10,6 +10,7 @@ import path from 'path';
 	const testsRoot = path.resolve(__dirname, '..');
 
 suite('Extension Test Suite', function (): void {
+	this.timeout(10000);
 		vscode.window.showInformationMessage('Start all tests.');
 
 		test('Not a vulnerable project', () => {

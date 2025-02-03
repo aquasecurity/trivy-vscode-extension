@@ -147,7 +147,8 @@
     "compile": "tsc -p ./",
     "pretest": "npm run compile && npm run lint && cp -r src/test/golden ./out/test",
     "test": "node ./out/test/runTest.js",
-    "lint": "eslint src --ext ts"
+    "lint": "eslint src --ext ts",
+    "format": "eslint --fix src --ext ts"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
@@ -163,8 +164,7 @@
     "glob": "^7.1.6",
     "mocha": "^11.1.0",
     "ts-node": "^10.9.2",
-    "typescript": "^4.9.5",
-    "vscode-test": "^1.5.0"
+    "typescript": "^4.9.5"
   },
   "repository": {
     "url": "https://github.com/aquasecurity/trivy-vscode-extension"
