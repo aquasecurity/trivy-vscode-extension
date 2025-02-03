@@ -1,0 +1,47 @@
+
+package-lock.json (npm)
+=======================
+Total: 11 (UNKNOWN: 0, LOW: 1, MEDIUM: 6, HIGH: 3, CRITICAL: 1)
+
+┌─────────┬──────────────────┬──────────┬────────┬───────────────────┬───────────────┬──────────────────────────────────────────────────────────────┐
+│ Library │  Vulnerability   │ Severity │ Status │ Installed Version │ Fixed Version │                            Title                             │
+├─────────┼──────────────────┼──────────┼────────┼───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ jquery  │ CVE-2019-11358   │ MEDIUM   │ fixed  │ 3.3.9             │ >=3.4.0       │ jquery: Prototype pollution in object's prototype leading to │
+│         │                  │          │        │                   │               │ denial of service, remote...                                 │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2019-11358                   │
+│         ├──────────────────┤          │        │                   │               ├──────────────────────────────────────────────────────────────┤
+│         │ CVE-2019-5428    │          │        │                   │               │ Modification of Assumed-Immutable Data (MAID)                │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2019-5428                    │
+│         ├──────────────────┤          │        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2020-11022   │          │        │                   │ 3.5.0         │ jquery: Cross-site scripting due to improper                 │
+│         │                  │          │        │                   │               │ injQuery.htmlPrefilter method                                │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2020-11022                   │
+│         ├──────────────────┤          │        │                   │               ├──────────────────────────────────────────────────────────────┤
+│         │ CVE-2020-11023   │          │        │                   │               │ jquery: Untrusted code execution via <option> tag in HTML    │
+│         │                  │          │        │                   │               │ passed to DOM...                                             │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2020-11023                   │
+├─────────┼──────────────────┼──────────┤        ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ lodash  │ CVE-2019-10744   │ CRITICAL │        │ 4.17.4            │ 4.17.12       │ nodejs-lodash: prototype pollution in defaultsDeep function  │
+│         │                  │          │        │                   │               │ leading to modifying properties                              │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2019-10744                   │
+│         ├──────────────────┼──────────┤        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2018-16487   │ HIGH     │        │                   │ >=4.17.11     │ lodash: Prototype pollution in utilities function            │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2018-16487                   │
+│         ├──────────────────┤          │        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2020-8203    │          │        │                   │ 4.17.19       │ nodejs-lodash: prototype pollution in zipObjectDeep function │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2020-8203                    │
+│         ├──────────────────┤          │        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2021-23337   │          │        │                   │ 4.17.21       │ nodejs-lodash: command injection via template                │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2021-23337                   │
+│         ├──────────────────┼──────────┤        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2019-1010266 │ MEDIUM   │        │                   │ 4.17.11       │ lodash: uncontrolled resource consumption in Data handler    │
+│         │                  │          │        │                   │               │ causing denial of service                                    │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2019-1010266                 │
+│         ├──────────────────┤          │        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2020-28500   │          │        │                   │ 4.17.21       │ nodejs-lodash: ReDoS via the toNumber, trim and trimEnd      │
+│         │                  │          │        │                   │               │ functions                                                    │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2020-28500                   │
+│         ├──────────────────┼──────────┤        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2018-3721    │ LOW      │        │                   │ >=4.17.5      │ lodash: Prototype pollution in utilities function            │
+│         │                  │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2018-3721                    │
+└─────────┴──────────────────┴──────────┴────────┴───────────────────┴───────────────┴──────────────────────────────────────────────────────────────┘

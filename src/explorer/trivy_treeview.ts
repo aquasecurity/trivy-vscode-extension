@@ -110,7 +110,7 @@ export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeI
 
 	getSecretInstances(element: TrivyTreeItem): TrivyTreeItem[] {
 		let results: TrivyTreeItem[] = [];
-		const filtered = this.resultData.filter(c => c.id === element.code && c.filename === element.filename);
+		const filtered = this.resultData.filter(c => c.filename === element.filename);
 
 		for (let index = 0; index < filtered.length; index++) {
 			const result = filtered[index];
