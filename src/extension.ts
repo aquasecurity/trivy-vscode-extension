@@ -1,14 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { TrivyHelpProvider } from './explorer/trivy_helpview';
 import { TrivyTreeViewProvider } from './explorer/trivy_treeview';
 import { TrivyWrapper } from './trivy_wrapper';
+import {execSync} from 'child_process';
 
 export function runCommand(command: string, projectRootPath: string): string {
-  var child_process = require('child_process');
+
   try {
-    return child_process.execSync(command + ' ' + projectRootPath).toString();
+    return execSync(command + ' ' + projectRootPath).toString();
   } catch (result: any) {
     switch (result.status) {
       case 10: {
@@ -37,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
     'Congratulations, your extension "trivy-vulnerability-scanner" is now active!'
   );
 
-  var outputChannel = vscode.window.createOutputChannel('Trivy Scan');
+  const outputChannel = vscode.window.createOutputChannel('Trivy Scan');
 
   const projectRootPath = vscode.workspace.getWorkspaceFolder;
   if (projectRootPath === undefined) {
@@ -53,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // creating the issue tree explicitly to allow access to events
-  let issueTree = vscode.window.createTreeView('trivy.issueview', {
+  const issueTree = vscode.window.createTreeView('trivy.issueview', {
     treeDataProvider: misconfigProvider,
   });
 
@@ -92,7 +96,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('trivy-vulnerability-scanner.scan', () => {
       const trivyScanCmd =
         'trivy --quiet filesystem --security-checks config,vuln --exit-code=10';
-      var scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
+      const scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
       if (scanResult.length > 0) {
         outputChannel.show();
         outputChannel.appendLine(scanResult);

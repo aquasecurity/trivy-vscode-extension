@@ -30,7 +30,7 @@ export class TrivyWrapper {
   }
 
   run() {
-    let outputChannel = this.outputChannel;
+    const outputChannel = this.outputChannel;
     this.outputChannel.appendLine('');
     this.outputChannel.appendLine('Running Trivy to update results');
 
@@ -38,21 +38,21 @@ export class TrivyWrapper {
       return;
     }
 
-    var files = readdirSync(this.resultsStoragePath).filter(
+    const files = readdirSync(this.resultsStoragePath).filter(
       (fn) => fn.endsWith('_results.json') || fn.endsWith('_results.json.json')
     );
     files.forEach((file) => {
-      let deletePath = path.join(this.resultsStoragePath, file);
+      const deletePath = path.join(this.resultsStoragePath, file);
       unlinkSync(deletePath);
     });
 
     const binary = this.getBinaryPath();
 
     this.workingPath.forEach((workingPath) => {
-      let command = this.buildCommand(workingPath);
+      const command = this.buildCommand(workingPath);
       this.outputChannel.appendLine(`command: ${command}`);
 
-      var execution = child.spawn(binary, command);
+      const execution = child.spawn(binary, command);
 
       execution.stdout.on('data', function (data) {
         outputChannel.appendLine(data.toString());
@@ -89,7 +89,7 @@ export class TrivyWrapper {
 
   private getBinaryPath() {
     const config = vscode.workspace.getConfiguration('trivy');
-    var binary = config.get('binaryPath', 'trivy');
+    let binary = config.get('binaryPath', 'trivy');
     if (binary === '') {
       binary = 'trivy';
     }
@@ -100,7 +100,7 @@ export class TrivyWrapper {
   private checkTrivyInstalled(): boolean {
     const binaryPath = this.getBinaryPath();
 
-    var command = [];
+    const command = [];
     command.push(binaryPath);
     command.push('--help');
     try {
@@ -110,6 +110,9 @@ export class TrivyWrapper {
       this.outputChannel.appendLine(
         `Trivy not found. Check the Trivy extension settings to ensure the path is correct. [${binaryPath}]`
       );
+      if (err instanceof Error) {
+        this.outputChannel.appendLine(err.message);
+      }
       return false;
     }
     return true;
@@ -123,9 +126,9 @@ export class TrivyWrapper {
       return '';
     }
 
-    let binary = this.getBinaryPath();
+    const binary = this.getBinaryPath();
 
-    var command = [];
+    const command = [];
     command.push(binary);
     command.push('--version');
     const getVersion = child.execSync(command.join(' '));
@@ -134,7 +137,7 @@ export class TrivyWrapper {
 
   private buildCommand(workingPath: string): string[] {
     const config = vscode.workspace.getConfiguration('trivy');
-    var command = [];
+    const command = [];
 
     if (config.get<boolean>('debug')) {
       command.push('--debug');
@@ -173,7 +176,7 @@ export class TrivyWrapper {
   }
 
   private getRequiredSeverities(config: vscode.WorkspaceConfiguration): string {
-    let requiredSeverities: string[] = [];
+    const requiredSeverities: string[] = [];
 
     const minRequired = config.get<string>('minimumReportedSeverity');
     const severities: string[] = [
