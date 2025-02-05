@@ -1,6 +1,6 @@
-import { Secret, TrivyResult } from './trivy_result';
+import { Secret, TrivyResult } from './explorer/trivy_result';
 
-function getSeverityPosition(severity: string): number {
+export function getSeverityPosition(severity: string): number {
   switch (severity) {
     case 'CRITICAL':
       return 0;
@@ -15,7 +15,7 @@ function getSeverityPosition(severity: string): number {
   }
 }
 
-const sortBySeverity = (a: TrivyResult, b: TrivyResult): number => {
+export const sortBySeverity = (a: TrivyResult, b: TrivyResult): number => {
   if (a.extraData instanceof Secret) {
     return 1;
   }
@@ -30,4 +30,3 @@ const sortBySeverity = (a: TrivyResult, b: TrivyResult): number => {
   return 0;
 };
 
-export { sortBySeverity };

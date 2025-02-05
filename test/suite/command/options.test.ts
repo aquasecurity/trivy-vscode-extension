@@ -22,7 +22,7 @@ class mockConfig{
   }
 }
 
-suite('Trivy command options suite', function (): void {
+suite('trivy command options', function (): void {
 
   vscode.window.showInformationMessage('Start trivy command options tests.');
 

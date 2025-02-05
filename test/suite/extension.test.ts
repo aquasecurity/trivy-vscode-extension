@@ -10,7 +10,7 @@ import *  as trivyExtension from  '../../src/extension'; // Adjust the import pa
 
 const testsRoot = path.resolve(__dirname, '..');
   
-suite('Extension Test Suite', function (): void {
+suite('extension', function (): void {
   this.timeout(10000); // Give the test 10 seconds to allow for the CI vscode to download
   vscode.window.showInformationMessage('Start all tests.');
 

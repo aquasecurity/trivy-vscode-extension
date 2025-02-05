@@ -9,7 +9,7 @@ import {
   Vulnerability,
 } from './trivy_result';
 import { TrivyTreeItem, TrivyTreeItemType } from './trivy_treeitem';
-import { sortBySeverity } from './utils';
+import { sortBySeverity } from '../utils';
 
 export class TrivyTreeViewProvider
   implements vscode.TreeDataProvider<TrivyTreeItem>

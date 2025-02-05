@@ -52,7 +52,7 @@ export class Secret {
   }
 }
 
-const processResult = (result: any): TrivyResult[] => {
+export const processResult = (result: any): TrivyResult[] => {
   const results: TrivyResult[] = [];
 
   if (result.Misconfigurations) {
@@ -128,5 +128,3 @@ const processResult = (result: any): TrivyResult[] => {
 
   return results;
 };
-
-export { processResult };
