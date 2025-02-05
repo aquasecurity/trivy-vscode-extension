@@ -13,9 +13,9 @@
   ],
   "activationEvents": [
     "onView:trivy.issueview",
-    "onCommand:trivy-vulnerability-scanner.scan",
-    "onCommand:trivy-vulnerability-scanner.explorer-run",
-    "onCommand:trivy-vulnerability-scanner.version"
+    "onCommand:trivy.scan",
+    "onCommand:trivy.explorer-run",
+    "onCommand:trivy.version"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -35,27 +35,38 @@
         "trivy.secretScanning": {
           "type": "boolean",
           "default": false,
-          "description": "Trivy should also scan for secrets, requires Trivy >=v0.27.0"
+          "description": "Trivy should also scan for secrets, requires Trivy >=v0.27.0",
+          "scope": "window"
         },
         "trivy.offlineScan": {
           "type": "boolean",
           "default": false,
-          "description": "Run Trivy as an offline scan"
+          "description": "Run Trivy as an offline scan",
+          "scope": "window"
         },
         "trivy.fixedOnly": {
           "type": "boolean",
           "default": false,
-          "description": "Only return Trivy results for vulnerabilities with fixes"
+          "description": "Only return Trivy results for vulnerabilities with fixes",
+          "scope": "window"
         },
-        "trivy.server.enable": {
+        "trivy.useIgnoreFile": {
           "type": "boolean",
           "default": false,
-          "description": "Connect to a trivy server, on a remote machine"
+          "description": "Use the .trivyignore.yaml file in the workspace",
+          "scope": "window"
         },
-        "trivy.server.url": {
+        "trivy.serverEnable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Connect to a trivy server, on a remote machine",
+          "scope": "window"
+        },
+        "trivy.serverUrl": {
           "type": "string",
           "default": "",
-          "description": "The remote trivy URL to connect to"
+          "description": "The remote trivy URL to connect to",
+          "scope": "window"
         },
         "trivy.minimumReportedSeverity": {
           "type": "string",
@@ -67,17 +78,18 @@
             "LOW",
             "UNKNOWN"
           ],
-          "description": "Return Trivy results with severity greater than or equal to this setting."
+          "description": "Return Trivy results with severity greater than or equal to this setting.",
+          "scope": "window"
         }
       }
     },
     "commands": [
       {
-        "command": "trivy-vulnerability-scanner.scan",
+        "command": "trivy.scan",
         "title": "Trivy Scan"
       },
       {
-        "command": "trivy-vulnerability-scanner.explorer-run",
+        "command": "trivy.explorer-run",
         "title": "Trivy: Run trivy against workspace",
         "icon": {
           "light": "resources/light/refresh.svg",
@@ -85,12 +97,44 @@
         }
       },
       {
-        "command": "trivy-vulnerability-scanner.refresh",
+        "command": "trivy.refresh",
         "title": "Trivy: Refresh the issue list"
       },
       {
-        "command": "trivy-vulnerability-scanner.version",
+        "command": "trivy.version",
         "title": "Trivy: Get the current version of Trivy"
+      },
+      {
+        "command": "trivy.useTrivyIgnore",
+        "title": "Use .trivyignore.yaml"
+      },
+      {
+        "command": "trivy.disableUseTrivyIgnore",
+        "title": "✓ Use .trivyignore.yaml"
+      },
+      {
+        "command": "trivy.offlineScan",
+        "title": "Offline Scanning"
+      },
+      {
+        "command": "trivy.disableOfflineScan",
+        "title": "✓ Offline Scanning"
+      },
+      {
+        "command": "trivy.scanForSecrets",
+        "title": "Scan for secrets"
+      },
+      {
+        "command": "trivy.disableScanForSecrets",
+        "title": "✓ Scan for secrets"
+      },
+      {
+        "command": "trivy.onlyFixedIssues",
+        "title": "Only show fixed issues"
+      },
+      {
+        "command": "trivy.disableOnlyFixedIssues",
+        "title": "✓ Only show fixed issues"
       }
     ],
     "viewsContainers": {
@@ -121,7 +165,7 @@
     "viewsWelcome": [
       {
         "view": "trivy.issueview",
-        "contents": "Click the button below to run Trivy against the current workspace.\n[Run Trivy now](command:trivy-vulnerability-scanner.explorer-run)\nTrivy configuration settings can be configured in the extension settings."
+        "contents": "Click the button below to run Trivy against the current workspace.\n[Run Trivy now](command:trivy.explorer-run)\nTrivy configuration settings can be configured in the extension settings."
       },
       {
         "view": "trivy.helpview",
@@ -131,9 +175,15 @@
     "menus": {
       "view/title": [
         {
-          "command": "trivy-vulnerability-scanner.explorer-run",
+          "command": "trivy.explorer-run",
           "when": "view == trivy.issueview",
           "group": "navigation@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "trivy.disableUseTrivyIgnore",
+          "when": "false"
         }
       ]
     }
@@ -145,8 +195,8 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "copy-resources": "copyfiles -u 1 \"resources/**/*\" out/resources/",
     "test-compile": "tsc -p ./",
-    "compile": "tsc -p ./ && npm run copy-resources",
-    "pretest": "npm run compile && npm run lint && cp -r src/test/golden ./out/test",
+    "compile": "rm -rf out && tsc -p ./ && npm run copy-resources",
+    "pretest": "npm run compile && npm run lint && cp -r test/golden ./out/test",
     "test": "node ./out/test/runTest.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",

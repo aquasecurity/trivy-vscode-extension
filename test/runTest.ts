@@ -3,9 +3,12 @@ import { runTests } from '@vscode/test-electron';
 
 async function main() {
   try {
+    const developmentPath = path.resolve(__dirname, '../');
+const testsPath = path.resolve(__dirname, './suite/index')
+
     await runTests({
-      extensionDevelopmentPath: path.resolve(__dirname, '../../'),
-      extensionTestsPath: path.resolve(__dirname, './suite/index'),
+      extensionDevelopmentPath: developmentPath,
+      extensionTestsPath: testsPath,
       launchArgs: ['--wait'], // Ensure process waits
     });
   } catch (err) {

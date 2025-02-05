@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { TrivyHelpProvider } from './explorer/trivy_helpview';
 import { TrivyTreeViewProvider } from './explorer/trivy_treeview';
-import { TrivyWrapper } from './trivy_wrapper';
-import {execSync} from 'child_process';
+import { TrivyWrapper } from './command/trivy_wrapper';
+import { execSync } from 'child_process';
 
 export function runCommand(command: string, projectRootPath: string): string {
-
   try {
     return execSync(command + ' ' + projectRootPath).toString();
   } catch (result: any) {
@@ -73,40 +71,22 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerWebviewViewProvider('trivy.helpview', helpProvider)
   );
   context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'trivy-vulnerability-scanner.explorer-run',
-      () => trivyWrapper.run()
+    vscode.commands.registerCommand('trivy.explorer-run', () =>
+      trivyWrapper.run()
     )
   );
   context.subscriptions.push(
-    vscode.commands.registerCommand('trivy-vulnerability-scanner.version', () =>
+    vscode.commands.registerCommand('trivy.scan', () => trivyWrapper.run())
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand('trivy.version', () =>
       trivyWrapper.showCurrentTrivyVersion()
     )
   );
   context.subscriptions.push(
-    vscode.commands.registerCommand('trivy-vulnerability-scanner.refresh', () =>
+    vscode.commands.registerCommand('trivy.refresh', () =>
       misconfigProvider.refresh()
     )
-  );
-
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  context.subscriptions.push(
-    vscode.commands.registerCommand('trivy-vulnerability-scanner.scan', () => {
-      const trivyScanCmd =
-        'trivy --quiet filesystem --security-checks config,vuln --exit-code=10';
-      const scanResult = runCommand(trivyScanCmd, projectRootPath.toString());
-      if (scanResult.length > 0) {
-        outputChannel.show();
-        outputChannel.appendLine(scanResult);
-      } else {
-        // return code is 0
-        vscode.window.showInformationMessage(
-          'Trivy: No vulnerabilities found.'
-        );
-      }
-    })
   );
 }
 

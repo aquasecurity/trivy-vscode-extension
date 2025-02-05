@@ -3,6 +3,7 @@ import * as child from 'child_process';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
 import { unlinkSync, readdirSync } from 'fs';
+import { TrivyCommandOptions } from './options';
 
 export class TrivyWrapper {
   private workingPath: string[] = [];
@@ -72,7 +73,7 @@ export class TrivyWrapper {
         );
         outputChannel.appendLine('Reloading the Findings Explorer content');
         setTimeout(() => {
-          vscode.commands.executeCommand('trivy-vulnerability-scanner.refresh');
+          vscode.commands.executeCommand('trivy.refresh');
         }, 250);
       });
     });
@@ -137,31 +138,12 @@ export class TrivyWrapper {
 
   private buildCommand(workingPath: string): string[] {
     const config = vscode.workspace.getConfiguration('trivy');
-    const command = [];
+    let command: string[] = [];
 
-    if (config.get<boolean>('debug')) {
-      command.push('--debug');
-    }
-
-    let requireChecks = 'config,vuln';
-    if (config.get<boolean>('secretScanning')) {
-      requireChecks = `${requireChecks},secret`;
-    }
-    command.push('fs');
-    command.push(`--security-checks=${requireChecks}`);
-    command.push(this.getRequiredSeverities(config));
-
-    if (config.get<boolean>('offlineScan')) {
-      command.push('--offline-scan');
-    }
-
-    if (config.get<boolean>('fixedOnly')) {
-      command.push('--ignore-unfixed');
-    }
-
-    if (config.get<boolean>('server.enable')) {
-      command.push('--server');
-      command.push(`${config.get<string>('server.url')}`);
+    // apply the command options to
+    // add the required configuration to the command
+    for (const option of TrivyCommandOptions) {
+      command = option.apply(command, config);
     }
 
     command.push('--format=json');
@@ -173,31 +155,5 @@ export class TrivyWrapper {
 
     command.push(workingPath);
     return command;
-  }
-
-  private getRequiredSeverities(config: vscode.WorkspaceConfiguration): string {
-    const requiredSeverities: string[] = [];
-
-    const minRequired = config.get<string>('minimumReportedSeverity');
-    const severities: string[] = [
-      'CRITICAL',
-      'HIGH',
-      'MEDIUM',
-      'LOW',
-      'UNKNOWN',
-    ];
-
-    for (let i = 0; i < severities.length; i++) {
-      const s = severities[i];
-      if (!s) {
-        continue;
-      }
-      requiredSeverities.push(s);
-      if (s === minRequired) {
-        break;
-      }
-    }
-
-    return `--severity=${requiredSeverities.join(',')}`;
   }
 }
