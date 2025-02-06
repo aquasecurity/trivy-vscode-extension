@@ -1,7 +1,7 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode'
-import { getTrivyCommandOptions } from '../../../src/command/options';
+import { DebugOption, FixedOnlyOption, IgnoreFilePathOption, OfflineScanOption, ScannersOption } from '../../../src/command/options';
 
 class mockConfig{
   private values: { [key: string]: boolean | string } = {
@@ -30,7 +30,7 @@ suite('trivy command options', function (): void {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
     let command : string[] = []
 
-    const commandOption = getTrivyCommandOptions('debug');
+    const commandOption = new DebugOption();
     command = commandOption.apply(command, config);
 
     assert.strictEqual(command.join(' '), '--debug');
@@ -40,7 +40,7 @@ suite('trivy command options', function (): void {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
     let command : string[] = []
 
-    const commandOption = getTrivyCommandOptions('scanners');
+    const commandOption = new ScannersOption();
     command = commandOption.apply(command, config);
 
     assert.strictEqual(command.join(' '), '--scanners=misconfig,vuln'); 
@@ -53,7 +53,7 @@ suite('trivy command options', function (): void {
 
     let command : string[] = []
 
-    const commandOption = getTrivyCommandOptions('scanners');
+    const commandOption = new ScannersOption();
     command = commandOption.apply(command, config);
 
     assert.strictEqual(command.join(' '), '--scanners=misconfig,vuln,secret');
@@ -64,7 +64,7 @@ suite('trivy command options', function (): void {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
     let command : string[] = []
 
-    const commandOption = getTrivyCommandOptions('offlineScan');
+    const commandOption = new OfflineScanOption();
     command = commandOption.apply(command, config);
 
     assert.strictEqual(command.join(' '), '--offline-scan');
@@ -74,7 +74,7 @@ suite('trivy command options', function (): void {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
     let command : string[] = []
 
-    const commandOption = getTrivyCommandOptions('fixedOnly');
+    const commandOption = new FixedOnlyOption();
     command = commandOption.apply(command, config);
 
     assert.strictEqual(command.join(' '), '--ignore-unfixed');
@@ -84,7 +84,7 @@ suite('trivy command options', function (): void {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
     let command : string[] = []
 
-    const commandOption = getTrivyCommandOptions('useTrivyIgnoreFile');
+    const commandOption = new IgnoreFilePathOption();
     command = commandOption.apply(command, config);
 
     assert.strictEqual(command.join(' '), '--ignorefile=.trivyignore.yaml');

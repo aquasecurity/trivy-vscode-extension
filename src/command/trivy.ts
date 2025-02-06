@@ -3,7 +3,18 @@ import * as child from 'child_process';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
 import { unlinkSync, readdirSync } from 'fs';
-import { TrivyCommandOptions } from './options';
+import {
+  ConfigFilePathOption,
+  DebugOption,
+  FixedOnlyOption,
+  IgnoreFilePathOption,
+  JSONFormatOption,
+  OfflineScanOption,
+  RequiredSeveritiesOption,
+  ResultsOutputOption,
+  ScannersOption,
+  TrivyCommandOption,
+} from './options';
 import { showWarningWithLink } from '../utils';
 
 export class TrivyWrapper {
@@ -37,6 +48,9 @@ export class TrivyWrapper {
     this.outputChannel.appendLine('Running Trivy to update results');
 
     if (!this.checkTrivyInstalled()) {
+      vscode.window.showErrorMessage(
+        'Trivy could not be found, check Output window'
+      );
       return;
     }
 
@@ -138,22 +152,37 @@ export class TrivyWrapper {
     return getVersion.toString();
   }
 
-  private buildCommand(workingPath: string): string[] {
+  buildCommand(
+    workingPath: string,
+    trivyOptions?: TrivyCommandOption[]
+  ): string[] {
     const config = vscode.workspace.getConfiguration('trivy');
     let command: string[] = ['fs'];
 
-    // apply the command options to
-    // add the required configuration to the command
-    for (const option of TrivyCommandOptions) {
-      command = option.apply(command, config);
-    }
-
-    command.push('--format=json');
     const resultsPath = path.join(
       this.resultsStoragePath,
       `${uuid()}_results.json`
     );
-    command.push(`--output=${resultsPath}`);
+
+    if (!trivyOptions) {
+      trivyOptions = [
+        new ScannersOption(),
+        new ConfigFilePathOption(),
+        new RequiredSeveritiesOption(),
+        new OfflineScanOption(),
+        new FixedOnlyOption(),
+        new IgnoreFilePathOption(),
+        new DebugOption(),
+        new JSONFormatOption(),
+        new ResultsOutputOption(resultsPath),
+      ];
+    }
+
+    // apply the command options to
+    // add the required configuration to the command
+    for (const option of trivyOptions) {
+      command = option.apply(command, config);
+    }
 
     command.push(workingPath);
     return command;
