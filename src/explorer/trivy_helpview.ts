@@ -7,7 +7,7 @@ import {
 } from './trivy_result';
 import { TrivyTreeItem, TrivyTreeItemType } from './trivy_treeitem';
 
-const defaultStyle = `
+const baseHTML = `
 <style>
 
 th {
@@ -49,7 +49,7 @@ export class TrivyHelpProvider implements WebviewViewProvider {
       return;
     }
 
-    let html: string = defaultStyle;
+    let html: string = baseHTML;
     switch (item.itemType) {
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.misconfigInstance:
