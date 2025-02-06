@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 
+// TrivyCommandOption is an interface that defines the structure of the TrivyCommandOption class.
+// The TrivyCommandOption class has an apply method that takes a command and a configuration and returns
+// the updated command.
 interface TrivyCommandOption {
   name: string;
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[];
@@ -8,6 +11,10 @@ interface TrivyCommandOption {
 class DebugOption implements TrivyCommandOption {
   readonly name = 'debug';
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
+    // if onlyUseConfigFile is set, we don't need to add the scanners option
+    if (config.get<boolean>('onlyUseConfigFile')) {
+      return command;
+    }
     if (config.get<boolean>('debug')) {
       command.push('--debug');
     }
@@ -18,13 +25,16 @@ class DebugOption implements TrivyCommandOption {
 class ScannersOption implements TrivyCommandOption {
   readonly name = 'scanners';
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
+    // if onlyUseConfigFile is set, we don't need to add the scanners option
+    if (config.get<boolean>('onlyUseConfigFile')) {
+      return command;
+    }
+
     let requireChecks = 'misconfig,vuln';
     if (config.get<boolean>('secretScanning')) {
       requireChecks = `${requireChecks},secret`;
     }
-    command.push('fs');
     command.push(`--scanners=${requireChecks}`);
-
     return command;
   }
 }
@@ -33,6 +43,10 @@ class RequiredSeveritiesOption implements TrivyCommandOption {
   readonly name = 'requiredSeverities';
 
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
+    // if onlyUseConfigFile is set, we don't need to add the scanners option
+    if (config.get<boolean>('onlyUseConfigFile')) {
+      return command;
+    }
     const requiredSeverities: string[] = [];
 
     const minRequired = config.get<string>('minimumReportedSeverity');
@@ -64,6 +78,10 @@ class OfflineScanOption implements TrivyCommandOption {
   readonly name = 'offlineScan';
 
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
+    // if onlyUseConfigFile is set, we don't need to add the scanners option
+    if (config.get<boolean>('onlyUseConfigFile')) {
+      return command;
+    }
     if (config.get<boolean>('offlineScan')) {
       command.push('--offline-scan');
     }
@@ -83,16 +101,46 @@ class FixedOnlyOption implements TrivyCommandOption {
   }
 }
 
-class ServerEnabledOption implements TrivyCommandOption {
-  readonly name = 'serverEnabled';
+class IgnoreFilePathOption implements TrivyCommandOption {
+  readonly name = 'useTrivyIgnoreFile';
 
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
-    if (
-      config.get<boolean>('serverEnable') &&
-      config.get<string>('serverUrl') !== ''
-    ) {
-      command.push('--server');
-      command.push(`${config.get<string>('serverUrl')}`);
+    // if onlyUseConfigFile is set, we don't need to add the scanners option
+    if (config.get<boolean>('onlyUseConfigFile')) {
+      return command;
+    }
+    const ignoreFilePath = config.get<string>('ignoreFilePath');
+    if (config.get<boolean>('useIgnoreFile')) {
+      if (ignoreFilePath) {
+        command.push(`--ignorefile=${ignoreFilePath}`);
+      } else {
+        vscode.window.showWarningMessage('Trivy ignore file path is not set.');
+        config.update('useIgnoreFile', false);
+      }
+    }
+
+    return command;
+  }
+}
+
+class ConfigFilePathOption implements TrivyCommandOption {
+  readonly name = 'configFilePath';
+
+  apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
+    // if onlyUseConfigFile is set, we don't need to add the scanners option
+    if (config.get<boolean>('onlyUseConfigFile')) {
+      return command;
+    }
+    const configFilePath = config.get<string>('configFilePath');
+    if (config.get<boolean>('useConfigFile')) {
+      if (configFilePath) {
+        command.push(`--config=${configFilePath}`);
+      } else {
+        vscode.window.showWarningMessage(
+          'Trivy config file path override is not set.'
+        );
+        config.update('useConfigFile', false);
+      }
     }
 
     return command;
@@ -100,12 +148,13 @@ class ServerEnabledOption implements TrivyCommandOption {
 }
 
 export const TrivyCommandOptions: TrivyCommandOption[] = [
-  new DebugOption(),
   new ScannersOption(),
+  new ConfigFilePathOption(),
   new RequiredSeveritiesOption(),
   new OfflineScanOption(),
   new FixedOnlyOption(),
-  new ServerEnabledOption(),
+  new IgnoreFilePathOption(),
+  new DebugOption(),
 ];
 
 export function getTrivyCommandOptions(

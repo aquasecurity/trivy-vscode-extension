@@ -315,10 +315,6 @@ export class TrivyTreeViewProvider
   private createFileOpenCommand(
     result: TrivyResult
   ): vscode.Command | undefined {
-    const issueRange = new vscode.Range(
-      new vscode.Position(result.startLine - 1, 0),
-      new vscode.Position(result.endLine, 0)
-    );
     if (
       vscode.workspace.workspaceFolders === undefined ||
       vscode.workspace.workspaceFolders.length < 1
@@ -361,6 +357,10 @@ export class TrivyTreeViewProvider
       return;
     }
 
+    const issueRange = new vscode.Range(
+      new vscode.Position(result.startLine - 1, 0),
+      new vscode.Position(result.endLine, 0)
+    );
     return {
       command: 'vscode.open',
       title: '',

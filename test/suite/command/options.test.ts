@@ -8,8 +8,8 @@ class mockConfig{
     'debug': true,
     'offlineScan': true,
     'fixedOnly': true,
-    'serverEnable': true,
-    'serverUrl': 'http://localhost:4954'
+    'ignoreFilePath': '.trivyignore.yaml',
+    'useIgnoreFile': true,
   }
 
 
@@ -43,7 +43,7 @@ suite('trivy command options', function (): void {
     const commandOption = getTrivyCommandOptions('scanners');
     command = commandOption.apply(command, config);
 
-    assert.strictEqual(command.join(' '), 'fs --scanners=misconfig,vuln'); 
+    assert.strictEqual(command.join(' '), '--scanners=misconfig,vuln'); 
   });
 
   test('Trivy scanners command option with secretScan enabled', () => {
@@ -56,7 +56,7 @@ suite('trivy command options', function (): void {
     const commandOption = getTrivyCommandOptions('scanners');
     command = commandOption.apply(command, config);
 
-    assert.strictEqual(command.join(' '), 'fs --scanners=misconfig,vuln,secret');
+    assert.strictEqual(command.join(' '), '--scanners=misconfig,vuln,secret');
   });
 
 
@@ -70,14 +70,24 @@ suite('trivy command options', function (): void {
     assert.strictEqual(command.join(' '), '--offline-scan');
   });
 
-  test('Trivy server url command option', () => {
+  test('Trivy fixed only command option', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
     let command : string[] = []
 
-    const commandOption = getTrivyCommandOptions('serverEnabled');
+    const commandOption = getTrivyCommandOptions('fixedOnly');
     command = commandOption.apply(command, config);
 
-    assert.strictEqual(command.join(' '), '--server http://localhost:4954');
+    assert.strictEqual(command.join(' '), '--ignore-unfixed');
+  });
+
+  test('Trivy ignore file option', () => {
+    const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
+    let command : string[] = []
+
+    const commandOption = getTrivyCommandOptions('useTrivyIgnoreFile');
+    command = commandOption.apply(command, config);
+
+    assert.strictEqual(command.join(' '), '--ignorefile=.trivyignore.yaml');
   });
 
 });

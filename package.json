@@ -11,12 +11,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onView:trivy.issueview",
-    "onCommand:trivy.scan",
-    "onCommand:trivy.explorer-run",
-    "onCommand:trivy.version"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -50,24 +45,6 @@
           "description": "Only return Trivy results for vulnerabilities with fixes",
           "scope": "window"
         },
-        "trivy.useIgnoreFile": {
-          "type": "boolean",
-          "default": false,
-          "description": "Use the .trivyignore.yaml file in the workspace",
-          "scope": "window"
-        },
-        "trivy.serverEnable": {
-          "type": "boolean",
-          "default": false,
-          "description": "Connect to a trivy server, on a remote machine",
-          "scope": "window"
-        },
-        "trivy.serverUrl": {
-          "type": "string",
-          "default": "",
-          "description": "The remote trivy URL to connect to",
-          "scope": "window"
-        },
         "trivy.minimumReportedSeverity": {
           "type": "string",
           "default": "UNKNOWN",
@@ -80,16 +57,42 @@
           ],
           "description": "Return Trivy results with severity greater than or equal to this setting.",
           "scope": "window"
+        },
+        "trivy.useIgnoreFile": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use the .trivyignore.yaml file in the workspace",
+          "scope": "window"
+        },
+        "trivy.ignoreFilePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the .trivyignore.yaml file in the workspace",
+          "scope": "window"
+        },
+        "trivy.useConfigFile": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use a config file, defaults to trivy.yaml in the workspace",
+          "scope": "window"
+        },
+        "trivy.onlyUseConfigFile": {
+          "type": "boolean",
+          "default": false,
+          "description": "Only use the config file, do not use other settings",
+          "scope": "window"
+        },
+        "trivy.configFilePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the trivy.yaml file in the workspace",
+          "scope": "window"
         }
       }
     },
     "commands": [
       {
         "command": "trivy.scan",
-        "title": "Trivy Scan"
-      },
-      {
-        "command": "trivy.explorer-run",
         "title": "Trivy: Run trivy against workspace",
         "icon": {
           "light": "resources/light/refresh.svg",
@@ -98,19 +101,27 @@
       },
       {
         "command": "trivy.refresh",
-        "title": "Trivy: Refresh the issue list"
+        "title": "Refresh the issue list"
       },
       {
         "command": "trivy.version",
-        "title": "Trivy: Get the current version of Trivy"
+        "title": "Get the current version of Trivy"
       },
       {
-        "command": "trivy.useTrivyIgnore",
-        "title": "Use .trivyignore.yaml"
+        "command": "trivy.useIgnoreFile",
+        "title": "Use ignore file"
       },
       {
-        "command": "trivy.disableUseTrivyIgnore",
-        "title": "✓ Use .trivyignore.yaml"
+        "command": "trivy.disableUseIgnoreFile",
+        "title": "✓ Use ignore file"
+      },
+      {
+        "command": "trivy.setIgnoreFilePath",
+        "title": "Set trivy ignore file"
+      },
+      {
+        "command": "trivy.unsetIgnoreFilePath",
+        "title": "✓ Set trivy ignore file"
       },
       {
         "command": "trivy.offlineScan",
@@ -135,6 +146,30 @@
       {
         "command": "trivy.disableOnlyFixedIssues",
         "title": "✓ Only show fixed issues"
+      },
+      {
+        "command": "trivy.useConfigFile",
+        "title": "Use config override"
+      },
+      {
+        "command": "trivy.disableUseConfigFile",
+        "title": "✓ Use config override"
+      },
+      {
+        "command": "trivy.onlyUseConfigFile",
+        "title": "Only use config file"
+      },
+      {
+        "command": "trivy.disableOnlyUseConfigFile",
+        "title": "✓ Only use config file"
+      },
+      {
+        "command": "trivy.setConfigFilePath",
+        "title": "Set explicit config file"
+      },
+      {
+        "command": "trivy.unsetConfigFilePath",
+        "title": "✓ Set explicit config file"
       }
     ],
     "viewsContainers": {
@@ -165,7 +200,7 @@
     "viewsWelcome": [
       {
         "view": "trivy.issueview",
-        "contents": "Click the button below to run Trivy against the current workspace.\n[Run Trivy now](command:trivy.explorer-run)\nTrivy configuration settings can be configured in the extension settings."
+        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\nTrivy configuration settings can be configured in the extension settings."
       },
       {
         "view": "trivy.helpview",
@@ -175,18 +210,194 @@
     "menus": {
       "view/title": [
         {
-          "command": "trivy.explorer-run",
+          "command": "trivy.scan",
           "when": "view == trivy.issueview",
           "group": "navigation@1"
+        },
+        {
+          "submenu": "trivyIgnoreMenu",
+          "when": "view == trivy.issueview",
+          "group": "1_ignore"
+        },
+        {
+          "submenu": "trivyConfigMenu",
+          "when": "view == trivy.issueview",
+          "group": "2_config"
+        },
+        {
+          "command": "trivy.offlineScan",
+          "when": "view == trivy.issueview && !trivy.offlineScan",
+          "group": "3_setting@1"
+        },
+        {
+          "command": "trivy.disableOfflineScan",
+          "when": "view == trivy.issueview && trivy.offlineScan",
+          "group": "3_setting@1"
+        },
+        {
+          "command": "trivy.scanForSecrets",
+          "when": "view == trivy.issueview && !trivy.secretScanning",
+          "group": "3_setting@2"
+        },
+        {
+          "command": "trivy.disableScanForSecrets",
+          "when": "view == trivy.issueview && trivy.secretScanning",
+          "group": "3_setting@2"
+        },
+        {
+          "command": "trivy.onlyFixedIssues",
+          "when": "view == trivy.issueview && !trivy.fixedOnly",
+          "group": "3_setting@3"
+        },
+        {
+          "command": "trivy.disableOnlyFixedIssues",
+          "when": "view == trivy.issueview && trivy.fixedOnly",
+          "group": "3_setting@3"
+        }
+      ],
+      "trivyConfigMenu": [
+        {
+          "command": "trivy.useConfigFile",
+          "when": "view == trivy.issueview && !trivy.useConfigFile",
+          "group": "1_config@1"
+        },
+        {
+          "command": "trivy.disableUseConfigFile",
+          "when": "view == trivy.issueview && trivy.useConfigFile",
+          "group": "1_config@1"
+        },
+        {
+          "command": "trivy.onlyUseConfigFile",
+          "when": "view == trivy.issueview && !trivy.onlyUseConfigFile",
+          "group": "1_config@2"
+        },
+        {
+          "command": "trivy.disableOnlyUseConfigFile",
+          "when": "view == trivy.issueview && trivy.onlyUseConfigFile",
+          "group": "1_config@2"
+        },
+        {
+          "command": "trivy.setConfigFilePath",
+          "when": "view == trivy.issueview && !trivy.configFilePath",
+          "group": "1_config@3"
+        },
+        {
+          "command": "trivy.unsetConfigFilePath",
+          "when": "view == trivy.issueview && trivy.configFilePath",
+          "group": "1_config@4"
+        }
+      ],
+      "trivyIgnoreMenu": [
+        {
+          "command": "trivy.useIgnoreFile",
+          "when": "view == trivy.issueview && !trivy.useIgnoreFile",
+          "group": "1_ignore@1"
+        },
+        {
+          "command": "trivy.disableUseIgnoreFile",
+          "when": "view == trivy.issueview && trivy.useIgnoreFile",
+          "group": "1_ignore@1"
+        },
+        {
+          "command": "trivy.setIgnoreFilePath",
+          "when": "view == trivy.issueview && !trivy.ignoreFilePath",
+          "group": "1_ignore@2"
+        },
+        {
+          "command": "trivy.unsetIgnoreFilePath",
+          "when": "view == trivy.issueview && trivy.ignoreFilePath",
+          "group": "1_ignore@3"
         }
       ],
       "commandPalette": [
         {
-          "command": "trivy.disableUseTrivyIgnore",
+          "command": "trivy.disableOfflineScan",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableOnlyFixedIssues",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableOnlyUseConfigFile",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableScanForSecrets",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableUseConfigFile",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableUseIgnoreFile",
+          "when": "false"
+        },
+        {
+          "command": "trivy.offlineScan",
+          "when": "false"
+        },
+        {
+          "command": "trivy.onlyFixedIssues",
+          "when": "false"
+        },
+        {
+          "command": "trivy.onlyUseConfigFile",
+          "when": "false"
+        },
+        {
+          "command": "trivy.refresh",
+          "when": "false"
+        },
+        {
+          "command": "trivy.scan",
+          "when": "false"
+        },
+        {
+          "command": "trivy.scanForSecrets",
+          "when": "false"
+        },
+        {
+          "command": "trivy.setConfigFilePath",
+          "when": "false"
+        },
+        {
+          "command": "trivy.setIgnoreFilePath",
+          "when": "false"
+        },
+        {
+          "command": "trivy.unsetConfigFilePath",
+          "when": "false"
+        },
+        {
+          "command": "trivy.unsetIgnoreFilePath",
+          "when": "false"
+        },
+        {
+          "command": "trivy.useConfigFile",
+          "when": "false"
+        },
+        {
+          "command": "trivy.useIgnoreFile",
+          "when": "false"
+        },
+        {
+          "command": "trivy.version",
           "when": "false"
         }
       ]
-    }
+    },
+    "submenus": [
+      {
+        "id": "trivyIgnoreMenu",
+        "label": ".ignorefile"
+      },
+      {
+        "id": "trivyConfigMenu",
+        "label": "Config File"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",

@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid';
 import * as path from 'path';
 import { unlinkSync, readdirSync } from 'fs';
 import { TrivyCommandOptions } from './options';
+import { showWarningWithLink } from '../utils';
 
 export class TrivyWrapper {
   private workingPath: string[] = [];
@@ -49,11 +50,11 @@ export class TrivyWrapper {
 
     const binary = this.getBinaryPath();
 
-    this.workingPath.forEach((workingPath) => {
-      const command = this.buildCommand(workingPath);
-      this.outputChannel.appendLine(`command: ${command}`);
+    this.workingPath.forEach(async (workingPath) => {
+      const command = await this.buildCommand(workingPath);
+      this.outputChannel.appendLine(`command: ${command.join(' ')}`);
 
-      const execution = child.spawn(binary, command);
+      const execution = child.spawn(binary, command, { cwd: workingPath });
 
       execution.stdout.on('data', function (data) {
         outputChannel.appendLine(data.toString());
@@ -63,9 +64,10 @@ export class TrivyWrapper {
         outputChannel.appendLine(data.toString());
       });
 
-      execution.on('exit', function (code) {
+      execution.on('exit', async function (code) {
         if (code !== 0) {
-          vscode.window.showErrorMessage('Trivy failed to run');
+          await showWarningWithLink('Trivy failed to run.', outputChannel);
+
           return;
         }
         vscode.window.showInformationMessage(
@@ -138,7 +140,7 @@ export class TrivyWrapper {
 
   private buildCommand(workingPath: string): string[] {
     const config = vscode.workspace.getConfiguration('trivy');
-    let command: string[] = [];
+    let command: string[] = ['fs'];
 
     // apply the command options to
     // add the required configuration to the command
