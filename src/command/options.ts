@@ -3,13 +3,11 @@ import * as vscode from 'vscode';
 // TrivyCommandOption is an interface that defines the structure of the TrivyCommandOption class.
 // The TrivyCommandOption class has an apply method that takes a command and a configuration and returns
 // the updated command.
-interface TrivyCommandOption {
-  name: string;
+export interface TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[];
 }
 
-class DebugOption implements TrivyCommandOption {
-  readonly name = 'debug';
+export class DebugOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     // if onlyUseConfigFile is set, we don't need to add the scanners option
     if (config.get<boolean>('onlyUseConfigFile')) {
@@ -22,8 +20,7 @@ class DebugOption implements TrivyCommandOption {
   }
 }
 
-class ScannersOption implements TrivyCommandOption {
-  readonly name = 'scanners';
+export class ScannersOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     // if onlyUseConfigFile is set, we don't need to add the scanners option
     if (config.get<boolean>('onlyUseConfigFile')) {
@@ -39,9 +36,7 @@ class ScannersOption implements TrivyCommandOption {
   }
 }
 
-class RequiredSeveritiesOption implements TrivyCommandOption {
-  readonly name = 'requiredSeverities';
-
+export class RequiredSeveritiesOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     // if onlyUseConfigFile is set, we don't need to add the scanners option
     if (config.get<boolean>('onlyUseConfigFile')) {
@@ -74,9 +69,7 @@ class RequiredSeveritiesOption implements TrivyCommandOption {
   }
 }
 
-class OfflineScanOption implements TrivyCommandOption {
-  readonly name = 'offlineScan';
-
+export class OfflineScanOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     // if onlyUseConfigFile is set, we don't need to add the scanners option
     if (config.get<boolean>('onlyUseConfigFile')) {
@@ -89,9 +82,7 @@ class OfflineScanOption implements TrivyCommandOption {
   }
 }
 
-class FixedOnlyOption implements TrivyCommandOption {
-  readonly name = 'fixedOnly';
-
+export class FixedOnlyOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     if (config.get<boolean>('fixedOnly')) {
       command.push('--ignore-unfixed');
@@ -101,9 +92,7 @@ class FixedOnlyOption implements TrivyCommandOption {
   }
 }
 
-class IgnoreFilePathOption implements TrivyCommandOption {
-  readonly name = 'useTrivyIgnoreFile';
-
+export class IgnoreFilePathOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     // if onlyUseConfigFile is set, we don't need to add the scanners option
     if (config.get<boolean>('onlyUseConfigFile')) {
@@ -123,9 +112,7 @@ class IgnoreFilePathOption implements TrivyCommandOption {
   }
 }
 
-class ConfigFilePathOption implements TrivyCommandOption {
-  readonly name = 'configFilePath';
-
+export class ConfigFilePathOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     // if onlyUseConfigFile is set, we don't need to add the scanners option
     if (config.get<boolean>('onlyUseConfigFile')) {
@@ -147,24 +134,34 @@ class ConfigFilePathOption implements TrivyCommandOption {
   }
 }
 
-export const TrivyCommandOptions: TrivyCommandOption[] = [
-  new ScannersOption(),
-  new ConfigFilePathOption(),
-  new RequiredSeveritiesOption(),
-  new OfflineScanOption(),
-  new FixedOnlyOption(),
-  new IgnoreFilePathOption(),
-  new DebugOption(),
-];
-
-export function getTrivyCommandOptions(
-  commandName: string
-): TrivyCommandOption {
-  const option = TrivyCommandOptions.find(
-    (option) => option.name === commandName
-  );
-  if (!option) {
-    throw new Error(`Unknown command option: ${commandName}`);
+export class JSONFormatOption implements TrivyCommandOption {
+  apply(command: string[]): string[] {
+    command.push('--format=json');
+    return command;
   }
-  return option;
+}
+
+export class ResultsOutputOption implements TrivyCommandOption {
+  constructor(private resultsPath: string) {}
+
+  apply(command: string[]): string[] {
+    command.push(`--output=${this.resultsPath}`);
+    return command;
+  }
+}
+
+export class ExitCodeOption implements TrivyCommandOption {
+  constructor(private exitCode: number) {}
+
+  apply(command: string[]): string[] {
+    command.push(`--exit-code=${this.exitCode}`);
+    return command;
+  }
+}
+
+export class QuietOption implements TrivyCommandOption {
+  apply(command: string[]): string[] {
+    command.push('--quiet');
+    return command;
+  }
 }

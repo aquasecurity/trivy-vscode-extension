@@ -1,44 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { TrivyHelpProvider } from './explorer/trivy_helpview';
 import { TrivyTreeViewProvider } from './explorer/trivy_treeview';
 import { TrivyWrapper } from './command/trivy';
-import { execSync } from 'child_process';
-
-export function runCommand(command: string, projectRootPath: string): string {
-  try {
-    return execSync(command + ' ' + projectRootPath).toString();
-  } catch (result: any) {
-    switch (result.status) {
-      case 10: {
-        vscode.window.showErrorMessage(
-          'Trivy: Vulnerabilities found, check logs for details.'
-        );
-        return result.stdout.toString();
-      }
-      default: {
-        vscode.window.showErrorMessage(
-          'Failed to run Trivy scan, error: ' +
-            result.status +
-            ' check logs for details.'
-        );
-        return result.stdout.toString();
-      }
-    }
-  }
-}
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // This line of code will only be executed once when your extension is activated
-  console.log(
-    'Congratulations, your extension "trivy-vulnerability-scanner" is now active!'
-  );
-
   const outputChannel = vscode.window.createOutputChannel('Trivy Scan');
 
   const projectRootPath = vscode.workspace.getWorkspaceFolder;
