@@ -7,6 +7,25 @@ import {
 } from './trivy_result';
 import { TrivyTreeItem, TrivyTreeItemType } from './trivy_treeitem';
 
+const defaultStyle = `
+<style>
+
+th {
+  text-align: left;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  padding-left: 10px;
+  margin-left: 5px;
+}
+
+</style>
+
+
+`;
+
 export class TrivyHelpProvider implements WebviewViewProvider {
   private view: Webview | undefined;
 
@@ -30,17 +49,17 @@ export class TrivyHelpProvider implements WebviewViewProvider {
       return;
     }
 
-    let html: string = '';
+    let html: string = defaultStyle;
     switch (item.itemType) {
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.misconfigInstance:
-        html = getMisconfigurationHtml(item.check);
+        html += getMisconfigurationHtml(item.check);
         break;
       case TrivyTreeItemType.vulnerabilityCode:
-        html = getVulnerabilityHtml(item.check);
+        html += getVulnerabilityHtml(item.check);
         break;
       case TrivyTreeItemType.secretInstance:
-        html = getSecretHtml(item.check);
+        html += getSecretHtml(item.check);
         break;
       default:
         return '';
@@ -67,27 +86,37 @@ function getVulnerabilityHtml(result: TrivyResult): string {
     return '';
   }
   return `
-    <h2>${result.id}</h2>
+    <h2>${result.title}</h2>
     
-    <h3>${result.title}</h3>
+    <h3>${result.id}</h3>
     ${result.description}
 
-    <h3>Severity</h3>
-    ${result.severity}
+    <br />
+    <br /> 
+    <table>
+    <tr>
+    <th>Severity</th>
+    <td>${result.severity}</td>
+    </tr>
+    <tr>
+    <th>Package Name</th>
+    <td>${vulnerability.pkgName}</td>
+    </tr>
+    <tr>
+    <th>Installed Version</th>
+    <td>${vulnerability.installedVersion}</td>
+    </tr>
+    <tr>
+    <th>Fixed Version</th>
+    <td>${vulnerability.fixedVersion}</td>
+    </tr>
+    <tr>
+    <th>Filename</th>
+    <td>${result.filename}</td>
+    </tr>
+    </table>
 
-    <h3>Package Name</h3>
-    ${vulnerability.pkgName}
-
-    <h3>Installed Version</h3>
-    ${vulnerability.installedVersion}
-
-    <h3>Fixed Version</h3>
-    ${vulnerability.fixedVersion}
-
-    <h3>Filename</h3>
-    ${result.filename}
-
-    <h3>More Information</h3>
+    <h4>More Information</h4>
     `;
 }
 
@@ -97,22 +126,29 @@ function getMisconfigurationHtml(result: TrivyResult): string {
     return '';
   }
   return `
-    <h2>${result.id}</h2>
+    <h2>${result.title}</h2>
     
-    <h3>${result.title}</h3>
+    <h3>${result.id}</h3>
     ${result.description}
 
+    <br />
+    <br /> 
+    <table>
+    <tr>
+    <th>Severity</th>
+    <td>${result.severity}</td>
+    </tr>
+    <tr>
+    <th>Resolution</th>
+    <td>${misconfig.resolution}</td>
+    </tr>
+    <tr>
+    <th>Filename</th>
+    <td>${result.filename}</td>
+    </tr>
+    </table>
 
-    <h3>Severity</h3>
-    ${result.severity}
-
-    <h3>Resolution</h3>
-    ${misconfig.resolution}
-
-    <h3>Filename</h3>
-    ${result.filename}
-
-    <h3>More Information</h3>
+    <h4>More Information</h4>
     `;
 }
 
@@ -124,14 +160,23 @@ function getSecretHtml(result: TrivyResult): string {
   return `
     <h2>${result.title}</h2>
 
-    <h3>Severity</h3>
-    ${result.severity}
+<br />
+    <br /> 
+    <table>
+    <tr>
+    <th>Severity</th>
+    <td>${result.severity}</td>
+    </tr>
+    <tr>
+    <th>Match</th>
+    <td>${secret.match}</td>
+    </tr>
+    <tr>
+    <th>Filename</th>
+    <td>${result.filename}</td>
+    </tr>
+    </table>
 
-    <h3>Match</h3>
-    ${secret.match}
-
-    <h3>Filename</h3>
-    ${result.filename}
 
     `;
 }

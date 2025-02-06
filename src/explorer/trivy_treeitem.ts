@@ -22,6 +22,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
   ) {
     super(title, collapsibleState);
     this.severity = check.severity;
+    this.command = command;
     this.code = '';
     this.provider = '';
     this.startLineNumber = 0;

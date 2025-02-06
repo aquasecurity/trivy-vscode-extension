@@ -9,7 +9,7 @@ import {
   Vulnerability,
 } from './trivy_result';
 import { TrivyTreeItem, TrivyTreeItemType } from './trivy_treeitem';
-import { sortBySeverity } from './utils';
+import { sortBySeverity } from '../utils';
 
 export class TrivyTreeViewProvider
   implements vscode.TreeDataProvider<TrivyTreeItem>
@@ -229,34 +229,32 @@ export class TrivyTreeViewProvider
       }
 
       switch (element.itemType) {
-        case TrivyTreeItemType.misconfigFile:
+        case TrivyTreeItemType.misconfigFile: {
           if (resolvedNodes.includes(result.id)) {
             continue;
           }
 
-          resolvedNodes.push(result.id);
-          if (result.extraData instanceof Secret) {
-            trivyResults.push(
-              new TrivyTreeItem(
-                result.id,
-                result,
-                vscode.TreeItemCollapsibleState.None,
-                TrivyTreeItemType.secretInstance,
-                this.createFileOpenCommand(result)
-              )
-            );
-          } else {
-            trivyResults.push(
-              new TrivyTreeItem(
-                result.id,
-                result,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                TrivyTreeItemType.misconfigCode
-              )
-            );
-          }
+          let cmd: vscode.Command | undefined;
+          let state = vscode.TreeItemCollapsibleState.Collapsed;
 
+          if (result.extraData instanceof Secret) {
+            state = vscode.TreeItemCollapsibleState.None;
+            cmd = this.createFileOpenCommand(result);
+          }
+          resolvedNodes.push(result.id);
+          trivyResults.push(
+            new TrivyTreeItem(
+              result.title,
+              result,
+              state,
+              result.extraData instanceof Secret
+                ? TrivyTreeItemType.secretInstance
+                : TrivyTreeItemType.misconfigCode,
+              cmd
+            )
+          );
           break;
+        }
         case TrivyTreeItemType.vulnerabilityFile: {
           const extraData = result.extraData;
 
@@ -317,10 +315,6 @@ export class TrivyTreeViewProvider
   private createFileOpenCommand(
     result: TrivyResult
   ): vscode.Command | undefined {
-    const issueRange = new vscode.Range(
-      new vscode.Position(result.startLine - 1, 0),
-      new vscode.Position(result.endLine, 0)
-    );
     if (
       vscode.workspace.workspaceFolders === undefined ||
       vscode.workspace.workspaceFolders.length < 1
@@ -332,12 +326,41 @@ export class TrivyTreeViewProvider
       return;
     }
 
-    const fileUri = path.join(wsFolder.uri.fsPath, result.filename);
-
-    if (!fs.existsSync(fileUri)) {
+    let fileUri: string = '';
+    let startLine = result.startLine;
+    let endLine = result.endLine;
+    if (
+      result.extraData instanceof Misconfiguration &&
+      result.extraData.occurrences
+    ) {
+      result.extraData.occurrences.forEach(
+        (occurrence: {
+          Filename: string;
+          Location: { StartLine: number; EndLine: number };
+        }) => {
+          const occurrencePath = path.join(
+            wsFolder.uri.fsPath,
+            occurrence.Filename
+          );
+          if (fs.existsSync(occurrencePath)) {
+            fileUri = occurrencePath;
+            startLine = occurrence.Location.StartLine;
+            endLine = occurrence.Location.EndLine;
+            return;
+          }
+        }
+      );
+    } else {
+      fileUri = path.join(wsFolder.uri.fsPath, result.filename);
+    }
+    if (!fileUri || !fs.existsSync(fileUri)) {
       return;
     }
 
+    const issueRange = new vscode.Range(
+      new vscode.Position(result.startLine - 1, 0),
+      new vscode.Position(result.endLine, 0)
+    );
     return {
       command: 'vscode.open',
       title: '',
@@ -345,9 +368,7 @@ export class TrivyTreeViewProvider
         vscode.Uri.file(fileUri),
         {
           selection:
-            result.startLine === result.endLine && result.startLine === 0
-              ? null
-              : issueRange,
+            startLine === endLine && startLine === 0 ? null : issueRange,
         },
       ],
     };

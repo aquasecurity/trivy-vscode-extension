@@ -34,10 +34,12 @@ export class Misconfiguration {
   public status: string;
   public startline: number = 0;
   public endline: number = 0;
+  occurrences: any;
   constructor(misconfiguration: any) {
     this.message = misconfiguration.Message;
     this.resolution = misconfiguration.Resolution;
     this.status = misconfiguration.Status;
+    this.occurrences = misconfiguration.CauseMetadata.Occurrences;
   }
 }
 
@@ -50,7 +52,7 @@ export class Secret {
   }
 }
 
-const processResult = (result: any): TrivyResult[] => {
+export const processResult = (result: any): TrivyResult[] => {
   const results: TrivyResult[] = [];
 
   if (result.Misconfigurations) {
@@ -126,5 +128,3 @@ const processResult = (result: any): TrivyResult[] => {
 
   return results;
 };
-
-export { processResult };

@@ -4,15 +4,14 @@ import * as fs from 'fs';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import * as trivyExtension from '../../extension';
+
 import path from 'path';
+import *  as trivyExtension from  '../../src/extension'; // Adjust the import path as necessary
 
 const testsRoot = path.resolve(__dirname, '..');
-
-suite('Extension Test Suite', function (): void {
-  // set the timeout to give test-electron time
-  // to download vscode-test and unzip it in CI
-  this.timeout(10000);
+  
+suite('extension', function (): void {
+  this.timeout(10000); // Give the test 10 seconds to allow for the CI vscode to download
   vscode.window.showInformationMessage('Start all tests.');
 
   test('Not a vulnerable project', () => {
