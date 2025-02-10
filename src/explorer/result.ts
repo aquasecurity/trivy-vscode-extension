@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class TrivyResult {
-  public extraData: Vulnerability | Misconfiguration | Secret;
+  public extraData: Vulnerability | Misconfiguration | Secret | string;
   constructor(
     public id: string,
     public title: string,
@@ -11,7 +11,8 @@ export class TrivyResult {
     public endLine: number,
     public severity: string,
     public references: string[],
-    extra: Vulnerability | Misconfiguration | Secret
+    extra: Vulnerability | Misconfiguration | Secret,
+    public workspaceName: string
   ) {
     this.extraData = extra;
   }
@@ -29,6 +30,7 @@ export class Vulnerability {
 }
 
 export class Misconfiguration {
+  public code: string;
   public message: string;
   public resolution: string;
   public status: string;
@@ -36,6 +38,7 @@ export class Misconfiguration {
   public endline: number = 0;
   occurrences: any;
   constructor(misconfiguration: any) {
+    this.code = misconfiguration.ID;
     this.message = misconfiguration.Message;
     this.resolution = misconfiguration.Resolution;
     this.status = misconfiguration.Status;
@@ -52,7 +55,10 @@ export class Secret {
   }
 }
 
-export const processResult = (result: any): TrivyResult[] => {
+export const processResult = (
+  result: any,
+  workspaceName: string
+): TrivyResult[] => {
   const results: TrivyResult[] = [];
 
   if (result.Misconfigurations) {
@@ -73,56 +79,85 @@ export const processResult = (result: any): TrivyResult[] => {
       startLine = startLine && startLine > 0 ? startLine : 1;
       endLine = endLine && endLine > 0 ? endLine : 1;
 
-      const trivyResult = new TrivyResult(
-        element.ID,
-        element.Title,
-        element.Description,
-        result.Target,
-        startLine,
-        endLine,
-        element.Severity,
-        element.References,
-        new Misconfiguration(element)
+      const id = element.ID;
+      const title = element.Title;
+      const description = element.Description;
+      const target = result.Target;
+      const severity = element.Severity;
+      const references = element.References;
+      const extra = new Misconfiguration(element);
+      results.push(
+        new TrivyResult(
+          id,
+          title,
+          description,
+          target,
+          startLine,
+          endLine,
+          severity,
+          references,
+          extra,
+          workspaceName
+        )
       );
-      results.push(trivyResult);
     }
   }
 
   if (result.Vulnerabilities) {
     for (let i = 0; i < result.Vulnerabilities.length; i++) {
       const element = result.Vulnerabilities[i];
-
-      const trivyResult = new TrivyResult(
-        element.VulnerabilityID,
-        element.Title,
-        element.Description,
-        result.Target,
-        1,
-        1,
-        element.Severity,
-        element.References,
-        new Vulnerability(element)
+      const id = element.VulnerabilityID;
+      const title = element.Title;
+      const description = element.Description;
+      const target = result.Target;
+      const severity = element.Severity;
+      const references = element.References;
+      const extra = new Vulnerability(element);
+      const startLine = 1;
+      const endLine = 1;
+      results.push(
+        new TrivyResult(
+          id,
+          title,
+          description,
+          target,
+          startLine,
+          endLine,
+          severity,
+          references,
+          extra,
+          workspaceName
+        )
       );
-      results.push(trivyResult);
     }
   }
 
   if (result.Secrets) {
     for (let i = 0; i < result.Secrets.length; i++) {
       const element = result.Secrets[i];
-
-      const trivyResult = new TrivyResult(
-        element.RuleID,
-        element.Title,
-        element.Description,
-        result.Target,
-        element.StartLine,
-        element.EndLine,
-        element.Severity,
-        element.References,
-        new Secret(element)
+      const id = element.RuleID;
+      const title = element.Title;
+      const description = element.Description;
+      const target = result.Target;
+      const severity = element.Severity;
+      const references = element.References;
+      const extra = new Secret(element);
+      const startLine = element.StartLine;
+      const endLine = element.EndLine;
+      results.push(
+        new TrivyResult(
+          id,
+          title,
+          description,
+          target,
+          startLine,
+          endLine,
+          severity,
+          references,
+          extra,
+          workspaceName
+        )
       );
-      results.push(trivyResult);
     }
   }
 

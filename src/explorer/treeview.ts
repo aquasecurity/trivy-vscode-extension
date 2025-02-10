@@ -7,8 +7,8 @@ import {
   Secret,
   TrivyResult,
   Vulnerability,
-} from './trivy_result';
-import { TrivyTreeItem, TrivyTreeItemType } from './trivy_treeitem';
+} from './result';
+import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
 import { sortBySeverity } from '../utils';
 
 export class TrivyTreeViewProvider
@@ -19,10 +19,11 @@ export class TrivyTreeViewProvider
   > = new vscode.EventEmitter<TrivyTreeItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<TrivyTreeItem | undefined | void> =
     this._onDidChangeTreeData.event;
-  public resultData: TrivyResult[] = [];
+  public resultData: Map<string, TrivyResult[]> = new Map();
   private taintResults: boolean = true;
   private storagePath: string = '';
   public readonly resultsStoragePath: string = '';
+  public items: TrivyTreeItem[] = [];
 
   constructor(context: vscode.ExtensionContext) {
     if (context.storageUri) {
@@ -39,13 +40,14 @@ export class TrivyTreeViewProvider
   }
 
   refresh(): void {
+    this.items = [];
     this.taintResults = true;
     this.loadResultData();
   }
 
   // when there is trivy output file, load the results
   async loadResultData() {
-    this.resultData = [];
+    this.resultData.clear();
     if (
       this.resultsStoragePath !== '' &&
       vscode.workspace &&
@@ -61,6 +63,7 @@ export class TrivyTreeViewProvider
       Promise.resolve(
         files.forEach((file) => {
           const resultFile = path.join(this.resultsStoragePath, file);
+          const workspaceName = file.replace('_results.json', '');
           if (fs.existsSync(resultFile)) {
             const content = fs.readFileSync(resultFile, 'utf8');
             try {
@@ -69,11 +72,12 @@ export class TrivyTreeViewProvider
                 return;
               }
               const results = data.Results;
+              const trivyResults: TrivyResult[] = [];
               for (let i = 0; i < results.length; i++) {
                 const element = results[i];
-                const trivyResults = processResult(element);
-                this.resultData.push(...trivyResults);
+                trivyResults.push(...processResult(element, workspaceName));
               }
+              this.resultData.set(workspaceName, trivyResults);
             } catch (error) {
               console.debug(`Error loading results file ${file}: ${error}`);
             }
@@ -99,16 +103,27 @@ export class TrivyTreeViewProvider
     // if this is refresh then get the top level codes
     let items: TrivyTreeItem[] = [];
     if (!element) {
-      items = this.getTopLevelNodes();
+      items = this.getWorkspaceNodes();
+      if (items.length === 1) {
+        // only one workspace so dont need to include in the tree
+        items = this.getTopLevelNodes(items[0].workspaceName);
+      }
     } else {
       items = this.getChildNodes(element);
     }
+    this.items.push(...items);
+
     return Promise.resolve(items);
   }
 
   private getVulnerabilityChildren(element: TrivyTreeItem): TrivyTreeItem[] {
     const results: TrivyTreeItem[] = [];
-    const filtered = this.resultData.filter(
+    const resultData = this.resultData.get(element.workspaceName);
+    if (!resultData) {
+      return results;
+    }
+
+    const filtered = resultData.filter(
       (c) =>
         c.extraData instanceof Vulnerability &&
         c.extraData.pkgName === element.title
@@ -125,11 +140,11 @@ export class TrivyTreeViewProvider
       const collapsedState = vscode.TreeItemCollapsibleState.None;
 
       const item = new TrivyTreeItem(
+        result.workspaceName,
         title,
-        result,
         collapsedState,
         TrivyTreeItemType.vulnerabilityCode,
-        this.createFileOpenCommand(result)
+        { check: result, command: this.createFileOpenCommand(result) }
       );
       results.push(item);
     }
@@ -139,9 +154,12 @@ export class TrivyTreeViewProvider
 
   getSecretInstances(element: TrivyTreeItem): TrivyTreeItem[] {
     const results: TrivyTreeItem[] = [];
-    const filtered = this.resultData.filter(
-      (c) => c.filename === element.filename
-    );
+    const resultData = this.resultData.get(element.workspaceName);
+    if (!resultData) {
+      return results;
+    }
+
+    const filtered = resultData.filter((c) => c.filename === element.filename);
 
     for (let index = 0; index < filtered.length; index++) {
       const result = filtered[index];
@@ -154,11 +172,11 @@ export class TrivyTreeViewProvider
       const collapsedState = vscode.TreeItemCollapsibleState.None;
 
       const item = new TrivyTreeItem(
+        result.workspaceName,
         title,
-        result,
         collapsedState,
         TrivyTreeItemType.secretInstance,
-        this.createFileOpenCommand(result)
+        { check: result, command: this.createFileOpenCommand(result) }
       );
       results.push(item);
     }
@@ -168,7 +186,12 @@ export class TrivyTreeViewProvider
 
   getMisconfigurationInstances(element: TrivyTreeItem): TrivyTreeItem[] {
     const results: TrivyTreeItem[] = [];
-    const filtered = this.resultData.filter(
+    const resultData = this.resultData.get(element.workspaceName);
+    if (!resultData) {
+      return results;
+    }
+
+    const filtered = resultData.filter(
       (c) => c.id === element.code && c.filename === element.filename
     );
 
@@ -183,11 +206,11 @@ export class TrivyTreeViewProvider
       const collapsedState = vscode.TreeItemCollapsibleState.None;
 
       const item = new TrivyTreeItem(
+        result.workspaceName,
         title,
-        result,
         collapsedState,
         TrivyTreeItemType.misconfigInstance,
-        this.createFileOpenCommand(result)
+        { check: result, command: this.createFileOpenCommand(result) }
       );
       results.push(item);
     }
@@ -197,8 +220,10 @@ export class TrivyTreeViewProvider
 
   private getChildNodes(element: TrivyTreeItem): TrivyTreeItem[] {
     const trivyResults: TrivyTreeItem[] = [];
-    let filtered: TrivyResult[];
+
     switch (element.itemType) {
+      case TrivyTreeItemType.workspace:
+        return this.getTopLevelNodes(element.workspaceName);
       case TrivyTreeItemType.vulnerablePackage:
         return this.getVulnerabilityChildren(element);
       case TrivyTreeItemType.misconfigCode:
@@ -207,17 +232,17 @@ export class TrivyTreeViewProvider
         return this.getSecretInstances(element);
     }
 
+    const resultData = this.resultData.get(element.workspaceName);
+    if (!resultData) {
+      return trivyResults;
+    }
+
+    const filtered = resultData.filter((c) => c.filename === element.filename);
+
     switch (element.itemType) {
       case TrivyTreeItemType.misconfigFile:
-        filtered = this.resultData.filter(
-          (c) => c.filename === element.filename
-        );
         filtered.sort(sortBySeverity);
         break;
-      default:
-        filtered = this.resultData.filter(
-          (c) => c.filename === element.filename
-        );
     }
 
     const resolvedNodes: string[] = [];
@@ -241,16 +266,21 @@ export class TrivyTreeViewProvider
             state = vscode.TreeItemCollapsibleState.None;
             cmd = this.createFileOpenCommand(result);
           }
+          if (filtered.filter((c) => c.id === result.id).length === 1) {
+            // there is only result for this code in this file
+            state = vscode.TreeItemCollapsibleState.None;
+            cmd = this.createFileOpenCommand(result);
+          }
           resolvedNodes.push(result.id);
           trivyResults.push(
             new TrivyTreeItem(
+              result.workspaceName,
               result.title,
-              result,
               state,
               result.extraData instanceof Secret
                 ? TrivyTreeItemType.secretInstance
                 : TrivyTreeItemType.misconfigCode,
-              cmd
+              { check: result, command: cmd }
             )
           );
           break;
@@ -265,10 +295,11 @@ export class TrivyTreeViewProvider
             resolvedNodes.push(extraData.pkgName);
             trivyResults.push(
               new TrivyTreeItem(
+                result.workspaceName,
                 extraData.pkgName,
-                result,
                 vscode.TreeItemCollapsibleState.Collapsed,
-                TrivyTreeItemType.vulnerablePackage
+                TrivyTreeItemType.vulnerablePackage,
+                { check: result }
               )
             );
           }
@@ -279,11 +310,46 @@ export class TrivyTreeViewProvider
     return trivyResults;
   }
 
-  private getTopLevelNodes(): TrivyTreeItem[] {
+  private getWorkspaceNodes(): TrivyTreeItem[] {
+    const results: TrivyTreeItem[] = [];
+
+    if (this.resultData.size === 0) {
+      return results;
+    }
+
+    vscode.workspace.workspaceFolders?.forEach((wsFolder) => {
+      const workspaceName = wsFolder.name;
+      const workspaceResults = this.resultData.get(workspaceName);
+      if (!workspaceResults) {
+        return;
+      }
+
+      const workspaceItem = new TrivyTreeItem(
+        workspaceName,
+        workspaceName,
+        vscode.TreeItemCollapsibleState.Collapsed,
+        TrivyTreeItemType.workspace,
+        {
+          workspacePath: wsFolder.uri.fsPath,
+        }
+      );
+      results.push(workspaceItem);
+    });
+
+    return results;
+  }
+
+  private getTopLevelNodes(workspaceName: string): TrivyTreeItem[] {
     const results: TrivyTreeItem[] = [];
     const resolvedNodes: string[] = [];
-    for (let index = 0; index < this.resultData.length; index++) {
-      const result = this.resultData[index];
+
+    const resultData = this.resultData.get(workspaceName);
+    if (!resultData) {
+      return results;
+    }
+
+    for (let index = 0; index < resultData.length; index++) {
+      const result = resultData[index];
       if (result === undefined) {
         continue;
       }
@@ -302,10 +368,11 @@ export class TrivyTreeViewProvider
             : TrivyTreeItemType.secretFile;
       results.push(
         new TrivyTreeItem(
+          result.workspaceName,
           result.filename,
-          result,
           vscode.TreeItemCollapsibleState.Collapsed,
-          itemType
+          itemType,
+          { check: result }
         )
       );
     }
@@ -315,13 +382,10 @@ export class TrivyTreeViewProvider
   private createFileOpenCommand(
     result: TrivyResult
   ): vscode.Command | undefined {
-    if (
-      vscode.workspace.workspaceFolders === undefined ||
-      vscode.workspace.workspaceFolders.length < 1
-    ) {
-      return;
-    }
-    const wsFolder = vscode.workspace.workspaceFolders[0];
+    const wsFolder = vscode.workspace.workspaceFolders?.find(
+      (ws) => ws.name === result.workspaceName
+    );
+
     if (!wsFolder) {
       return;
     }

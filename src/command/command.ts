@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as child from 'child_process';
-import { v4 as uuid } from 'uuid';
 import * as path from 'path';
 import { unlinkSync, readdirSync } from 'fs';
 import {
@@ -18,29 +17,10 @@ import {
 import { showWarningWithLink } from '../utils';
 
 export class TrivyWrapper {
-  private workingPath: string[] = [];
   constructor(
     private outputChannel: vscode.OutputChannel,
     private readonly resultsStoragePath: string
-  ) {
-    if (
-      !vscode.workspace ||
-      !vscode.workspace.workspaceFolders ||
-      vscode.workspace.workspaceFolders.length <= 0
-    ) {
-      return;
-    }
-    const folders = vscode.workspace.workspaceFolders;
-    for (let i = 0; i < folders.length; i++) {
-      if (folders[i]) {
-        const workspaceFolder = folders[i];
-        if (!workspaceFolder) {
-          continue;
-        }
-        this.workingPath.push(workspaceFolder.uri.fsPath);
-      }
-    }
-  }
+  ) {}
 
   run() {
     const outputChannel = this.outputChannel;
@@ -64,8 +44,13 @@ export class TrivyWrapper {
 
     const binary = this.getBinaryPath();
 
-    this.workingPath.forEach(async (workingPath) => {
-      const command = await this.buildCommand(workingPath);
+    vscode.workspace.workspaceFolders?.forEach(async (workspaceFolder) => {
+      if (!workspaceFolder) {
+        return;
+      }
+      const workingPath = workspaceFolder.uri.fsPath;
+
+      const command = this.buildCommand(workingPath, workspaceFolder.name);
       this.outputChannel.appendLine(`command: ${command.join(' ')}`);
 
       const execution = child.spawn(binary, command, { cwd: workingPath });
@@ -154,6 +139,7 @@ export class TrivyWrapper {
 
   buildCommand(
     workingPath: string,
+    workspaceName: string,
     trivyOptions?: TrivyCommandOption[]
   ): string[] {
     const config = vscode.workspace.getConfiguration('trivy');
@@ -161,7 +147,7 @@ export class TrivyWrapper {
 
     const resultsPath = path.join(
       this.resultsStoragePath,
-      `${uuid()}_results.json`
+      `${workspaceName}_results.json`
     );
 
     if (!trivyOptions) {

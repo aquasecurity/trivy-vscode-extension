@@ -1,11 +1,6 @@
 import { Webview, WebviewView, WebviewViewProvider } from 'vscode';
-import {
-  Misconfiguration,
-  TrivyResult,
-  Vulnerability,
-  Secret,
-} from './trivy_result';
-import { TrivyTreeItem, TrivyTreeItemType } from './trivy_treeitem';
+import { Misconfiguration, TrivyResult, Vulnerability, Secret } from './result';
+import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
 
 const baseHTML = `
 <style>
@@ -41,7 +36,7 @@ export class TrivyHelpProvider implements WebviewViewProvider {
     if (item === null) {
       return;
     }
-    const codeData = item.check;
+    const codeData = item.properties?.check;
     if (codeData === undefined) {
       this.view.html = `
 <h2>No check data available</h2>
@@ -53,13 +48,13 @@ export class TrivyHelpProvider implements WebviewViewProvider {
     switch (item.itemType) {
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.misconfigInstance:
-        html += getMisconfigurationHtml(item.check);
+        html += getMisconfigurationHtml(item.properties?.check);
         break;
       case TrivyTreeItemType.vulnerabilityCode:
-        html += getVulnerabilityHtml(item.check);
+        html += getVulnerabilityHtml(item.properties?.check);
         break;
       case TrivyTreeItemType.secretInstance:
-        html += getSecretHtml(item.check);
+        html += getSecretHtml(item.properties?.check);
         break;
       default:
         return '';
@@ -80,7 +75,11 @@ export class TrivyHelpProvider implements WebviewViewProvider {
   }
 }
 
-function getVulnerabilityHtml(result: TrivyResult): string {
+function getVulnerabilityHtml(result?: TrivyResult): string {
+  if (result === undefined) {
+    return '';
+  }
+
   const vulnerability = result.extraData as Vulnerability;
   if (vulnerability === undefined) {
     return '';
@@ -120,7 +119,11 @@ function getVulnerabilityHtml(result: TrivyResult): string {
     `;
 }
 
-function getMisconfigurationHtml(result: TrivyResult): string {
+function getMisconfigurationHtml(result?: TrivyResult): string {
+  if (result === undefined) {
+    return '';
+  }
+
   const misconfig = result.extraData as Misconfiguration;
   if (misconfig === undefined) {
     return '';
@@ -152,7 +155,10 @@ function getMisconfigurationHtml(result: TrivyResult): string {
     `;
 }
 
-function getSecretHtml(result: TrivyResult): string {
+function getSecretHtml(result?: TrivyResult): string {
+  if (result === undefined) {
+    return '';
+  }
   const secret = result.extraData as Secret;
   if (secret === undefined) {
     return '';

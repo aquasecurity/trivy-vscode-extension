@@ -1,4 +1,4 @@
-import { Secret, TrivyResult } from './explorer/trivy_result';
+import { Secret, TrivyResult } from './explorer/result';
 import vscode from 'vscode';
 
 export function getSeverityPosition(severity: string): number {
