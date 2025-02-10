@@ -125,11 +125,11 @@
       },
       {
         "command": "trivy.offlineScan",
-        "title": "Offline Scanning"
+        "title": "Offline scanning"
       },
       {
         "command": "trivy.disableOfflineScan",
-        "title": "✓ Offline Scanning"
+        "title": "✓ Offline scanning"
       },
       {
         "command": "trivy.scanForSecrets",
@@ -176,7 +176,7 @@
       "activitybar": [
         {
           "id": "trivy",
-          "title": "trivy",
+          "title": "Trivy",
           "icon": "media/trivy.svg"
         }
       ]
