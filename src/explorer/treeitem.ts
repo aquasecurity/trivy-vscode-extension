@@ -1,6 +1,6 @@
 import path from 'path';
 import * as vscode from 'vscode';
-import { TrivyResult } from './trivy_result';
+import { TrivyResult } from './result';
 
 export class TrivyTreeItem extends vscode.TreeItem {
   public filename: string;
@@ -14,35 +14,43 @@ export class TrivyTreeItem extends vscode.TreeItem {
   contextValue = '';
 
   constructor(
+    public workspaceName: string,
     public readonly title: string,
-    public readonly check: TrivyResult,
     public collapsibleState: vscode.TreeItemCollapsibleState,
     public itemType: TrivyTreeItemType,
-    public command?: vscode.Command
+    public properties?: {
+      check?: TrivyResult;
+      command?: vscode.Command;
+      workspacePath?: string;
+    }
   ) {
     super(title, collapsibleState);
-    this.severity = check.severity;
-    this.command = command;
-    this.code = '';
+    this.severity = properties?.check?.severity || '';
+    this.command = properties?.command;
+    this.code = properties?.check?.id || '';
     this.provider = '';
     this.startLineNumber = 0;
     this.endLineNumber = 0;
-    this.filename = check.filename;
-    this.code = check.id;
+    this.filename = properties?.check?.filename || '';
+    this.code = properties?.check?.id || '';
 
     switch (itemType) {
+      case TrivyTreeItemType.workspace:
+        this.title = workspaceName;
+        this.tooltip = properties?.workspacePath;
+        this.iconPath = new vscode.ThemeIcon('folder-opened');
+        break;
       case TrivyTreeItemType.misconfigFile:
       case TrivyTreeItemType.vulnerabilityFile:
       case TrivyTreeItemType.secretFile:
       case TrivyTreeItemType.misconfigInstance:
-        this.filename = check.filename;
-        this.tooltip = `${check.description}`;
+        this.tooltip = `${properties?.check?.description}`;
         this.iconPath = vscode.ThemeIcon.File;
-        this.resourceUri = vscode.Uri.parse(check.filename);
+        this.resourceUri = vscode.Uri.parse(this.filename);
         break;
       case TrivyTreeItemType.secretInstance:
       case TrivyTreeItemType.secretCode:
-        this.tooltip = check.id;
+        this.tooltip = this.id;
         this.iconPath = {
           light: path.join(
             __filename,
@@ -64,7 +72,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
         break;
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.vulnerabilityCode:
-        this.tooltip = check.title;
+        this.tooltip = properties?.check?.title;
         this.iconPath = {
           light: path.join(
             __filename,
@@ -110,4 +118,5 @@ export enum TrivyTreeItemType {
   secretFile = 6,
   secretInstance = 7,
   secretCode = 8,
+  workspace = 9,
 }

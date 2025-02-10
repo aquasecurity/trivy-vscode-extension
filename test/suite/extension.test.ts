@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 
 import path from 'path';
-import { TrivyWrapper } from '../../src/command/trivy';
+import { TrivyWrapper } from '../../src/command/command';
 import { ExitCodeOption, QuietOption } from '../../src/command/options';
 import * as child from 'child_process';
 
@@ -27,7 +27,7 @@ suite('extension', function (): void {
       targetDir
     );
 
-    const commandArgs = wrapper.buildCommand(projectPath, [
+    const commandArgs = wrapper.buildCommand(projectPath, 'workspace1', [
       new QuietOption(),
       new ExitCodeOption(10)
     ])
@@ -57,6 +57,11 @@ suite('extension', function (): void {
     }  
   return '';
   }
+
+  test('Sample test', () => {
+    console.log('Running sample test...');
+    assert.strictEqual(1, 1);
+  });
 
   test('Not a vulnerable project', () => {
     const got = runCommand(testsRoot + '/golden/not-vulnerable');
