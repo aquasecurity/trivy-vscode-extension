@@ -7,14 +7,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: npm install
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install npm dependencies    
+        run: npm install
 
       - name: Pre-publish
         run: npm run vscode:prepublish
 
       - name: Publish 
-        uses: lannonbr/vsce-action@@4.0.0
+        uses: lannonbr/vsce-action@4.0.0
         with:
           args: "publish -p $VSCE_TOKEN"
         env:
