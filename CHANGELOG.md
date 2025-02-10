@@ -1,5 +1,10 @@
 # Change Log
 
+### 0.8.0
+Add support for managing the config through the UI
+Add support for multiple workspaces in the explorer
+Add tests and process around the code
+
 ### 0.6.0
 Add support for secrets - turn on in the extension settings
 
