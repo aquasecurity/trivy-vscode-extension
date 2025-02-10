@@ -424,7 +424,7 @@
     "@typescript-eslint/parser": "^8.23.0",
     "@vscode/test-electron": "^2.4.1",
     "copyfiles": "^2.4.1",
-    "esbuild": "^0.14.11",
+    "esbuild": "^0.25.0",
     "eslint": "^9.19.0",
     "glob": "^7.1.6",
     "globals": "^15.14.0",
