@@ -28,6 +28,11 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 0.8.0
+- Add support for managing the config through the UI
+- Add support for multiple workspaces in the explorer
+- Add tests and process around the code
+
 ### 0.6.1
 Handle findings inside tarballs
 
