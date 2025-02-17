@@ -1,5 +1,8 @@
 # Change Log
 
+### 0.8.2 
+- Add a basic walkthrough for new users
+
 ### 0.8.1 
 - Add support for ignoring files in the .gitignore file
 

@@ -64,7 +64,6 @@ export const processResult = (
 ): TrivyResult[] => {
   const results: TrivyResult[] = [];
 
-
   if (result.Misconfigurations) {
     for (let i = 0; i < result.Misconfigurations.length; i++) {
       if (ignorer.isFileIgnored(result.Target, workspaceName)) {

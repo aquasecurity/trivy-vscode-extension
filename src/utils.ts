@@ -41,4 +41,3 @@ export async function showWarningWithLink(
     outputChannel.show(true);
   }
 }
-

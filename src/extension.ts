@@ -23,13 +23,13 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // creating the issue tree explicitly to allow access to events
-  const issueTree = vscode.window.createTreeView('trivy.issueview', {
+  const issueTree = vscode.window.createTreeView('trivyIssueViewer', {
     treeDataProvider: misconfigProvider,
     showCollapseAll: true,
   });
 
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('trivy.helpview', helpProvider)
+    vscode.window.registerWebviewViewProvider('trivyHelpViewer', helpProvider)
   );
 
   issueTree.onDidChangeSelection(function (event) {

@@ -11,7 +11,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -190,13 +192,13 @@
     "views": {
       "trivy": [
         {
-          "id": "trivy.issueview",
+          "id": "trivyIssueViewer",
           "name": "Findings Explorer",
           "icon": "media/trivy.svg",
           "contextualTitle": "Findings Explorer"
         },
         {
-          "id": "trivy.helpview",
+          "id": "trivyHelpViewer",
           "name": "Findings Help",
           "type": "webview",
           "contextualTitle": "Findings Help"
@@ -205,11 +207,11 @@
     },
     "viewsWelcome": [
       {
-        "view": "trivy.issueview",
+        "view": "trivyIssueViewer",
         "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\nTrivy configuration settings can be configured in the extension settings."
       },
       {
-        "view": "trivy.helpview",
+        "view": "trivyHelpViewer",
         "contents": "No check selected. Run Trivy and choose a failed check from the explorer"
       }
     ],
@@ -217,101 +219,101 @@
       "view/title": [
         {
           "command": "trivy.scan",
-          "when": "view == trivy.issueview",
+          "when": "view == trivyIssueViewer",
           "group": "navigation@1"
         },
         {
           "submenu": "trivyIgnoreMenu",
-          "when": "view == trivy.issueview",
+          "when": "view == trivyIssueViewer",
           "group": "1_ignore"
         },
         {
           "submenu": "trivyConfigMenu",
-          "when": "view == trivy.issueview",
+          "when": "view == trivyIssueViewer",
           "group": "2_config"
         },
         {
           "command": "trivy.offlineScan",
-          "when": "view == trivy.issueview && !trivy.offlineScan",
+          "when": "view == trivyIssueViewer && !trivy.offlineScan",
           "group": "3_setting@1"
         },
         {
           "command": "trivy.disableOfflineScan",
-          "when": "view == trivy.issueview && trivy.offlineScan",
+          "when": "view == trivyIssueViewer && trivy.offlineScan",
           "group": "3_setting@1"
         },
         {
           "command": "trivy.scanForSecrets",
-          "when": "view == trivy.issueview && !trivy.secretScanning",
+          "when": "view == trivyIssueViewer && !trivy.secretScanning",
           "group": "3_setting@2"
         },
         {
           "command": "trivy.disableScanForSecrets",
-          "when": "view == trivy.issueview && trivy.secretScanning",
+          "when": "view == trivyIssueViewer && trivy.secretScanning",
           "group": "3_setting@2"
         },
         {
           "command": "trivy.onlyFixedIssues",
-          "when": "view == trivy.issueview && !trivy.fixedOnly",
+          "when": "view == trivyIssueViewer && !trivy.fixedOnly",
           "group": "3_setting@3"
         },
         {
           "command": "trivy.disableOnlyFixedIssues",
-          "when": "view == trivy.issueview && trivy.fixedOnly",
+          "when": "view == trivyIssueViewer && trivy.fixedOnly",
           "group": "3_setting@3"
         }
       ],
       "trivyConfigMenu": [
         {
           "command": "trivy.useConfigFile",
-          "when": "view == trivy.issueview && !trivy.useConfigFile",
+          "when": "view == trivyIssueViewer && !trivy.useConfigFile",
           "group": "1_config@1"
         },
         {
           "command": "trivy.disableUseConfigFile",
-          "when": "view == trivy.issueview && trivy.useConfigFile",
+          "when": "view == trivyIssueViewer && trivy.useConfigFile",
           "group": "1_config@1"
         },
         {
           "command": "trivy.onlyUseConfigFile",
-          "when": "view == trivy.issueview && !trivy.onlyUseConfigFile",
+          "when": "view == trivyIssueViewer && !trivy.onlyUseConfigFile",
           "group": "1_config@2"
         },
         {
           "command": "trivy.disableOnlyUseConfigFile",
-          "when": "view == trivy.issueview && trivy.onlyUseConfigFile",
+          "when": "view == trivyIssueViewer && trivy.onlyUseConfigFile",
           "group": "1_config@2"
         },
         {
           "command": "trivy.setConfigFilePath",
-          "when": "view == trivy.issueview && !trivy.configFilePath",
+          "when": "view == trivyIssueViewer && !trivy.configFilePath",
           "group": "1_config@3"
         },
         {
           "command": "trivy.unsetConfigFilePath",
-          "when": "view == trivy.issueview && trivy.configFilePath",
+          "when": "view == trivyIssueViewer && trivy.configFilePath",
           "group": "1_config@4"
         }
       ],
       "trivyIgnoreMenu": [
         {
           "command": "trivy.useIgnoreFile",
-          "when": "view == trivy.issueview && !trivy.useIgnoreFile",
+          "when": "view == trivyIssueViewer && !trivy.useIgnoreFile",
           "group": "1_ignore@1"
         },
         {
           "command": "trivy.disableUseIgnoreFile",
-          "when": "view == trivy.issueview && trivy.useIgnoreFile",
+          "when": "view == trivyIssueViewer && trivy.useIgnoreFile",
           "group": "1_ignore@1"
         },
         {
           "command": "trivy.setIgnoreFilePath",
-          "when": "view == trivy.issueview && !trivy.ignoreFilePath",
+          "when": "view == trivyIssueViewer && !trivy.ignoreFilePath",
           "group": "1_ignore@2"
         },
         {
           "command": "trivy.unsetIgnoreFilePath",
-          "when": "view == trivy.issueview && trivy.ignoreFilePath",
+          "when": "view == trivyIssueViewer && trivy.ignoreFilePath",
           "group": "1_ignore@3"
         }
       ],
@@ -402,6 +404,37 @@
       {
         "id": "trivyConfigMenu",
         "label": "Config File"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "trivy",
+        "title": "Trivy Quick Start",
+        "description": "This walkthrough will guide you through the basics of using Trivy in VS Code.",
+        "steps": [
+          {
+            "id": "opentrivy",
+            "title": "Open Trivy explorer from the Activity Bar",
+            "description": "Click on the Trivy icon in the Activity Bar to open the Trivy explorer.",
+            "media": {
+              "image": "media/open.png",
+              "altText": "Open Trivy"
+            },
+            "completionEvents": ["onView:trivyIssueViewer"]
+          },
+          {
+            "id": "runcommand",
+            "title": "Run Trivy",
+            "description": "Open a directory you want to scan then [Run Trivy](command:trivy.scan).",
+            "media": {
+              "image": "media/scan.png",
+              "altText": "Run Trivy"
+            },
+            "comletionEvents": [
+              "onCommand:trivy.scan"
+            ]
+          }
+        ]
       }
     ]
   },
