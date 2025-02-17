@@ -17,6 +17,7 @@ jobs:
   
       - name: Set release version
         run: |
+          VERSION=${GITHUB_REF#refs/*/}
           jq --arg version "$VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
 
       - name: Install npm dependencies    
