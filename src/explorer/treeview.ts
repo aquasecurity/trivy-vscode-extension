@@ -10,6 +10,7 @@ import {
 } from './result';
 import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
 import { sortBySeverity } from '../utils';
+import { Ignorer } from '../ignorer';
 
 export class TrivyTreeViewProvider
   implements vscode.TreeDataProvider<TrivyTreeItem>
@@ -47,6 +48,8 @@ export class TrivyTreeViewProvider
 
   // when there is trivy output file, load the results
   async loadResultData() {
+    const config = vscode.workspace.getConfiguration('trivy');
+    const ig = new Ignorer(config);
     this.resultData.clear();
     if (
       this.resultsStoragePath !== '' &&
@@ -64,6 +67,7 @@ export class TrivyTreeViewProvider
         files.forEach((file) => {
           const resultFile = path.join(this.resultsStoragePath, file);
           const workspaceName = file.replace('_results.json', '');
+
           if (fs.existsSync(resultFile)) {
             const content = fs.readFileSync(resultFile, 'utf8');
             try {
@@ -75,7 +79,9 @@ export class TrivyTreeViewProvider
               const trivyResults: TrivyResult[] = [];
               for (let i = 0; i < results.length; i++) {
                 const element = results[i];
-                trivyResults.push(...processResult(element, workspaceName));
+                trivyResults.push(
+                  ...processResult(element, workspaceName, ig)
+                );
               }
               this.resultData.set(workspaceName, trivyResults);
             } catch (error) {

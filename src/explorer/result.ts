@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { Ignorer } from '../ignorer';
+
 export class TrivyResult {
   public extraData: Vulnerability | Misconfiguration | Secret | string;
   constructor(
@@ -57,12 +59,18 @@ export class Secret {
 
 export const processResult = (
   result: any,
-  workspaceName: string
+  workspaceName: string,
+  ignorer: Ignorer
 ): TrivyResult[] => {
   const results: TrivyResult[] = [];
 
+
   if (result.Misconfigurations) {
     for (let i = 0; i < result.Misconfigurations.length; i++) {
+      if (ignorer.isFileIgnored(result.Target, workspaceName)) {
+        continue;
+      }
+
       const element = result.Misconfigurations[i];
 
       let startLine = element.CauseMetadata
@@ -105,6 +113,9 @@ export const processResult = (
 
   if (result.Vulnerabilities) {
     for (let i = 0; i < result.Vulnerabilities.length; i++) {
+      if (ignorer.isFileIgnored(result.Target, workspaceName)) {
+        continue;
+      }
       const element = result.Vulnerabilities[i];
       const id = element.VulnerabilityID;
       const title = element.Title;
@@ -134,6 +145,9 @@ export const processResult = (
 
   if (result.Secrets) {
     for (let i = 0; i < result.Secrets.length; i++) {
+      if (ignorer.isFileIgnored(result.Target, workspaceName)) {
+        continue;
+      }
       const element = result.Secrets[i];
       const id = element.RuleID;
       const title = element.Title;

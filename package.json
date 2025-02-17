@@ -3,7 +3,7 @@
   "displayName": "Trivy Vulnerability Scanner",
   "publisher": "AquaSecurityOfficial",
   "description": "A VS Code extension for Trivy.",
-  "icon": "images/aqualogo.png",
+  "icon": "images/icon.png",
   "version": "0.8.0",
   "engines": {
     "vscode": "^1.54.0"
@@ -86,6 +86,12 @@
           "type": "string",
           "default": "",
           "description": "Path to the trivy.yaml file in the workspace",
+          "scope": "window"
+        },
+        "trivy.ignoreFilesInGitIgnore": {
+          "type": "boolean",
+          "default": false,
+          "description": "Ignore files in .gitignore",
           "scope": "window"
         }
       }
@@ -441,6 +447,7 @@
   },
   "dependencies": {
     "@types/uuid": "^8.3.4",
+    "ignore": "^7.0.3",
     "semver": "^7.5.2",
     "typescipt": "^1.0.0",
     "uuid": "^8.3.2"
