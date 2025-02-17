@@ -79,9 +79,7 @@ export class TrivyTreeViewProvider
               const trivyResults: TrivyResult[] = [];
               for (let i = 0; i < results.length; i++) {
                 const element = results[i];
-                trivyResults.push(
-                  ...processResult(element, workspaceName, ig)
-                );
+                trivyResults.push(...processResult(element, workspaceName, ig));
               }
               this.resultData.set(workspaceName, trivyResults);
             } catch (error) {
