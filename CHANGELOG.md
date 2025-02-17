@@ -1,5 +1,8 @@
 # Change Log
 
+### 0.8.1 
+- Add support for ignoring files in the .gitignore file
+
 ### 0.8.0
 - Add support for managing the config through the UI
 - Add support for multiple workspaces in the explorer
