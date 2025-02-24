@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { showErrorMessage } from '../notification/notifications';
 
 // TrivyCommandOption is an interface that defines the structure of the TrivyCommandOption class.
 // The TrivyCommandOption class has an apply method that takes a command and a configuration and returns
@@ -103,7 +104,7 @@ export class IgnoreFilePathOption implements TrivyCommandOption {
       if (ignoreFilePath) {
         command.push(`--ignorefile=${ignoreFilePath}`);
       } else {
-        vscode.window.showWarningMessage('Trivy ignore file path is not set.');
+        showErrorMessage('Trivy ignore file path is not set.');
         config.update('useIgnoreFile', false);
       }
     }
@@ -123,9 +124,7 @@ export class ConfigFilePathOption implements TrivyCommandOption {
       if (configFilePath) {
         command.push(`--config=${configFilePath}`);
       } else {
-        vscode.window.showWarningMessage(
-          'Trivy config file path override is not set.'
-        );
+        showErrorMessage('Trivy config file path override is not set.');
         config.update('useConfigFile', false);
       }
     }

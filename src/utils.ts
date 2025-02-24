@@ -1,5 +1,5 @@
 import { Secret, TrivyResult } from './explorer/result';
-import vscode from 'vscode';
+import { stripVTControlCharacters } from 'node:util';
 
 export function getSeverityPosition(severity: string): number {
   switch (severity) {
@@ -31,13 +31,6 @@ export const sortBySeverity = (a: TrivyResult, b: TrivyResult): number => {
   return 0;
 };
 
-export async function showWarningWithLink(
-  message: string,
-  outputChannel: vscode.OutputChannel
-) {
-  const action = await vscode.window.showWarningMessage(message, 'View Logs');
-
-  if (action === 'View Logs') {
-    outputChannel.show(true);
-  }
+export function stripAnsi(str: string): string {
+  return stripVTControlCharacters(str);
 }

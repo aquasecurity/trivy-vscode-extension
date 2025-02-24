@@ -13,12 +13,13 @@ import path from 'path';
 import { TrivyWrapper } from '../../src/command/command';
 import { ExitCodeOption, QuietOption } from '../../src/command/options';
 import * as child from 'child_process';
+import { showErrorMessage, showInformationMessage } from '../../src/notification/notifications';
 
 const testsRoot = path.resolve(__dirname, '..');
   
 suite('extension', function (): void {
   this.timeout(10000); // Give the test 10 seconds to allow for the CI vscode to download
-  vscode.window.showInformationMessage('Start all tests.');
+  showInformationMessage('Start all tests.');
 
   const runCommand = function(projectPath: string): string {
     const targetDir = fs.mkdtempSync(projectPath);
@@ -40,13 +41,13 @@ suite('extension', function (): void {
     } catch (result: any) {
       switch (result.status) {
         case 10: {
-          vscode.window.showErrorMessage(
+          showErrorMessage(
             'Trivy: Vulnerabilities found, check logs for details.'
           );
           return result.stdout.toString();
         }
         default: {
-          vscode.window.showErrorMessage(
+          showErrorMessage(
             'Failed to run Trivy scan, error: ' +
               result.status +
               ' check logs for details.'

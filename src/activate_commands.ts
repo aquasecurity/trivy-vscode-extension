@@ -2,7 +2,9 @@
 
 import * as vscode from 'vscode';
 import { TrivyWrapper } from './command/command';
-import { TrivyTreeViewProvider } from './explorer/treeview';
+import { TrivyTreeViewProvider } from './explorer/treeview_provider';
+import { setupCommercial } from './commercial/setup';
+import { TrivyHelpProvider } from './explorer/helpview';
 
 function register(
   context: vscode.ExtensionContext,
@@ -38,13 +40,27 @@ export function registerCommands(
   context: vscode.ExtensionContext,
   trivyWrapper: TrivyWrapper,
   misconfigProvider: TrivyTreeViewProvider,
+  assuranceProvider: TrivyTreeViewProvider,
+  helpProvider: TrivyHelpProvider,
   config: vscode.WorkspaceConfiguration
 ) {
-  register(context, 'trivy.scan', () => trivyWrapper.run());
+  register(context, 'trivy.scan', () => trivyWrapper.run(context.secrets));
   register(context, 'trivy.version', () =>
     trivyWrapper.showCurrentTrivyVersion()
   );
-  register(context, 'trivy.refresh', () => misconfigProvider.refresh());
+  register(context, 'trivy.refresh', () => {
+    misconfigProvider.refresh();
+    assuranceProvider.refresh();
+  });
+  register(context, 'trivy.reset', () => {
+    vscode.commands.executeCommand(
+      'setContext',
+      'trivy.useAquaPlatform',
+      false
+    );
+    helpProvider.clear();
+    misconfigProvider.reset();
+  });
   register(context, 'trivy.useIgnoreFile', () =>
     updateConfigAndContext(config, 'useIgnoreFile', true)
   );
@@ -95,6 +111,10 @@ export function registerCommands(
   });
   register(context, 'trivy.setConfigFilePath', async () => {
     await getFilePath(config, 'Config file', 'configFilePath', ['*']);
+  });
+
+  register(context, 'trivy.setupCommercial', () => {
+    setupCommercial(context);
   });
 }
 

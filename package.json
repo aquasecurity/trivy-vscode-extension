@@ -11,9 +11,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -95,6 +93,22 @@
           "default": false,
           "description": "Ignore files in .gitignore",
           "scope": "window"
+        },
+        "trivy.aquaApiUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Aqua API URL"
+        },
+        "trivy.aquaAuthenticationUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Aqua API URL"
+        },
+        "trivy.useAquaPlatform": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use Aqua Platform for scanning",
+          "scope": "window"
         }
       }
     },
@@ -106,6 +120,18 @@
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "trivy.reset",
+        "title": "Trivy: Reset the issue list",
+        "icon": {
+          "light": "resources/light/trash.svg",
+          "dark": "resources/dark/trash.svg"
+        }
+      },
+      {
+        "command": "trivy.setupCommercial",
+        "title": "Trivy Aqua Platform Integration"
       },
       {
         "command": "trivy.refresh",
@@ -198,17 +224,24 @@
           "contextualTitle": "Findings Explorer"
         },
         {
+          "id": "trivyAssuranceViewer",
+          "name": "Assurance Policies",
+          "icon": "media/trivy.svg",
+          "contextualTitle": "Assurance Policies",
+          "when": "trivy.useAquaPlatform"
+        },
+        {
           "id": "trivyHelpViewer",
-          "name": "Findings Help",
+          "name": "Details",
           "type": "webview",
-          "contextualTitle": "Findings Help"
+          "contextualTitle": "Details"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "trivyIssueViewer",
-        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\nTrivy configuration settings can be configured in the extension settings."
+        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\n\nIf using with Aqua Platform you can use the button below to configure\n[Configure Aqua Platform](command:trivy.setupCommercial)\n"
       },
       {
         "view": "trivyHelpViewer",
@@ -221,6 +254,11 @@
           "command": "trivy.scan",
           "when": "view == trivyIssueViewer",
           "group": "navigation@1"
+        },
+        {
+          "command": "trivy.reset",
+          "when": "view == trivyIssueViewer",
+          "group": "navigation@2"
         },
         {
           "submenu": "trivyIgnoreMenu",
@@ -261,6 +299,11 @@
           "command": "trivy.disableOnlyFixedIssues",
           "when": "view == trivyIssueViewer && trivy.fixedOnly",
           "group": "3_setting@3"
+        },
+        {
+          "command": "trivy.setupCommercial",
+          "when": "view == trivyIssueViewer",
+          "group": "4_aquaPlatform"
         }
       ],
       "trivyConfigMenu": [
@@ -420,7 +463,9 @@
               "image": "media/open.png",
               "altText": "Open Trivy"
             },
-            "completionEvents": ["onView:trivyIssueViewer"]
+            "completionEvents": [
+              "onView:trivyIssueViewer"
+            ]
           },
           {
             "id": "runcommand",
@@ -430,8 +475,21 @@
               "image": "media/scan.png",
               "altText": "Run Trivy"
             },
-            "comletionEvents": [
+            "completionEvents": [
               "onCommand:trivy.scan"
+            ]
+
+          },
+          {
+            "id": "setupCommercial",
+            "title": "Connect to Aqua Platform",
+            "description": "Configure access to the [Aqua Platform](command:trivy.setupCommercial).",
+            "media": {
+              "image": "media/platform.png",
+              "altText": "Aqua Platform"
+            },
+            "completionEvents": [
+              "onCommand:trivy.setupCommercial"
             ]
           }
         ]
@@ -456,7 +514,7 @@
     "@eslint/js": "^9.19.0",
     "@types/glob": "^7.1.1",
     "@types/mocha": "^7.0.2",
-    "@types/node": "^13.11.0",
+    "@types/node": "^13.13.52",
     "@types/semver": "^7.3.6",
     "@types/vscode": "^1.54.0",
     "@typescript-eslint/eslint-plugin": "^8.23.0",
@@ -480,6 +538,7 @@
   },
   "dependencies": {
     "@types/uuid": "^8.3.4",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "ignore": "^7.0.3",
     "semver": "^7.5.2",
     "typescipt": "^1.0.0",

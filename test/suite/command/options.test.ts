@@ -24,7 +24,7 @@ class mockConfig{
 
 suite('trivy command options', function (): void {
 
-  vscode.window.showInformationMessage('Start trivy command options tests.');
+  showInformationMessage('Start trivy command options tests.');
 
   test('Trivy debug command option', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;

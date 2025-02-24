@@ -1,6 +1,6 @@
 import path from 'path';
 import * as vscode from 'vscode';
-import { TrivyResult } from './result';
+import { PolicyResult, TrivyResult } from './result';
 
 export class TrivyTreeItem extends vscode.TreeItem {
   public filename: string;
@@ -19,7 +19,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
     public collapsibleState: vscode.TreeItemCollapsibleState,
     public itemType: TrivyTreeItemType,
     public properties?: {
-      check?: TrivyResult;
+      check?: TrivyResult | PolicyResult;
       command?: vscode.Command;
       workspacePath?: string;
     }
@@ -35,6 +35,12 @@ export class TrivyTreeItem extends vscode.TreeItem {
     this.code = properties?.check?.id || '';
 
     switch (itemType) {
+      case TrivyTreeItemType.assurancePolicy:
+        this.code = (properties?.check as PolicyResult)?.matchCode || '';
+        this.title = (properties?.check as PolicyResult)?.title || '';
+        this.tooltip = (properties?.check as PolicyResult)?.description || '';
+        this.iconPath = new vscode.ThemeIcon('output');
+        break;
       case TrivyTreeItemType.workspace:
         this.title = workspaceName;
         this.tooltip = properties?.workspacePath;
@@ -44,6 +50,8 @@ export class TrivyTreeItem extends vscode.TreeItem {
       case TrivyTreeItemType.vulnerabilityFile:
       case TrivyTreeItemType.secretFile:
       case TrivyTreeItemType.misconfigInstance:
+      case TrivyTreeItemType.singleCodeAssurancePolicy:
+      case TrivyTreeItemType.multiCodeAssurancePolicy:
         this.tooltip = `${properties?.check?.description}`;
         this.iconPath = vscode.ThemeIcon.File;
         this.resourceUri = vscode.Uri.parse(this.filename);
@@ -79,14 +87,14 @@ export class TrivyTreeItem extends vscode.TreeItem {
             '..',
             '..',
             'resources',
-            this.severityIcon(this.severity)
+            this.severityIcon(this.severity.toString())
           ),
           dark: path.join(
             __filename,
             '..',
             '..',
             'resources',
-            this.severityIcon(this.severity)
+            this.severityIcon(this.severity.toString())
           ),
         };
         break;
@@ -96,11 +104,15 @@ export class TrivyTreeItem extends vscode.TreeItem {
   severityIcon = (severity: string): string => {
     switch (severity) {
       case 'CRITICAL':
+      case '4':
         return 'critical.svg';
+      case '3':
       case 'HIGH':
         return 'high.svg';
+      case '2':
       case 'MEDIUM':
         return 'medium.svg';
+      case '1':
       case 'LOW':
         return 'low.svg';
     }
@@ -119,4 +131,7 @@ export enum TrivyTreeItemType {
   secretInstance = 7,
   secretCode = 8,
   workspace = 9,
+  assurancePolicy = 10,
+  multiCodeAssurancePolicy = 11,
+  singleCodeAssurancePolicy = 12,
 }

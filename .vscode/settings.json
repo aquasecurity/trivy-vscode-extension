@@ -7,5 +7,32 @@
         "out": true // set this to false to include "out" folder in search results
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-    "typescript.tsc.autoDetect": "off"
+    "typescript.tsc.autoDetect": "off",
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#133e78",
+        "activityBar.background": "#133e78",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#dc2372",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "editorGroup.border": "#133e78",
+        "panel.border": "#133e78",
+        "sash.hoverBorder": "#133e78",
+        "statusBar.background": "#0c274c",
+        "statusBar.border": "#0c274c",
+        "statusBar.debuggingBackground": "#4c310c",
+        "statusBar.debuggingBorder": "#4c310c",
+        "statusBar.debuggingForeground": "#e7e7e7",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#133e78",
+        "statusBarItem.remoteBackground": "#0c274c",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#0c274c",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.border": "#0c274c",
+        "titleBar.inactiveBackground": "#0c274c99",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#0c274c"
 }

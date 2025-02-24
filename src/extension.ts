@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
 import { TrivyHelpProvider } from './explorer/helpview';
-import { TrivyTreeViewProvider } from './explorer/treeview';
+import { TrivyTreeViewProvider } from './explorer/treeview_provider';
 import { TrivyWrapper } from './command/command';
 import { registerCommands } from './activate_commands';
+import { showErrorMessage } from './notification/notifications';
 
+const disposables: vscode.Disposable[] = [];
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  const outputChannel = vscode.window.createOutputChannel('Trivy Scan');
-
   const projectRootPath = vscode.workspace.getWorkspaceFolder;
   if (projectRootPath === undefined) {
-    vscode.window.showErrorMessage('Trivy: Must open a project file to scan.');
+    showErrorMessage('Trivy: Must open a project file to scan.');
     return;
   }
 
@@ -20,18 +20,18 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(diagnosticsCollection);
 
   const helpProvider = new TrivyHelpProvider();
-  const misconfigProvider = new TrivyTreeViewProvider(
-    context,
-    diagnosticsCollection
-  );
-  const trivyWrapper = new TrivyWrapper(
-    outputChannel,
-    misconfigProvider.resultsStoragePath
-  );
+  const findingProvider = new TrivyTreeViewProvider(context, diagnosticsCollection,  'finding');
+  const assuranceProvider = new TrivyTreeViewProvider(context, diagnosticsCollection, 'policy');
+  const trivyWrapper = new TrivyWrapper(findingProvider.resultsStoragePath);
 
   // creating the issue tree explicitly to allow access to events
-  const issueTree = vscode.window.createTreeView('trivyIssueViewer', {
-    treeDataProvider: misconfigProvider,
+  const findingTree = vscode.window.createTreeView('trivyIssueViewer', {
+    treeDataProvider: findingProvider,
+    showCollapseAll: true,
+  });
+
+  const assuranceTree = vscode.window.createTreeView('trivyAssuranceViewer', {
+    treeDataProvider: assuranceProvider,
     showCollapseAll: true,
   });
 
@@ -39,16 +39,31 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerWebviewViewProvider('trivyHelpViewer', helpProvider)
   );
 
-  issueTree.onDidChangeSelection(function (event) {
+  findingTree.onDidChangeSelection(function (event) {
     const treeItem = event.selection[0];
     if (treeItem) {
-      helpProvider.update(treeItem);
+      helpProvider.update(treeItem, 'finding');
+    }
+  });
+
+  assuranceTree.onDidChangeSelection(function (event) {
+    const treeItem = event.selection[0];
+    if (treeItem) {
+      helpProvider.update(treeItem, 'policy');
     }
   });
 
   const config = vscode.workspace.getConfiguration('trivy');
-  context.subscriptions.push(issueTree);
-  registerCommands(context, trivyWrapper, misconfigProvider, config);
+  context.subscriptions.push(findingTree);
+  context.subscriptions.push(assuranceTree);
+  registerCommands(
+    context,
+    trivyWrapper,
+    findingProvider,
+    assuranceProvider,
+    helpProvider,
+    config
+  );
 
   // if the config changes externally, we need to ensure that the context used for menus
   // is updated to reflect this too
@@ -71,12 +86,10 @@ function syncContextWithConfig(config: vscode.WorkspaceConfiguration) {
     'fixedOnly',
     'onlyUseConfigFile',
     'useConfigFile',
+    'useAquaPlatform',
   ].forEach((key) => {
-    vscode.commands.executeCommand(
-      'setContext',
-      `trivy.${key}`,
-      config.get(key, false)
-    );
+    const configVal = config.get(key, false);
+    vscode.commands.executeCommand('setContext', `trivy.${key}`, configVal);
   });
 
   ['ignoreFilePath', 'configFilePath'].forEach((key) => {
@@ -89,4 +102,6 @@ function syncContextWithConfig(config: vscode.WorkspaceConfiguration) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+  disposables.forEach((d) => d.dispose());
+}
