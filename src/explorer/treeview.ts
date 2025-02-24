@@ -25,8 +25,13 @@ export class TrivyTreeViewProvider
   private storagePath: string = '';
   public readonly resultsStoragePath: string = '';
   public items: TrivyTreeItem[] = [];
+  private diagnosticsCollection: vscode.DiagnosticCollection;
 
-  constructor(context: vscode.ExtensionContext) {
+  constructor(
+    context: vscode.ExtensionContext,
+    diagnosticsCollection: vscode.DiagnosticCollection
+  ) {
+    this.diagnosticsCollection = diagnosticsCollection;
     if (context.storageUri) {
       this.storagePath = context.storageUri.fsPath;
       console.log(`storage path is ${this.storagePath}`);
@@ -40,8 +45,61 @@ export class TrivyTreeViewProvider
     }
   }
 
+  updateProblems(file: string, trivyResults: TrivyResult[]) {
+    if (trivyResults.length === 0) {
+      return;
+    }
+
+    const fileDiagnostics = new Map<string, vscode.Diagnostic[]>();
+    trivyResults.forEach((item) => {
+      try {
+        const startLine = Math.max(item.startLine, 1);
+        const endLine = Math.max(item.endLine, 1);
+        const range = new vscode.Range(
+          new vscode.Position(startLine - 1, 0),
+          new vscode.Position(endLine, 0)
+        );
+
+        let diagSeverity = vscode.DiagnosticSeverity.Information;
+        if (item.severity === 'CRITICAL' || item.severity === 'HIGH') {
+          diagSeverity = vscode.DiagnosticSeverity.Error;
+        }
+        if (item.severity === 'MEDIUM') {
+          diagSeverity = vscode.DiagnosticSeverity.Warning;
+        }
+
+        const diagnostic = new vscode.Diagnostic(
+          range,
+          item.title.toString() || '',
+          diagSeverity
+        );
+        diagnostic.source = 'trivy';
+        diagnostic.code = item.id;
+
+        const workspaceFilename = vscode.workspace.workspaceFolders?.find(
+          (ws) => ws.name === item.workspaceName
+        )?.uri.fsPath;
+        if (!workspaceFilename) {
+          return;
+        }
+        const fullFilename = path.join(workspaceFilename, item.filename);
+        if (!fileDiagnostics.has(fullFilename)) {
+          fileDiagnostics.set(fullFilename, []);
+        }
+        fileDiagnostics.get(fullFilename)?.push(diagnostic);
+      } catch (error) {
+        console.error(`Error updating problems: ${error}`);
+      }
+    });
+
+    fileDiagnostics.forEach((diags, filename) => {
+      this.diagnosticsCollection.set(vscode.Uri.file(filename), diags);
+    });
+  }
+
   refresh(): void {
     this.items = [];
+    this.diagnosticsCollection.clear();
     this.taintResults = true;
     this.loadResultData();
   }
@@ -81,6 +139,7 @@ export class TrivyTreeViewProvider
                 const element = results[i];
                 trivyResults.push(...processResult(element, workspaceName, ig));
               }
+              this.updateProblems(file, trivyResults);
               this.resultData.set(workspaceName, trivyResults);
             } catch (error) {
               console.debug(`Error loading results file ${file}: ${error}`);
