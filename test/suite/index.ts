@@ -1,6 +1,7 @@
 import * as path from 'path';
-import Mocha from 'mocha';
+
 import glob from 'glob';
+import Mocha from 'mocha';
 
 export function run(): Promise<void> {
   const mocha = new Mocha({

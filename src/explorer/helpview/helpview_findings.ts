@@ -1,80 +1,59 @@
-import { Webview, WebviewView, WebviewViewProvider } from 'vscode';
-import { Misconfiguration, TrivyResult, Vulnerability, Secret } from './result';
-import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
+import {
+  Misconfiguration,
+  Secret,
+  TrivyResult,
+  Vulnerability,
+} from '../result';
+import { TrivyTreeItem } from '../treeview/treeitem';
+import { TrivyTreeItemType } from '../treeview/treeitem_types';
 
-const baseHTML = `
-<style>
+/**
+ * Get the Trivy result data for the selected tree item
+ * @param item Selected tree item
+ * @param html HTML content to append to
+ * @returns The HTML content with the Trivy result data
+ */
+export function getTrivyResultData(item: TrivyTreeItem, html: string): string {
+  const result = item.properties?.check as TrivyResult;
 
-th {
-  text-align: left;
-}
-
-ul {
-  margin: 0;
-  padding: 0;
-  padding-left: 10px;
-  margin-left: 5px;
-}
-
-</style>
-
-
-`;
-
-export class TrivyHelpProvider implements WebviewViewProvider {
-  private view: Webview | undefined;
-
-  resolveWebviewView(webviewView: WebviewView): void | Thenable<void> {
-    this.view = webviewView.webview;
-    this.update(null);
+  const codeData = result;
+  if (codeData === undefined) {
+    return `<h2>No check data available</h2>`;
   }
 
-  update(item: TrivyTreeItem | null) {
-    if (this.view === undefined) {
-      return;
-    }
-    if (item === null) {
-      return;
-    }
-    const codeData = item.properties?.check;
-    if (codeData === undefined) {
-      this.view.html = `
-<h2>No check data available</h2>
-`;
-      return;
-    }
-
-    let html: string = baseHTML;
-    switch (item.itemType) {
-      case TrivyTreeItemType.misconfigCode:
-      case TrivyTreeItemType.misconfigInstance:
-        html += getMisconfigurationHtml(item.properties?.check);
-        break;
-      case TrivyTreeItemType.vulnerabilityCode:
-        html += getVulnerabilityHtml(item.properties?.check);
-        break;
-      case TrivyTreeItemType.secretInstance:
-        html += getSecretHtml(item.properties?.check);
-        break;
-      default:
-        return '';
-    }
-
-    if (codeData.references) {
-      html += '<ul>';
-      for (let i = 0; i < codeData.references.length; i++) {
-        const reference = codeData.references[i];
-        html += `<li><a href="${reference}">${reference}</a></li>
-            `;
-      }
-      html += '</ul>';
-    }
-
-    this.view.html = html;
-    return;
+  switch (item.itemType) {
+    case TrivyTreeItemType.misconfigCode:
+    case TrivyTreeItemType.misconfigInstance:
+      html += getMisconfigurationHtml(result);
+      break;
+    case TrivyTreeItemType.vulnerabilityCode:
+      html += getVulnerabilityHtml(result);
+      break;
+    case TrivyTreeItemType.secretInstance:
+      html += getSecretHtml(result);
+      break;
+    default:
+      return '';
   }
+
+  if (codeData.references) {
+    html += '<ul>';
+    for (let i = 0; i < codeData.references.length; i++) {
+      const reference = codeData.references[i];
+      html += `<li><a href="${reference}">${reference}</a></li>
+          `;
+    }
+    html += '</ul>';
+  }
+
+  return html;
 }
 
+/**
+ * Get the HTML content for a vulnerability
+ * @param result The Trivy result
+ * @returns The HTML content for a vulnerability
+ */
 function getVulnerabilityHtml(result?: TrivyResult): string {
   if (result === undefined) {
     return '';
@@ -119,6 +98,11 @@ function getVulnerabilityHtml(result?: TrivyResult): string {
     `;
 }
 
+/**
+ * Get the HTML content for a misconfiguration
+ * @param result The Trivy result
+ * @returns The HTML content for a misconfiguration
+ */
 function getMisconfigurationHtml(result?: TrivyResult): string {
   if (result === undefined) {
     return '';
@@ -155,6 +139,11 @@ function getMisconfigurationHtml(result?: TrivyResult): string {
     `;
 }
 
+/**
+ * Get the HTML content for a secret
+ * @param result The Trivy result
+ * @returns The HTML content for a secret
+ */
 function getSecretHtml(result?: TrivyResult): string {
   if (result === undefined) {
     return '';

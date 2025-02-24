@@ -1,31 +1,37 @@
 on:
   push:
     tags:
-      - "*"
-name: Deploy Extension
+      - '*'
+
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 23
-  
-      - name: Set release version
-        run: |
-          VERSION=${GITHUB_REF#refs/*/}
-          jq --arg version "$VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
+          node-version: 23.x
+          cache: npm
 
-      - name: Install npm dependencies    
-        run: npm install
+      - run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${{ github.ref_name }}"
+          # Remove 'v' prefix from tag if present
+          TAG_VERSION=${TAG_VERSION#v}
 
-      - name: Publish 
-        uses: lannonbr/vsce-action@4.0.0
-        with:
-          args: "publish -p $VSCE_TOKEN"
+          echo "Package version: $PKG_VERSION"
+          echo "Tag version: $TAG_VERSION"
+
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Error: Version mismatch between package.json ($PKG_VERSION) and git tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "✅ Version check passed"
+      - run: npm ci
+      - run: npm run build
+      - run: npm run package
         env:
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          RELEASE_VERSION: '${{ github.ref_name }}'
+      - run: npm run publish
+        env:
+          PUBLISHER_TOKEN: ${{ secrets.VSCE_TOKEN }}

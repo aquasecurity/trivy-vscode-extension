@@ -1,7 +1,16 @@
-import * as vscode from 'vscode';
 import * as child from 'child_process';
-import * as path from 'path';
 import { unlinkSync, readdirSync, existsSync } from 'fs';
+import * as path from 'path';
+
+import * as vscode from 'vscode';
+
+import { updateEnvironment } from '../commercial/env';
+import {
+  showErrorMessage,
+  showInformationMessage,
+  showWarningWithLink,
+} from '../notification/notifications';
+
 import {
   ConfigFilePathOption,
   DebugOption,
@@ -15,11 +24,6 @@ import {
   TrivyCommandOption,
 } from './options';
 import { Output } from './output';
-import {
-  showErrorMessage,
-  showInformationMessage,
-  showWarningWithLink,
-} from '../notification/notifications';
 
 /**
  * Types of Trivy scans
@@ -63,46 +67,45 @@ export class TrivyWrapper {
    * Runs Trivy scan on all workspace folders
    * @param secrets Secret storage for API keys and tokens
    */
-  async run(): Promise<void> {
-    if (this.running) {
-      return;
-    }
-
-    this.outputChannel.appendLine('');
-    this.outputChannel.appendLine('Running Trivy to update results');
-
-    // Ensure Trivy is installed before continuing
-    if (!this.checkTrivyInstalled()) {
-      showErrorMessage('Trivy could not be found, check Output window');
-      return;
-    }
-
-    // Get workspace folders
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-      showErrorMessage('No workspace folders found');
-      return;
-    }
-
-    // Clean up previous result files
-    await this.cleanupPreviousResults();
-
-    // Get the Trivy binary path
-    const binary = this.getBinaryPath();
-
-    // Set context to disable views during scanning
-    await vscode.commands.executeCommand(
-      'setContext',
-      'trivy.scanRunning',
-      true
-    );
-    this.running = true;
-
+  async run(secrets: vscode.SecretStorage): Promise<void> {
     try {
+      if (this.running) {
+        return;
+      }
+      this.running = true;
+      // Set context to disable views during scanning
+      await vscode.commands.executeCommand(
+        'setContext',
+        'trivy.scanRunning',
+        true
+      );
+
+      this.outputChannel.appendLine('');
+      this.outputChannel.appendLine('Running Trivy to update results');
+
+      // Ensure Trivy is installed before continuing
+      if (!this.checkTrivyInstalled()) {
+        showErrorMessage('Trivy could not be found, check Output window');
+        return;
+      }
+
+      // Get workspace folders
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders || workspaceFolders.length === 0) {
+        showErrorMessage('No workspace folders found');
+        return;
+      }
+
+      // Clean up previous result files
+      await this.cleanupPreviousResults();
+
+      // Get the Trivy binary path
+      const binary = this.getBinaryPath();
+
       // Run scans for each workspace folder in sequence
       for (const workspaceFolder of workspaceFolders) {
         try {
-          await this.scanWorkspaceFolder(workspaceFolder, binary);
+          await this.scanWorkspaceFolder(workspaceFolder, binary, secrets);
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
@@ -111,6 +114,11 @@ export class TrivyWrapper {
           );
         }
       }
+
+      // Use a slight delay to ensure files are written before refreshing
+      setTimeout(() => {
+        vscode.commands.executeCommand('trivy.refresh');
+      }, 250);
 
       // Indicate that scanning is complete
       showInformationMessage('Trivy scanning complete');
@@ -121,10 +129,15 @@ export class TrivyWrapper {
     } finally {
       // Reset context to re-enable views
       this.running = false;
-      await vscode.commands.executeCommand(
-        'setContext',
-        'trivy.scanRunning',
-        false
+
+      setTimeout(
+        async () =>
+          await vscode.commands.executeCommand(
+            'setContext',
+            'trivy.scanRunning',
+            false
+          ),
+        500
       );
     }
   }
@@ -171,14 +184,23 @@ export class TrivyWrapper {
    */
   private async scanWorkspaceFolder(
     workspaceFolder: vscode.WorkspaceFolder,
-    binary: string
+    binary: string,
+    secrets: vscode.SecretStorage
   ): Promise<void> {
     // Get configuration
     const config = vscode.workspace.getConfiguration('trivy');
     const isAquaPlatformRun = config.get<boolean>('useAquaPlatform');
 
     // Set up environment
-    const env = { ...process.env };
+    let env = { ...process.env };
+
+    if (isAquaPlatformRun) {
+      const assuranceReportPath = path.join(
+        this.resultsStoragePath,
+        `${workspaceFolder.name}_assurance.json`
+      );
+      env = await updateEnvironment(config, secrets, env, assuranceReportPath);
+    }
 
     // Build command
     const workingPath = workspaceFolder.uri.fsPath;
@@ -486,11 +508,6 @@ export class TrivyWrapper {
             this.outputChannel.appendLine(
               'Reloading the Findings Explorer content'
             );
-
-            // Use a slight delay to ensure files are written before refreshing
-            setTimeout(() => {
-              vscode.commands.executeCommand('trivy.refresh');
-            }, 250);
 
             resolve();
           });

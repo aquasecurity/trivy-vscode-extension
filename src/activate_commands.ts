@@ -1,42 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
+
 import { TrivyWrapper } from './command/command';
-import { showErrorMessage } from './notification/notifications';
 import { installTrivy } from './command/install';
-import { TrivyTreeViewProvider } from './explorer/treeview';
-import { TrivyHelpProvider } from './explorer/helpview';
-
-/**
- * Command registration helper that adds proper typing and error handling
- * @param context Extension context
- * @param commandId The command ID to register
- * @param callback The function to execute when the command is called
- * @param errorMessage Optional error message to show if command fails
- */
-function registerCommand<T extends (...args: any[]) => any>(
-  context: vscode.ExtensionContext,
-  commandId: string,
-  callback: T,
-  errorMessage?: string
-): void {
-  const wrappedCallback = async (
-    ...args: Parameters<T>
-  ): Promise<ReturnType<T> | undefined> => {
-    try {
-      return (await callback(...args)) as ReturnType<T>;
-    } catch (error) {
-      console.error(`Error executing command ${commandId}:`, error);
-      showErrorMessage(
-        errorMessage || `Failed to execute ${commandId}: ${error}`
-      );
-      return undefined;
-    }
-  };
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(commandId, wrappedCallback)
-  );
-}
+import { setupCommercial } from './commercial/setup';
+import { TrivyHelpProvider } from './explorer/helpview/helpview';
+import { TrivyTreeViewProvider } from './explorer/treeview/treeview_provider';
+import { showErrorMessage } from './notification/notifications';
 
 /**
  * Opens a file picker dialog and updates configuration with selected path
@@ -105,6 +75,38 @@ async function updateConfigAndContext(
 }
 
 /**
+ * Command registration helper that adds proper typing and error handling
+ * @param context Extension context
+ * @param commandId The command ID to register
+ * @param callback The function to execute when the command is called
+ * @param errorMessage Optional error message to show if command fails
+ */
+function registerCommand<T extends (...args: any[]) => any>(
+  context: vscode.ExtensionContext,
+  commandId: string,
+  callback: T,
+  errorMessage?: string
+): void {
+  const wrappedCallback = async (
+    ...args: Parameters<T>
+  ): Promise<ReturnType<T> | undefined> => {
+    try {
+      return (await callback(...args)) as ReturnType<T>;
+    } catch (error) {
+      console.error(`Error executing command ${commandId}:`, error);
+      showErrorMessage(
+        errorMessage || `Failed to execute ${commandId}: ${error}`
+      );
+      return undefined;
+    }
+  };
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(commandId, wrappedCallback)
+  );
+}
+
+/**
  * Registers all commands for the Trivy extension
  * @param context Extension context
  * @param trivyWrapper Trivy command wrapper
@@ -116,7 +118,8 @@ async function updateConfigAndContext(
 export function registerCommands(
   context: vscode.ExtensionContext,
   trivyWrapper: TrivyWrapper,
-  findingsProvider: TrivyTreeViewProvider,
+  misconfigProvider: TrivyTreeViewProvider,
+  assuranceProvider: TrivyTreeViewProvider,
   helpProvider: TrivyHelpProvider,
   config: vscode.WorkspaceConfiguration
 ): void {
@@ -143,7 +146,12 @@ export function registerCommands(
   registerCommand(
     context,
     'trivy.scan',
-    () => trivyWrapper.run(),
+    () => {
+      misconfigProvider.reset();
+      assuranceProvider.reset();
+      helpProvider.clear();
+      trivyWrapper.run(context.secrets);
+    },
     'Failed to run Trivy scan'
   );
 
@@ -153,113 +161,61 @@ export function registerCommands(
     () => trivyWrapper.showCurrentTrivyVersion(),
     'Failed to get Trivy version'
   );
-
-  // Refresh and reset commands
-  registerCommand(context, 'trivy.refresh', async () => {
-    findingsProvider.refresh();
+  registerCommand(context, 'trivy.refresh', () => {
+    misconfigProvider.refresh();
+    assuranceProvider.refresh();
   });
-
-  registerCommand(context, 'trivy.reset', async () => {
-    await vscode.commands.executeCommand(
-      'setContext',
-      'trivy.useAquaPlatform',
-      false
-    );
-
-    findingsProvider.reset();
+  registerCommand(context, 'trivy.reset', () => {
+    misconfigProvider.reset();
+    assuranceProvider.reset();
+    helpProvider.clear();
   });
-
-  // Ignore file commands
-  registerCommand(context, 'trivy.useIgnoreFile', async () => {
-    await updateConfigAndContext(config, 'useIgnoreFile', true);
-  });
-
-  registerCommand(context, 'trivy.disableUseIgnoreFile', async () => {
-    await updateConfigAndContext(config, 'useIgnoreFile', false);
-  });
-
-  registerCommand(context, 'trivy.setIgnoreFilePath', async () => {
-    const filePath = await selectFilePath(
-      config,
-      'Ignore File',
-      'ignoreFilePath',
-      ['.yaml', '.yml', '.toml', '.json']
-    );
-    if (filePath) {
-      await updateConfigAndContext(config, 'useIgnoreFile', true);
-    }
-  });
-
-  registerCommand(context, 'trivy.unsetIgnoreFilePath', async () => {
-    await config.update(
-      'ignoreFilePath',
-      undefined,
-      vscode.ConfigurationTarget.Workspace
-    );
-    await updateConfigAndContext(config, 'useIgnoreFile', false);
-  });
-
-  // Scan mode commands
-  registerCommand(context, 'trivy.offlineScan', async () => {
-    await updateConfigAndContext(config, 'offlineScan', true);
-  });
-
-  registerCommand(context, 'trivy.disableOfflineScan', async () => {
-    await updateConfigAndContext(config, 'offlineScan', false);
-  });
-
-  registerCommand(context, 'trivy.scanForSecrets', async () => {
-    await updateConfigAndContext(config, 'secretScanning', true);
-  });
-
-  registerCommand(context, 'trivy.disableScanForSecrets', async () => {
-    await updateConfigAndContext(config, 'secretScanning', false);
-  });
-
-  registerCommand(context, 'trivy.onlyFixedIssues', async () => {
-    await updateConfigAndContext(config, 'fixedOnly', true);
-  });
-
-  registerCommand(context, 'trivy.disableOnlyFixedIssues', async () => {
-    await updateConfigAndContext(config, 'fixedOnly', false);
-  });
-
-  // Config file commands
-  registerCommand(context, 'trivy.useConfigFile', async () => {
-    await updateConfigAndContext(config, 'useConfigFile', true);
-  });
-
-  registerCommand(context, 'trivy.setConfigFilePath', async () => {
-    const filePath = await selectFilePath(
-      config,
-      'Config File',
-      'configFilePath',
-      ['.yaml', '.yml', '.toml', '.json']
-    );
-    if (filePath) {
-      await updateConfigAndContext(config, 'useConfigFile', true);
-    }
-  });
-
-  registerCommand(context, 'trivy.unsetConfigFilePath', async () => {
-    await config.update(
-      'configFilePath',
-      undefined,
-      vscode.ConfigurationTarget.Workspace
-    );
-  });
-
-  registerCommand(context, 'trivy.disableUseConfigFile', async () => {
-    await updateConfigAndContext(config, 'useConfigFile', false);
-    await updateConfigAndContext(config, 'onlyUseConfigFile', false);
+  registerCommand(context, 'trivy.useIgnoreFile', () =>
+    updateConfigAndContext(config, 'useIgnoreFile', true)
+  );
+  registerCommand(context, 'trivy.disableUseIgnoreFile', () =>
+    updateConfigAndContext(config, 'useIgnoreFile', false)
+  );
+  registerCommand(context, 'trivy.unsetIgnoreFilePath', () =>
+    config.update('ignoreFilePath', undefined)
+  );
+  registerCommand(context, 'trivy.offlineScan', () =>
+    updateConfigAndContext(config, 'offlineScan', true)
+  );
+  registerCommand(context, 'trivy.disableOfflineScan', () =>
+    updateConfigAndContext(config, 'offlineScan', false)
+  );
+  registerCommand(context, 'trivy.scanForSecrets', () =>
+    updateConfigAndContext(config, 'secretScanning', true)
+  );
+  registerCommand(context, 'trivy.disableScanForSecrets', () =>
+    updateConfigAndContext(config, 'secretScanning', false)
+  );
+  registerCommand(context, 'trivy.onlyFixedIssues', () =>
+    updateConfigAndContext(config, 'fixedOnly', true)
+  );
+  registerCommand(context, 'trivy.disableOnlyFixedIssues', () =>
+    updateConfigAndContext(config, 'fixedOnly', false)
+  );
+  registerCommand(context, 'trivy.useConfigFile', () =>
+    updateConfigAndContext(config, 'useConfigFile', true)
+  );
+  registerCommand(context, 'trivy.unsetConfigFilePath', () =>
+    config.update('configFilePath', undefined)
+  );
+  registerCommand(context, 'trivy.disableUseConfigFile', () => {
+    updateConfigAndContext(config, 'useConfigFile', false);
+    updateConfigAndContext(config, 'onlyUseConfigFile', false);
   });
 
   registerCommand(context, 'trivy.onlyUseConfigFile', async () => {
-    await updateConfigAndContext(config, 'onlyUseConfigFile', true);
-    await updateConfigAndContext(config, 'useConfigFile', true);
+    updateConfigAndContext(config, 'onlyUseConfigFile', true);
+    updateConfigAndContext(config, 'useConfigFile', true);
   });
-
-  registerCommand(context, 'trivy.disableOnlyUseConfigFile', async () => {
-    await updateConfigAndContext(config, 'onlyUseConfigFile', false);
+  registerCommand(context, 'trivy.setConfigFilePath', async () => {
+    await selectFilePath(config, 'Config file', 'configFilePath', ['*']);
+  });
+  registerCommand(context, 'trivy.setupCommercial', async () => {
+    await setupCommercial(context);
   });
 }

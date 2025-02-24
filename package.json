@@ -4,9 +4,9 @@
   "publisher": "AquaSecurityOfficial",
   "description": "A VS Code extension for Trivy.",
   "icon": "images/icon.png",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "engines": {
-    "vscode": "^1.54.0"
+    "vscode": "^1.56.0"
   },
   "categories": [
     "Other"
@@ -93,6 +93,28 @@
           "default": false,
           "description": "Ignore files in .gitignore",
           "scope": "window"
+        },
+        "trivy.aquaApiUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Aqua API URL"
+        },
+        "trivy.aquaAuthenticationUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Aqua API URL"
+        },
+        "trivy.useAquaPlatform": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use Aqua Platform for scanning",
+          "scope": "window"
+        },
+        "trivy.uploadResults": {
+          "type": "boolean",
+          "default": false,
+          "description": "Upload results to Aqua Platform",
+          "scope": "window"
         }
       }
     },
@@ -121,6 +143,18 @@
           "light": "resources/light/trash.svg",
           "dark": "resources/dark/trash.svg"
         }
+      },
+      {
+        "command": "trivy.reset",
+        "title": "Trivy: Reset the issue list",
+        "icon": {
+          "light": "resources/light/trash.svg",
+          "dark": "resources/dark/trash.svg"
+        }
+      },
+      {
+        "command": "trivy.setupCommercial",
+        "title": "Trivy Aqua Platform Integration"
       },
       {
         "command": "trivy.refresh",
@@ -193,6 +227,10 @@
       {
         "command": "trivy.unsetConfigFilePath",
         "title": "✓ Set explicit config file"
+      },
+      {
+        "command": "trivy.update",
+        "title": "Update Trivy"
       }
     ],
     "viewsContainers": {
@@ -213,9 +251,17 @@
           "contextualTitle": "Findings Explorer"
         },
         {
+          "id": "trivyAssuranceViewer",
+          "name": "Assurance Policies",
+          "icon": "media/trivy.svg",
+          "contextualTitle": "Assurance Policies",
+          "when": "trivy.useAquaPlatform"
+        },
+        {
           "id": "trivyHelpViewer",
           "name": "Details",
           "type": "webview",
+          "icon": "media/trivy.svg",
           "contextualTitle": "Details",
           "when": "trivy.installed"
         }
@@ -224,22 +270,23 @@
     "viewsWelcome": [
       {
         "view": "trivyIssueViewer",
-        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\n\n",
-        "when": "trivy.installed && trivy.isLatest"
+        "contents": "$(loading~spin) Loading...",
+        "when": "!trivy.extensionLoaded || trivy.scanRunning"
       },
       {
         "view": "trivyIssueViewer",
-        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\n\nThere is an update available for Trivy. \n[Update Trivy](command:trivy.install)\n",
-        "when": "trivy.installed && !trivy.isLatest"
+        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\n\nIf using with Aqua Platform you can use the button below to configure\n[Configure Aqua Platform](command:trivy.setupCommercial)\n",
+        "when": "trivy.extensionLoaded && trivy.installed && trivy.isLatest && !trivy.scanRunning"
       },
       {
         "view": "trivyIssueViewer",
         "contents": "Trivy does not appear to be installed.\n\nIf you believe it is installed \n[Specify Trivy Location](command:workbench.action.openSettings?%22trivy.binaryPath%22)\n Click the button below to install Trivy.\n[Install Trivy](command:trivy.install)\n",
-        "when": "!trivy.installed"
+        "when": "trivy.extensionLoaded && !trivy.installed"
       },
       {
         "view": "trivyHelpViewer",
-        "contents": "No check selected. Run Trivy and choose a failed check from the explorer"
+        "contents": "No check selected. Run Trivy and choose a failed check from the explorer",
+        "when": "trivy.extensionLoaded && trivy.installed"
       }
     ],
     "menus": {
@@ -256,12 +303,12 @@
         },
         {
           "submenu": "trivyIgnoreMenu",
-          "when": "view == trivyIssueViewer",
+          "when": "view == trivyIssueViewer && !trivy.useAquaPlatform",
           "group": "1_ignore"
         },
         {
           "submenu": "trivyConfigMenu",
-          "when": "view == trivyIssueViewer",
+          "when": "view == trivyIssueViewer && !trivy.useAquaPlatform",
           "group": "2_config"
         },
         {
@@ -295,6 +342,11 @@
           "group": "3_setting@3"
         },
         {
+          "command": "trivy.setupCommercial",
+          "when": "view == trivyIssueViewer",
+          "group": "4_aquaPlatform"
+        },
+        {
           "command": "trivy.version",
           "when": "view == trivyIssueViewer",
           "group": "5_version"
@@ -303,6 +355,16 @@
           "command": "trivy.update",
           "when": "view == trivyIssueViewer && !trivy.isLatest",
           "group": "5_version"
+        },
+        {
+          "command": "trivy.scan",
+          "when": "view == trivyAssuranceViewer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "trivy.reset",
+          "when": "view == trivyAssuranceViewer",
+          "group": "navigation@2"
         }
       ],
       "trivyConfigMenu": [
@@ -482,8 +544,20 @@
               "image": "media/scan.png",
               "altText": "Run Trivy"
             },
-            "comletionEvents": [
+            "completionEvents": [
               "onCommand:trivy.scan"
+            ]
+          },
+          {
+            "id": "setupCommercial",
+            "title": "Connect to Aqua Platform",
+            "description": "Configure access to the [Aqua Platform](command:trivy.setupCommercial).",
+            "media": {
+              "image": "media/platform.png",
+              "altText": "Aqua Platform"
+            },
+            "completionEvents": [
+              "onCommand:trivy.setupCommercial"
             ]
           }
         ]
@@ -491,57 +565,81 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "npm run esbuild-base -- --sourcemap",
-    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
-    "copy-resources": "copyfiles -u 1 \"resources/**/*\" out/resources/",
+    "vscode:prepublish": "npm run clean && webpack --mode production",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
     "compile-tests": "tsc -p ./tsconfig.test.json",
-    "test-compile": "npm run esbuild && npm run compile-tests && npm run copy-test-resources",
+    "test-compile": "npm run build && npm run compile-tests && npm run copy-test-resources",
     "copy-test-resources": "mkdir -p out/test && cp -r test/golden ./out/test/",
-    "compile": "rm -rf out && npm run esbuild && npm run copy-resources",
-    "pretest": "npm run test-compile && npm run lint",
-    "test": "node ./out/test/runTest.js",
-    "lint": "eslint src/**/*.ts test/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts test/**/*.ts --fix",
-    "format": "prettier --config .prettierrc 'src/**/*.ts' 'test/**/*.ts' --write"
+    "pretest": "npm run test-compile",
+    "test": "vscode-test",
+    "lint": "eslint ./src ./test",
+    "lint:fix": "eslint ./src ./test --fix",
+    "check:deps": "eslint . --rule 'import/no-extraneous-dependencies: error' --no-inline-config",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "clean": "rimraf out",
+    "package": "vsce package",
+    "publish": "vsce publish -p $VSCE_TOKEN"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@types/glob": "^7.1.1",
     "@types/mocha": "^7.0.2",
     "@types/node": "^16.0.0",
-    "@types/semver": "^7.3.6",
     "@types/vscode": "^1.54.0",
     "@typescript-eslint/eslint-plugin": "^8.23.0",
     "@typescript-eslint/parser": "^8.23.0",
+    "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
-    "copyfiles": "^2.4.1",
-    "esbuild": "^0.25.0",
+    "@vscode/vsce": "^3.2.2",
+    "copy-webpack-plugin": "^13.0.0",
     "eslint": "^9.19.0",
+    "eslint-import-resolver-typescript": "^3.8.5",
+    "eslint-plugin-import": "^2.31.0",
+    "file-loader": "^6.2.0",
     "glob": "^7.1.6",
     "globals": "^15.14.0",
     "mocha": "^11.1.0",
-    "nodemon": "^3.1.9",
-    "prettier": "^3.4.2",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^4.9.5",
-    "typescript-eslint": "^8.23.0"
+    "typescript-eslint": "^8.23.0",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
   },
   "repository": {
     "url": "https://github.com/aquasecurity/trivy-vscode-extension"
   },
   "dependencies": {
     "@types/tar": "^6.1.13",
-    "@types/uuid": "^8.3.4",
     "@vscode/codicons": "^0.0.36",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "ignore": "^7.0.3",
-    "semver": "^7.5.2",
     "tar": "^7.4.3",
-    "typescipt": "^1.0.0",
-    "uuid": "^8.3.2",
-    "webview-ui-toolkit": "^0.0.0"
+    "webview-ui-toolkit": "^0.0.0",
+    "which": "^5.0.0"
+  },
+  "prettier": {
+    "endOfLine": "lf",
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5",
+    "overrides": [
+      {
+        "files": [
+          "*.json",
+          "*.js"
+        ],
+        "options": {
+          "printWidth": 120
+        }
+      }
+    ]
   }
 }
