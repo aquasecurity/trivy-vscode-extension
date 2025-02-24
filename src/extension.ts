@@ -15,8 +15,15 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
+  const diagnosticsCollection =
+    vscode.languages.createDiagnosticCollection('trivy');
+  context.subscriptions.push(diagnosticsCollection);
+
   const helpProvider = new TrivyHelpProvider();
-  const misconfigProvider = new TrivyTreeViewProvider(context);
+  const misconfigProvider = new TrivyTreeViewProvider(
+    context,
+    diagnosticsCollection
+  );
   const trivyWrapper = new TrivyWrapper(
     outputChannel,
     misconfigProvider.resultsStoragePath

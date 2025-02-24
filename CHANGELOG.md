@@ -1,5 +1,8 @@
 # Change Log
 
+### 0.9.0
+- Add Trivy findings to the Problems view
+
 ### 0.8.2 
 - Add a basic walkthrough for new users
 
