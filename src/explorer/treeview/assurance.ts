@@ -1,8 +1,13 @@
-import { PolicyResult, TrivyResult } from './result';
+import { PolicyResult, TrivyResult } from '../result';
 import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
 import * as vscode from 'vscode';
 import { createFileOpenCommand } from './treeview_command';
 
+/**
+ * Extract the top level findings from the result data
+ * @param resultData to extract the top level policies from
+ * @returns
+ */
 export function getTopLevelPolicies(
   resultData: TrivyResult[] | PolicyResult[]
 ): TrivyTreeItem[] {
@@ -33,6 +38,12 @@ export function getTopLevelPolicies(
   return results;
 }
 
+/**
+ * Get the children of a policy
+ * @param resultData to extract the children from
+ * @param element to extract the children for
+ * @returns
+ */
 export function getAssurancePolicyChildrenMultiCode(
   resultData: TrivyResult[] | PolicyResult[],
   element: TrivyTreeItem
@@ -84,6 +95,12 @@ export function getAssurancePolicyChildrenMultiCode(
   return results;
 }
 
+/**
+ * Get the children of a policy
+ * @param resultData to extract the children from
+ * @param element to extract the children for
+ * @returns
+ */
 export function getAssurancePolicyChildrenSingleCode(
   resultData: TrivyResult[] | PolicyResult[],
   element: TrivyTreeItem
@@ -133,6 +150,12 @@ export function getAssurancePolicyChildrenSingleCode(
   return results;
 }
 
+/**
+ * Get the children of a policy
+ * @param resultData to extract the children from
+ * @param element to extract the children for
+ * @returns
+ */
 export function getAssurancePolicyChildren(
   resultData: TrivyResult[] | PolicyResult[],
   element: TrivyTreeItem

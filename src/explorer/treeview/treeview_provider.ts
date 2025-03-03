@@ -8,10 +8,10 @@ import {
   Secret,
   TrivyResult,
   Vulnerability,
-} from './result';
+} from '../result';
 import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
-import { sortBySeverity } from '../utils';
-import { Ignorer } from '../ignorer';
+import { sortBySeverity } from '../../utils';
+import { Ignorer } from '../../ignorer';
 import {
   getMisconfigurationInstances,
   getSecretInstances,
@@ -25,7 +25,7 @@ import {
   getTopLevelPolicies,
 } from './assurance';
 import { createFileOpenCommand } from './treeview_command';
-import { showInformationMessage } from '../notification/notifications';
+import { showInformationMessage } from '../../notification/notifications';
 
 export type explorerType = 'finding' | 'policy';
 
@@ -49,7 +49,6 @@ export class TrivyTreeViewProvider
     dignosticsCollection: vscode.DiagnosticCollection,
     private readonly explorerType: explorerType = 'finding'
   ) {
-
     this.diagnosticsCollection = dignosticsCollection;
     if (context.storageUri) {
       this.storagePath = context.storageUri.fsPath;
@@ -118,7 +117,10 @@ export class TrivyTreeViewProvider
 
   refresh(): void {
     this.items = [];
-    this.diagnosticsCollection.clear();
+    if (this.explorerType === 'finding') {
+      // only need to clear when its findings
+      this.diagnosticsCollection.clear();
+    }
     this.taintResults = true;
     this.loadResultData();
   }
@@ -180,11 +182,13 @@ export class TrivyTreeViewProvider
                     );
                   }
 
+                  this.updateProblems(file, trivyResults);
                   this.resultData.set(workspaceName, trivyResults);
                 } else {
                   const assurancePolicies = isAssurance
                     ? extractPolicyResults(data.Results, workspaceName)
                     : [];
+
                   this.resultData.set(`${workspaceName}`, assurancePolicies);
                 }
               } else {
@@ -197,6 +201,7 @@ export class TrivyTreeViewProvider
                       ...processResult(element, workspaceName, ig)
                     );
                   }
+                  this.updateProblems(file, trivyResults);
                   this.resultData.set(workspaceName, trivyResults);
                 }
               }

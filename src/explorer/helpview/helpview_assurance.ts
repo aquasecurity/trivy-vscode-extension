@@ -1,5 +1,5 @@
-import { PolicyResult } from './result';
-import { TrivyTreeItem } from './treeitem';
+import { PolicyResult } from '../result';
+import { TrivyTreeItem } from '../treeview/treeitem';
 
 const tick = '✅';
 const cross = '❌';

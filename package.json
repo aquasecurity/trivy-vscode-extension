@@ -468,6 +468,16 @@
             ]
           },
           {
+            "id": "trivyinstalled",
+            "title": "Ensure that Trivy is installed",
+            "media": {
+              "image": "media/open.png",
+              "altText": "Open Trivy"
+            },
+            "description": "This extension requires Trivy to be installed on your system. You can install Trivy from [here](https://trivy.dev/latest/getting-started/installation/).",
+            "completionEvents": ["onContext:trivy.installed"]
+          },
+          {
             "id": "runcommand",
             "title": "Run Trivy",
             "description": "Open a directory you want to scan then [Run Trivy](command:trivy.scan).",

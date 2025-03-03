@@ -1,5 +1,10 @@
-import { Misconfiguration, Secret, TrivyResult, Vulnerability } from './result';
-import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
+import {
+  Misconfiguration,
+  Secret,
+  TrivyResult,
+  Vulnerability,
+} from '../result';
+import { TrivyTreeItem, TrivyTreeItemType } from '../treeview/treeitem';
 
 export function getTrivyResultData(item: TrivyTreeItem, html: string): string {
   const result = item.properties?.check as TrivyResult;

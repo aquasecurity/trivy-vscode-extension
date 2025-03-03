@@ -1,5 +1,5 @@
 import path from 'path';
-import { Misconfiguration, PolicyResult, TrivyResult } from './result';
+import { Misconfiguration, PolicyResult, TrivyResult } from '../result';
 import * as vscode from 'vscode';
 import fs from 'fs';
 

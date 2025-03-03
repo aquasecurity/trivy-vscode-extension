@@ -1,30 +1,126 @@
 import * as vscode from 'vscode';
-import { TrivyHelpProvider } from './explorer/helpview';
-import { TrivyTreeViewProvider } from './explorer/treeview_provider';
+import { TrivyHelpProvider } from './explorer/helpview/helpview';
+import { TrivyTreeViewProvider } from './explorer/treeview/treeview_provider';
 import { TrivyWrapper } from './command/command';
 import { registerCommands } from './activate_commands';
 import { showErrorMessage } from './notification/notifications';
 
+/**
+ * Disposables to clean up when extension is deactivated
+ */
 const disposables: vscode.Disposable[] = [];
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-  const projectRootPath = vscode.workspace.getWorkspaceFolder;
-  if (projectRootPath === undefined) {
-    showErrorMessage('Trivy: Must open a project file to scan.');
-    return;
+
+/**
+ * Extension configuration keys to sync with VS Code context
+ */
+const CONFIG_BOOLEAN_KEYS = [
+  'useIgnoreFile',
+  'offlineScan',
+  'secretScanning',
+  'fixedOnly',
+  'onlyUseConfigFile',
+  'useConfigFile',
+  'useAquaPlatform',
+];
+
+const CONFIG_STRING_KEYS = ['ignoreFilePath', 'configFilePath'];
+
+/**
+ * Activation function called when extension is activated
+ * @param context Extension context provided by VS Code
+ */
+export async function activate(
+  context: vscode.ExtensionContext
+): Promise<void> {
+  try {
+    // Show walkthrough for first-time users
+    if (context.globalState.get<boolean>('trivy.firstLaunch') !== true) {
+      context.globalState.update('trivy.firstLaunch', true);
+      vscode.commands.executeCommand(
+        'workbench.action.openWalkthrough',
+        'trivy.walkthrough'
+      );
+    }
+
+    // Ensure we have a workspace to work with
+    if (
+      !vscode.workspace.workspaceFolders ||
+      vscode.workspace.workspaceFolders.length === 0
+    ) {
+      showErrorMessage('Must open a project file to scan.');
+      return;
+    }
+
+    // Initialize diagnostics collection
+    const diagnosticsCollection =
+      vscode.languages.createDiagnosticCollection('trivy');
+    context.subscriptions.push(diagnosticsCollection);
+
+    // Create providers
+    const helpProvider = new TrivyHelpProvider();
+    const findingProvider = new TrivyTreeViewProvider(
+      context,
+      diagnosticsCollection,
+      'finding'
+    );
+    const assuranceProvider = new TrivyTreeViewProvider(
+      context,
+      diagnosticsCollection,
+      'policy'
+    );
+    const trivyWrapper = new TrivyWrapper(findingProvider.resultsStoragePath);
+
+    // Register views
+    await registerViews(
+      context,
+      helpProvider,
+      findingProvider,
+      assuranceProvider,
+      trivyWrapper
+    );
+
+    // Register config change handler
+    const configChangeDisposable =
+      vscode.workspace.onDidChangeConfiguration(handleConfigChange);
+    context.subscriptions.push(configChangeDisposable);
+    disposables.push(configChangeDisposable);
+
+    // Set initial context and verify installation
+    const config = vscode.workspace.getConfiguration('trivy');
+    syncContextWithConfig(config);
+    await verifyTrivyInstallation(config);
+
+    // Log successful activation
+    console.log('Trivy extension activated');
+  } catch (error) {
+    showErrorMessage(`Failed to activate Trivy extension: ${error}`);
+    console.error('Error activating Trivy extension:', error);
   }
+}
 
-  const diagnosticsCollection =
-    vscode.languages.createDiagnosticCollection('trivy');
-  context.subscriptions.push(diagnosticsCollection);
+/**
+ * Registers all views and their event handlers
+ * @param context Extension context
+ * @param helpProvider Help view provider
+ * @param findingProvider Findings tree view provider
+ * @param assuranceProvider Assurance tree view provider
+ * @param trivyWrapper Trivy command wrapper
+ */
+async function registerViews(
+  context: vscode.ExtensionContext,
+  helpProvider: TrivyHelpProvider,
+  findingProvider: TrivyTreeViewProvider,
+  assuranceProvider: TrivyTreeViewProvider,
+  trivyWrapper: TrivyWrapper
+): Promise<void> {
+  // Register webview provider
+  const webviewRegistration = vscode.window.registerWebviewViewProvider(
+    'trivyHelpViewer',
+    helpProvider
+  );
+  context.subscriptions.push(webviewRegistration);
 
-  const helpProvider = new TrivyHelpProvider();
-  const findingProvider = new TrivyTreeViewProvider(context, diagnosticsCollection,  'finding');
-  const assuranceProvider = new TrivyTreeViewProvider(context, diagnosticsCollection, 'policy');
-  const trivyWrapper = new TrivyWrapper(findingProvider.resultsStoragePath);
-
-  // creating the issue tree explicitly to allow access to events
+  // Create tree views
   const findingTree = vscode.window.createTreeView('trivyIssueViewer', {
     treeDataProvider: findingProvider,
     showCollapseAll: true,
@@ -35,27 +131,29 @@ export function activate(context: vscode.ExtensionContext) {
     showCollapseAll: true,
   });
 
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('trivyHelpViewer', helpProvider)
-  );
-
-  findingTree.onDidChangeSelection(function (event) {
+  // Register tree view selection handlers
+  findingTree.onDidChangeSelection((event) => {
     const treeItem = event.selection[0];
     if (treeItem) {
       helpProvider.update(treeItem, 'finding');
     }
   });
 
-  assuranceTree.onDidChangeSelection(function (event) {
+  assuranceTree.onDidChangeSelection((event) => {
     const treeItem = event.selection[0];
     if (treeItem) {
       helpProvider.update(treeItem, 'policy');
     }
   });
 
-  const config = vscode.workspace.getConfiguration('trivy');
+  // Register trees as disposables
   context.subscriptions.push(findingTree);
   context.subscriptions.push(assuranceTree);
+  disposables.push(findingTree);
+  disposables.push(assuranceTree);
+
+  // Register commands
+  const config = vscode.workspace.getConfiguration('trivy');
   registerCommands(
     context,
     trivyWrapper,
@@ -64,44 +162,76 @@ export function activate(context: vscode.ExtensionContext) {
     helpProvider,
     config
   );
-
-  // if the config changes externally, we need to ensure that the context used for menus
-  // is updated to reflect this too
-  vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration('trivy')) {
-      const config = vscode.workspace.getConfiguration('trivy');
-      syncContextWithConfig(config);
-    }
-  });
-
-  // on startup, we need to ensure that the context is synced correctly
-  syncContextWithConfig(config);
 }
 
-function syncContextWithConfig(config: vscode.WorkspaceConfiguration) {
-  [
-    'useIgnoreFile',
-    'offlineScan',
-    'secretScanning',
-    'fixedOnly',
-    'onlyUseConfigFile',
-    'useConfigFile',
-    'useAquaPlatform',
-  ].forEach((key) => {
-    const configVal = config.get(key, false);
+/**
+ * Handles configuration changes
+ * @param event Configuration change event
+ */
+function handleConfigChange(event: vscode.ConfigurationChangeEvent): void {
+  if (event.affectsConfiguration('trivy')) {
+    const config = vscode.workspace.getConfiguration('trivy');
+    syncContextWithConfig(config);
+  }
+}
+
+/**
+ * Syncs extension configuration with VS Code context
+ * @param config Workspace configuration
+ */
+function syncContextWithConfig(config: vscode.WorkspaceConfiguration): void {
+  // Sync boolean configuration values
+  CONFIG_BOOLEAN_KEYS.forEach((key) => {
+    const configVal = config.get<boolean>(key, false);
     vscode.commands.executeCommand('setContext', `trivy.${key}`, configVal);
   });
 
-  ['ignoreFilePath', 'configFilePath'].forEach((key) => {
-    vscode.commands.executeCommand(
-      'setContext',
-      `trivy.${key}`,
-      config.get(key, '')
-    );
+  // Sync string configuration values
+  CONFIG_STRING_KEYS.forEach((key) => {
+    const configVal = config.get<string>(key, '');
+    vscode.commands.executeCommand('setContext', `trivy.${key}`, configVal);
   });
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {
-  disposables.forEach((d) => d.dispose());
+/**
+ * Verifies Trivy installation and sets context
+ * @param config Workspace configuration
+ */
+async function verifyTrivyInstallation(
+  config: vscode.WorkspaceConfiguration
+): Promise<void> {
+  try {
+    const isInstalled = TrivyWrapper.checkIfInstalled(config);
+    await vscode.commands.executeCommand(
+      'setContext',
+      'trivy.installed',
+      isInstalled
+    );
+  } catch (error) {
+    console.error('Error verifying Trivy installation:', error);
+    await vscode.commands.executeCommand(
+      'setContext',
+      'trivy.installed',
+      false
+    );
+    showErrorMessage(`Failed to verify Trivy installation: ${error}`);
+  }
+}
+
+/**
+ * Deactivation function called when extension is deactivated
+ */
+export function deactivate(): void {
+  try {
+    console.log('Deactivating Trivy extension');
+    disposables.forEach((d) => {
+      try {
+        d.dispose();
+      } catch (error) {
+        console.error('Error disposing resource:', error);
+      }
+    });
+  } catch (error) {
+    console.error('Error deactivating Trivy extension:', error);
+  }
 }

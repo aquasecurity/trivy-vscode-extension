@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as child from 'child_process';
 import * as path from 'path';
-import { unlinkSync, readdirSync } from 'fs';
+import { unlinkSync, readdirSync, existsSync } from 'fs';
 import {
   ConfigFilePathOption,
   DebugOption,
@@ -18,14 +18,33 @@ import { updateEnvironment } from '../commercial/env';
 import { Output } from './output';
 import {
   showErrorMessage,
+  showInformationMessage,
   showWarningWithLink,
 } from '../notification/notifications';
+
+/**
+ * Types of Trivy scans
+ */
+export enum ScanType {
+  FilesystemScan = 'fs',
+  ImageScan = 'image',
+  GitScan = 'repository',
+}
+
+/**
+ * Result of a Trivy execution
+ */
+interface ExecutionResult {
+  success: boolean;
+  message?: string;
+  error?: Error;
+}
 
 /**
  * Wrapper for executing Trivy commands and handling results
  */
 export class TrivyWrapper {
-  private readonly outputChannel = new Output();
+  private readonly outputChannel = Output.getInstance();
 
   /**
    * Creates a new instance of TrivyWrapper
@@ -41,22 +60,24 @@ export class TrivyWrapper {
     this.outputChannel.appendLine('');
     this.outputChannel.appendLine('Running Trivy to update results');
 
+    // Ensure Trivy is installed before continuing
     if (!this.checkTrivyInstalled()) {
       showErrorMessage('Trivy could not be found, check Output window');
       return;
     }
 
-    // Clean up previous result files
-    this.cleanupPreviousResults();
-
-    const binary = this.getBinaryPath();
-
-    // Process each workspace folder
+    // Get workspace folders
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders) {
+    if (!workspaceFolders || workspaceFolders.length === 0) {
       showErrorMessage('No workspace folders found');
       return;
     }
+
+    // Clean up previous result files
+    await this.cleanupPreviousResults();
+
+    // Get the Trivy binary path
+    const binary = this.getBinaryPath();
 
     // Set context to disable views during scanning
     await vscode.commands.executeCommand(
@@ -66,16 +87,25 @@ export class TrivyWrapper {
     );
 
     try {
-      // Run scans for each workspace folder
+      // Run scans for each workspace folder in sequence
       for (const workspaceFolder of workspaceFolders) {
         try {
           await this.scanWorkspaceFolder(workspaceFolder, binary, secrets);
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           this.outputChannel.appendLine(
-            `Error scanning workspace ${workspaceFolder.name}: ${error}`
+            `Error scanning workspace ${workspaceFolder.name}: ${errorMessage}`
           );
         }
       }
+
+      // Indicate that scanning is complete
+      showInformationMessage('Trivy scanning complete');
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      showErrorMessage(`Error running Trivy: ${errorMessage}`);
     } finally {
       // Reset context to re-enable views
       await vscode.commands.executeCommand(
@@ -89,16 +119,18 @@ export class TrivyWrapper {
   /**
    * Display the current Trivy version
    */
-  showCurrentTrivyVersion(): void {
+  async showCurrentTrivyVersion(): Promise<void> {
     try {
-      const currentVersion = this.getInstalledTrivyVersion();
+      const currentVersion = await this.getInstalledTrivyVersion();
       if (currentVersion) {
-        vscode.window.showInformationMessage(
+        showInformationMessage(
           `Current Trivy version is ${currentVersion.trim()}`
         );
       }
     } catch (error) {
-      showErrorMessage(`Failed to get Trivy version: ${error}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      showErrorMessage(`Failed to get Trivy version: ${errorMessage}`);
     }
   }
 
@@ -113,10 +145,12 @@ export class TrivyWrapper {
     binary: string,
     secrets: vscode.SecretStorage
   ): Promise<void> {
+    // Get configuration
     const config = vscode.workspace.getConfiguration('trivy');
     const isAquaPlatformRun = config.get<boolean>('useAquaPlatform');
 
-    let env = process.env;
+    // Set up environment
+    let env = { ...process.env };
 
     if (isAquaPlatformRun) {
       const assuranceReportPath = path.join(
@@ -126,10 +160,16 @@ export class TrivyWrapper {
       env = await updateEnvironment(config, secrets, env, assuranceReportPath);
     }
 
+    // Build command
     const workingPath = workspaceFolder.uri.fsPath;
     const command = this.buildCommand(workingPath, workspaceFolder.name);
-    this.outputChannel.appendLine(`command: ${command.join(' ')}`);
 
+    // Log the command (sensitive info is handled in updateEnvironment)
+    this.outputChannel.appendLine(
+      `Running command: ${binary} ${command.join(' ')}`
+    );
+
+    // Run the task with progress
     await this.runTaskWithProgress(
       binary,
       command,
@@ -142,23 +182,40 @@ export class TrivyWrapper {
   /**
    * Clean up previous result files
    */
-  private cleanupPreviousResults(): void {
-    const files = readdirSync(this.resultsStoragePath).filter(
-      (fn) =>
-        fn.endsWith('_results.json') ||
-        fn.endsWith('_results.json.dump') ||
-        fn.endsWith('_assurance.json')
-    );
-
-    for (const file of files) {
-      try {
-        const deletePath = path.join(this.resultsStoragePath, file);
-        unlinkSync(deletePath);
-      } catch (error) {
-        this.outputChannel.appendLine(
-          `Error cleaning up file ${file}: ${error}`
-        );
+  private async cleanupPreviousResults(): Promise<void> {
+    try {
+      if (!existsSync(this.resultsStoragePath)) {
+        return;
       }
+
+      const files = readdirSync(this.resultsStoragePath).filter(
+        (fn) =>
+          fn.endsWith('_results.json') ||
+          fn.endsWith('_results.json.dump') ||
+          fn.endsWith('_assurance.json')
+      );
+
+      for (const file of files) {
+        try {
+          const deletePath = path.join(this.resultsStoragePath, file);
+          unlinkSync(deletePath);
+          this.outputChannel.appendLine(
+            `Cleaned up previous result file: ${file}`
+          );
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          this.outputChannel.appendLine(
+            `Error cleaning up file ${file}: ${errorMessage}`
+          );
+        }
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.outputChannel.appendLine(
+        `Error cleaning up result files: ${errorMessage}`
+      );
     }
   }
 
@@ -168,12 +225,7 @@ export class TrivyWrapper {
    */
   private getBinaryPath(): string {
     const config = vscode.workspace.getConfiguration('trivy');
-    let binary = config.get<string>('binaryPath', 'trivy');
-
-    if (binary === '') {
-      binary = 'trivy';
-    }
-
+    const binary = config.get<string>('binaryPath', 'trivy') || 'trivy';
     return binary;
   }
 
@@ -185,7 +237,7 @@ export class TrivyWrapper {
     const binaryPath = this.getBinaryPath();
 
     try {
-      child.execSync(`${binaryPath} --help`, { stdio: 'ignore' });
+      child.execSync(`"${binaryPath}" --help`, { stdio: 'ignore' });
       return true;
     } catch (err) {
       Output.show();
@@ -200,35 +252,83 @@ export class TrivyWrapper {
   }
 
   /**
-   * Get the installed Trivy version
-   * @returns Version string of the installed Trivy binary
+   * Check if Trivy is installed using a given configuration
+   * @param config Workspace configuration
+   * @returns true if Trivy is installed, false otherwise
    */
-  private getInstalledTrivyVersion(): string {
-    // Note: Call the function, not reference it
+  public static checkIfInstalled(
+    config: vscode.WorkspaceConfiguration
+  ): boolean {
+    try {
+      const binaryPath = config.get<string>('binaryPath', 'trivy');
+      if (!binaryPath || binaryPath.trim() === '') {
+        return false;
+      }
+      child.execSync(`"${binaryPath}" --help`, { stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the installed Trivy version
+   * @returns Promise resolving to version string of the installed Trivy binary
+   */
+  private async getInstalledTrivyVersion(): Promise<string> {
     if (!this.checkTrivyInstalled()) {
       showErrorMessage('Trivy could not be found, check Output window');
       return '';
     }
 
     const binary = this.getBinaryPath();
-    const getVersion = child.execSync(`${binary} --version`);
-    return getVersion.toString();
+
+    return new Promise<string>((resolve, reject) => {
+      try {
+        const process = child.exec(`"${binary}" --version`);
+        let output = '';
+
+        process.stdout?.on('data', (data) => {
+          output += data.toString();
+        });
+
+        process.stderr?.on('data', (data) => {
+          this.outputChannel.appendLine(`Version stderr: ${data.toString()}`);
+        });
+
+        process.on('exit', (code) => {
+          if (code === 0) {
+            resolve(output.trim());
+          } else {
+            reject(new Error(`Trivy exited with code ${code}`));
+          }
+        });
+
+        process.on('error', (error) => {
+          reject(error);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   /**
    * Build the Trivy command
    * @param workingPath Path to scan
    * @param workspaceName Name of the workspace
+   * @param scanType Type of scan to perform
    * @param trivyOptions Optional command options
    * @returns String array of command parts
    */
   buildCommand(
     workingPath: string,
     workspaceName: string,
+    scanType: ScanType = ScanType.FilesystemScan,
     trivyOptions?: TrivyCommandOption[]
   ): string[] {
     const config = vscode.workspace.getConfiguration('trivy');
-    let command: string[] = ['fs'];
+    let command: string[] = [scanType];
 
     const isAquaPlatform = config.get<boolean>('useAquaPlatform');
     const suffix = isAquaPlatform ? '.dump' : '';
@@ -278,54 +378,96 @@ export class TrivyWrapper {
   ): Promise<void> {
     return vscode.window.withProgress(
       {
-        location: vscode.ProgressLocation.Window,
+        location: vscode.ProgressLocation.Notification,
         title: `Running Trivy Scan${isAquaPlatformRun ? ' (Aqua Platform)' : ''}`,
         cancellable: true,
       },
       async (progress, token) => {
-        let killed = false;
-
-        progress.report({ increment: 0, message: 'Scanning...' });
+        progress.report({ increment: 0, message: 'Starting scan...' });
 
         return new Promise<void>((resolve, reject) => {
+          let killed = false;
+          let progressCounter = 0;
+          const progressMax = 100;
+          let currentPhase = 'Running';
+
+          // Function to update progress bar
+          const updateProgress = () => {
+            progressCounter += 2;
+            if (progressCounter > progressMax) {
+              progressCounter = 0;
+            }
+
+            progress.report({
+              increment: 2,
+              message: `${currentPhase} (${Math.min(progressCounter, 100)}%)`,
+            });
+          };
+
+          // Start progress update interval
+          const progressInterval = setInterval(updateProgress, 400);
+
+          // Spawn process
           const execution = child.spawn(binary, command, {
             cwd: workingPath,
             env,
+            shell: process.platform === 'win32', // Use shell on Windows
           });
 
+          // Handle cancellation
           token.onCancellationRequested(() => {
             killed = true;
-            execution.kill();
-            execution.stderr.destroy();
-            execution.stdout.destroy();
+            clearInterval(progressInterval);
+
+            // Kill process and clean up streams
+            execution.kill('SIGINT');
+            try {
+              execution.stdout?.destroy();
+              execution.stderr?.destroy();
+            } catch {
+              // Ignore errors on stream destroy
+            }
+
             this.outputChannel.appendLine('Trivy scan canceled by user');
+            reject(new Error('Scan canceled by user'));
           });
 
+          // Handle stdout
           execution.stdout.on('data', (data) => {
             const output = data.toString();
             this.outputChannel.appendLine(output);
 
             // Update progress based on output
             if (output.includes('Scanning')) {
-              progress.report({ message: 'Scanning files...' });
+              currentPhase = 'Scanning files';
+              progress.report({ message: `${currentPhase}...` });
             } else if (output.includes('Analyzing')) {
-              progress.report({ message: 'Analyzing dependencies...' });
+              currentPhase = 'Analyzing dependencies';
+              progress.report({ message: `${currentPhase}...` });
+            } else if (output.includes('Detecting')) {
+              currentPhase = 'Detecting vulnerabilities';
+              progress.report({ message: `${currentPhase}...` });
             }
           });
 
+          // Handle stderr
           execution.stderr.on('data', (data) => {
             this.outputChannel.appendLine(data.toString());
           });
 
+          // Handle execution errors
           execution.on('error', (error) => {
+            clearInterval(progressInterval);
             this.outputChannel.appendLine(`Execution error: ${error.message}`);
             reject(error);
           });
 
+          // Handle process exit
           execution.on('exit', async (code) => {
+            clearInterval(progressInterval);
+
             if (killed) {
-              reject(new Error('Scan canceled by user'));
-              return;
+              return; // Already handled by cancellation
             }
 
             if (code !== 0) {
@@ -334,9 +476,7 @@ export class TrivyWrapper {
               return;
             }
 
-            vscode.window.showInformationMessage(
-              'Trivy ran successfully, updating results'
-            );
+            showInformationMessage('Trivy ran successfully, updating results');
             this.outputChannel.appendLine(
               'Reloading the Findings Explorer content'
             );
@@ -351,5 +491,37 @@ export class TrivyWrapper {
         });
       }
     );
+  }
+
+  /**
+   * Execute a simple Trivy command and return the result
+   * @param args Command arguments
+   * @returns Promise resolving to execution result
+   */
+  async executeCommand(args: string[]): Promise<ExecutionResult> {
+    if (!this.checkTrivyInstalled()) {
+      return {
+        success: false,
+        message: 'Trivy is not installed or not found in PATH',
+        error: new Error('Trivy not installed'),
+      };
+    }
+
+    const binary = this.getBinaryPath();
+    const command = `"${binary}" ${args.join(' ')}`;
+
+    try {
+      const output = child.execSync(command, { encoding: 'utf-8' });
+      return { success: true, message: output };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { success: false, message: error.message, error };
+      }
+      return {
+        success: false,
+        message: 'Unknown error',
+        error: new Error('Unknown error'),
+      };
+    }
   }
 }

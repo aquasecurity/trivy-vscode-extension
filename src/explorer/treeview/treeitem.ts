@@ -1,6 +1,6 @@
 import path from 'path';
 import * as vscode from 'vscode';
-import { PolicyResult, TrivyResult } from './result';
+import { PolicyResult, TrivyResult } from '../result';
 
 export class TrivyTreeItem extends vscode.TreeItem {
   public filename: string;

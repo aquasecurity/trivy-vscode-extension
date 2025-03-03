@@ -1,6 +1,6 @@
 import { Webview, WebviewView, WebviewViewProvider } from 'vscode';
-import { TrivyTreeItem } from './treeitem';
-import { explorerType } from './treeview_provider';
+import { TrivyTreeItem } from '../treeview/treeitem';
+import { explorerType } from '../treeview/treeview_provider';
 import { getPolicyData } from './helpview_assurance';
 import { getTrivyResultData } from './helpview_findings';
 
@@ -24,8 +24,6 @@ th {
   }
 
 </style>
-
-
 `;
 
 export class TrivyHelpProvider implements WebviewViewProvider {

@@ -3,11 +3,16 @@ import {
   PolicyResult,
   TrivyResult,
   Vulnerability,
-} from './result';
+} from '../result';
 import { TrivyTreeItem, TrivyTreeItemType } from './treeitem';
 import * as vscode from 'vscode';
 import { createFileOpenCommand } from './treeview_command';
 
+/**
+ * Extract the top level findings from the result data
+ * @param resultData to extract the top level findings from
+ * @returns The top level findings as TrivyTreeItems
+ */
 export function getTopLevelFindings(
   resultData: TrivyResult[] | PolicyResult[]
 ): TrivyTreeItem[] {
@@ -46,6 +51,12 @@ export function getTopLevelFindings(
   return results;
 }
 
+/**
+ * Get the children of a file
+ * @param resultData to extract the children from
+ * @param element to extract the children for
+ * @returns The children of the file as TrivyTreeItems
+ */
 export function getMisconfigurationInstances(
   resultData: TrivyResult[] | PolicyResult[],
   element: TrivyTreeItem
@@ -82,6 +93,12 @@ export function getMisconfigurationInstances(
   return results;
 }
 
+/**
+ * Get the children of a vulnerability
+ * @param resultData to extract the children from
+ * @param element to extract the children for
+ * @returns The children of the vulnerability as TrivyTreeItems
+ */
 export function getVulnerabilityChildren(
   resultData: TrivyResult[] | PolicyResult[],
   element: TrivyTreeItem
@@ -92,7 +109,8 @@ export function getVulnerabilityChildren(
     (c) =>
       c instanceof TrivyResult &&
       c.extraData instanceof Vulnerability &&
-      c.extraData.pkgName === element.title
+      c.extraData.pkgName === element.title &&
+      c.filename === element.filename
   );
 
   for (let index = 0; index < filtered.length; index++) {
@@ -118,6 +136,12 @@ export function getVulnerabilityChildren(
   return results;
 }
 
+/**
+ * Get Secret Instances
+ * @param resultData the result data to extract the children from
+ * @param element
+ * @returns
+ */
 export function getSecretInstances(
   resultData: TrivyResult[] | PolicyResult[],
   element: TrivyTreeItem

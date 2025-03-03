@@ -112,6 +112,23 @@ export class PolicyResult {
   }
 }
 
+type Location = {
+  StartLine: number;
+  EndLine: number;
+};
+
+type PkgIdentifier = {
+  PURL: string;
+  UID: string;
+};
+
+type Package = {
+  ID: string;
+  Name: string;
+  Locations: Location[];
+  Identifier: PkgIdentifier;
+};
+
 export const extractPolicyResults = (
   results: any,
   workspaceName: string
@@ -240,22 +257,26 @@ export const processResult = (
       const severity = element.Severity;
       const references = element.References;
       const extra = new Vulnerability(element);
-      const startLine = 1;
-      const endLine = 1;
-      results.push(
-        new TrivyResult(
-          id,
-          title,
-          description,
-          target,
-          startLine,
-          endLine,
-          severity,
-          references,
-          extra,
-          workspaceName
-        )
-      );
+      const location = getLocation(element, result.Packages);
+
+      try {
+        results.push(
+          new TrivyResult(
+            id,
+            title,
+            description,
+            target,
+            location.StartLine,
+            location.EndLine,
+            severity,
+            references,
+            extra,
+            workspaceName
+          )
+        );
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
 
@@ -293,3 +314,22 @@ export const processResult = (
 
   return results;
 };
+
+function getLocation(e: any, packages: Package[]): Location {
+  const element = e;
+
+  if (element && packages) {
+    const matchingPackage = packages.find(
+      (pkg) => pkg.Identifier?.PURL === element.PkgIdentifier?.PURL
+    );
+    if (matchingPackage && matchingPackage.Locations) {
+      if (matchingPackage.Locations.length > 1) {
+        return matchingPackage.Locations[0];
+      } else {
+        return matchingPackage.Locations[0];
+      }
+    }
+  }
+
+  return { StartLine: 1, EndLine: 1 };
+}
