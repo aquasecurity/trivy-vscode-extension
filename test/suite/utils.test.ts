@@ -8,21 +8,20 @@ suite('utils', function (): void {
     assert.strictEqual(getSeverityPosition('HIGH'), 1);
     assert.strictEqual(getSeverityPosition('MEDIUM'), 2);
     assert.strictEqual(getSeverityPosition('LOW'), 3);
-    assert.strictEqual(getSeverityPosition('UNKNOWN'), -1);
-  })
+    assert.strictEqual(getSeverityPosition('UNKNOWN'), 4);
+  });
 
   test('sort by severity', () => {
     const a = {
       severity: 'CRITICAL',
-      extraData: null
-    } as unknown as TrivyResult
+      extraData: null,
+    } as unknown as TrivyResult;
     const b = {
       severity: 'MEDIUM',
-      extraData: null
-    } as unknown as TrivyResult
+      extraData: null,
+    } as unknown as TrivyResult;
 
     const sorted = sortBySeverity(a, b);
-    assert.strictEqual(sorted, -1);
+    assert.strictEqual(sorted, -2);
   });
-
 });

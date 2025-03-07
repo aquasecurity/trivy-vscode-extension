@@ -11,9 +11,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -100,11 +98,28 @@
     },
     "commands": [
       {
+        "command": "trivy.install",
+        "title": "Trivy: Install Trivy"
+      },
+      {
+        "command": "trivy.update",
+        "title": "Update Trivy"
+      },
+      {
         "command": "trivy.scan",
         "title": "Trivy: Run trivy against workspace",
         "icon": {
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
+        },
+        "enablement": "trivy.installed"
+      },
+      {
+        "command": "trivy.reset",
+        "title": "Trivy: Reset the issue list",
+        "icon": {
+          "light": "resources/light/trash.svg",
+          "dark": "resources/dark/trash.svg"
         }
       },
       {
@@ -113,7 +128,7 @@
       },
       {
         "command": "trivy.version",
-        "title": "Get the current version of Trivy"
+        "title": "Show Trivy version"
       },
       {
         "command": "trivy.useIgnoreFile",
@@ -199,16 +214,28 @@
         },
         {
           "id": "trivyHelpViewer",
-          "name": "Findings Help",
+          "name": "Details",
           "type": "webview",
-          "contextualTitle": "Findings Help"
+          "contextualTitle": "Details",
+          "when": "trivy.installed"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "trivyIssueViewer",
-        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\nTrivy configuration settings can be configured in the extension settings."
+        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\n\n",
+        "when": "trivy.installed && trivy.isLatest"
+      },
+      {
+        "view": "trivyIssueViewer",
+        "contents": "Click the button below to run Trivy against the current workspace.\n[Scan Now](command:trivy.scan)\n\nThere is an update available for Trivy. \n[Update Trivy](command:trivy.install)\n",
+        "when": "trivy.installed && !trivy.isLatest"
+      },
+      {
+        "view": "trivyIssueViewer",
+        "contents": "Trivy does not appear to be installed.\n\nIf you believe it is installed \n[Specify Trivy Location](command:workbench.action.openSettings?%22trivy.binaryPath%22)\n Click the button below to install Trivy.\n[Install Trivy](command:trivy.install)\n",
+        "when": "!trivy.installed"
       },
       {
         "view": "trivyHelpViewer",
@@ -221,6 +248,11 @@
           "command": "trivy.scan",
           "when": "view == trivyIssueViewer",
           "group": "navigation@1"
+        },
+        {
+          "command": "trivy.reset",
+          "when": "view == trivyIssueViewer",
+          "group": "navigation@2"
         },
         {
           "submenu": "trivyIgnoreMenu",
@@ -261,6 +293,16 @@
           "command": "trivy.disableOnlyFixedIssues",
           "when": "view == trivyIssueViewer && trivy.fixedOnly",
           "group": "3_setting@3"
+        },
+        {
+          "command": "trivy.version",
+          "when": "view == trivyIssueViewer",
+          "group": "5_version"
+        },
+        {
+          "command": "trivy.update",
+          "when": "view == trivyIssueViewer && !trivy.isLatest",
+          "group": "5_version"
         }
       ],
       "trivyConfigMenu": [
@@ -389,10 +431,6 @@
         {
           "command": "trivy.useIgnoreFile",
           "when": "false"
-        },
-        {
-          "command": "trivy.version",
-          "when": "false"
         }
       ]
     },
@@ -420,7 +458,21 @@
               "image": "media/open.png",
               "altText": "Open Trivy"
             },
-            "completionEvents": ["onView:trivyIssueViewer"]
+            "completionEvents": [
+              "onView:trivyIssueViewer"
+            ]
+          },
+          {
+            "id": "trivyinstalled",
+            "title": "Ensure that Trivy is installed",
+            "media": {
+              "image": "media/open.png",
+              "altText": "Open Trivy"
+            },
+            "description": "This extension requires Trivy to be installed on your system. [Install Trivy](command:trivy.install)",
+            "completionEvents": [
+              "onContext:trivy.installed"
+            ]
           },
           {
             "id": "runcommand",
@@ -444,19 +496,21 @@
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "copy-resources": "copyfiles -u 1 \"resources/**/*\" out/resources/",
-    "test-compile": "tsc -p ./",
+    "compile-tests": "tsc -p ./tsconfig.test.json",
+    "test-compile": "npm run esbuild && npm run compile-tests && npm run copy-test-resources",
+    "copy-test-resources": "mkdir -p out/test && cp -r test/golden ./out/test/ && cp -r test/mocks ./out/test/",
     "compile": "rm -rf out && npm run esbuild && npm run copy-resources",
-    "pretest": "npm run test-compile && npm run lint && cp -r test/golden ./out/test",
+    "pretest": "npm run test-compile && npm run lint",
     "test": "node ./out/test/runTest.js",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --config .prettierrc 'src/**/*.ts' --write"
+    "lint": "eslint src/**/*.ts test/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts test/**/*.ts --fix",
+    "format": "prettier --config .prettierrc 'src/**/*.ts' 'test/**/*.ts' --write"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@types/glob": "^7.1.1",
     "@types/mocha": "^7.0.2",
-    "@types/node": "^13.11.0",
+    "@types/node": "^16.0.0",
     "@types/semver": "^7.3.6",
     "@types/vscode": "^1.54.0",
     "@typescript-eslint/eslint-plugin": "^8.23.0",
@@ -479,10 +533,15 @@
     "url": "https://github.com/aquasecurity/trivy-vscode-extension"
   },
   "dependencies": {
+    "@types/tar": "^6.1.13",
     "@types/uuid": "^8.3.4",
+    "@vscode/codicons": "^0.0.36",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "ignore": "^7.0.3",
     "semver": "^7.5.2",
+    "tar": "^7.4.3",
     "typescipt": "^1.0.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "webview-ui-toolkit": "^0.0.0"
   }
 }

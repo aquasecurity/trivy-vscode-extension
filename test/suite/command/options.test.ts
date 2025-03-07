@@ -1,20 +1,26 @@
-
 import * as assert from 'assert';
-import * as vscode from 'vscode'
-import { DebugOption, FixedOnlyOption, IgnoreFilePathOption, OfflineScanOption, ScannersOption } from '../../../src/command/options';
 
-class mockConfig{
+import * as vscode from 'vscode';
+
+import {
+  DebugOption,
+  FixedOnlyOption,
+  IgnoreFilePathOption,
+  OfflineScanOption,
+  ScannersOption,
+} from '../../../src/command/options';
+
+class mockConfig {
   private values: { [key: string]: boolean | string } = {
-    'debug': true,
-    'offlineScan': true,
-    'fixedOnly': true,
-    'ignoreFilePath': '.trivyignore.yaml',
-    'useIgnoreFile': true,
-  }
-
+    debug: true,
+    offlineScan: true,
+    fixedOnly: true,
+    ignoreFilePath: '.trivyignore.yaml',
+    useIgnoreFile: true,
+  };
 
   get<T>(section: string): T | undefined {
-    return this.values[section] as T || undefined;
+    return (this.values[section] as T) || undefined;
   }
 
   update(section: string, value: string | boolean) {
@@ -23,12 +29,11 @@ class mockConfig{
 }
 
 suite('trivy command options', function (): void {
-
   vscode.window.showInformationMessage('Start trivy command options tests.');
 
   test('Trivy debug command option', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
-    let command : string[] = []
+    let command: string[] = [];
 
     const commandOption = new DebugOption();
     command = commandOption.apply(command, config);
@@ -38,31 +43,35 @@ suite('trivy command options', function (): void {
 
   test('Trivy scanners command option', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
-    let command : string[] = []
+    let command: string[] = [];
 
     const commandOption = new ScannersOption();
     command = commandOption.apply(command, config);
 
-    assert.strictEqual(command.join(' '), '--scanners=misconfig,vuln'); 
+    assert.strictEqual(
+      command.join(' '),
+      '--scanners=misconfig,vuln --list-all-pkgs'
+    );
   });
 
   test('Trivy scanners command option with secretScan enabled', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
-    config.update('secretScanning', true)
+    config.update('secretScanning', true);
 
-
-    let command : string[] = []
+    let command: string[] = [];
 
     const commandOption = new ScannersOption();
     command = commandOption.apply(command, config);
 
-    assert.strictEqual(command.join(' '), '--scanners=misconfig,vuln,secret');
+    assert.strictEqual(
+      command.join(' '),
+      '--scanners=misconfig,vuln,secret --list-all-pkgs'
+    );
   });
-
 
   test('Trivy offline scan command option', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
-    let command : string[] = []
+    let command: string[] = [];
 
     const commandOption = new OfflineScanOption();
     command = commandOption.apply(command, config);
@@ -72,7 +81,7 @@ suite('trivy command options', function (): void {
 
   test('Trivy fixed only command option', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
-    let command : string[] = []
+    let command: string[] = [];
 
     const commandOption = new FixedOnlyOption();
     command = commandOption.apply(command, config);
@@ -82,12 +91,11 @@ suite('trivy command options', function (): void {
 
   test('Trivy ignore file option', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
-    let command : string[] = []
+    let command: string[] = [];
 
     const commandOption = new IgnoreFilePathOption();
     command = commandOption.apply(command, config);
 
     assert.strictEqual(command.join(' '), '--ignorefile=.trivyignore.yaml');
   });
-
 });

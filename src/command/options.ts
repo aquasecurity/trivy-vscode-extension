@@ -1,18 +1,58 @@
 import * as vscode from 'vscode';
+import { showErrorMessage } from '../notification/notifications';
 
-// TrivyCommandOption is an interface that defines the structure of the TrivyCommandOption class.
-// The TrivyCommandOption class has an apply method that takes a command and a configuration and returns
-// the updated command.
+/**
+ * Interface defining a command option that can be applied to a Trivy command
+ */
 export interface TrivyCommandOption {
-  apply(command: string[], config: vscode.WorkspaceConfiguration): string[];
+  /**
+   * Apply this option to a command array
+   * @param command The command array to modify
+   * @param config The VS Code configuration to use
+   * @returns The modified command array
+   */
+  apply(command: string[], config?: vscode.WorkspaceConfiguration): string[];
 }
 
-export class DebugOption implements TrivyCommandOption {
+/**
+ * Base class for options that should be skipped when using config file only mode
+ */
+abstract class ConfigAwareOption implements TrivyCommandOption {
+  /**
+   * Apply the option if not in config-file-only mode
+   * @param command The command array to modify
+   * @param config The VS Code configuration to use
+   * @returns The modified command array
+   */
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
-    // if onlyUseConfigFile is set, we don't need to add the scanners option
+    // Skip this option if only using config file
     if (config.get<boolean>('onlyUseConfigFile')) {
       return command;
     }
+
+    return this.applyOption(command, config);
+  }
+
+  /**
+   * Implementation-specific option application
+   * @param command The command array to modify
+   * @param config The VS Code configuration to use
+   * @returns The modified command array
+   */
+  protected abstract applyOption(
+    command: string[],
+    config: vscode.WorkspaceConfiguration
+  ): string[];
+}
+
+/**
+ * Option to enable debug output
+ */
+export class DebugOption extends ConfigAwareOption {
+  protected applyOption(
+    command: string[],
+    config: vscode.WorkspaceConfiguration
+  ): string[] {
     if (config.get<boolean>('debug')) {
       command.push('--debug');
     }
@@ -20,61 +60,83 @@ export class DebugOption implements TrivyCommandOption {
   }
 }
 
-export class ScannersOption implements TrivyCommandOption {
-  apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
-    // if onlyUseConfigFile is set, we don't need to add the scanners option
-    if (config.get<boolean>('onlyUseConfigFile')) {
-      return command;
+/**
+ * Option to set scanners (misconfig, vuln, secret)
+ */
+export class ScannersOption extends ConfigAwareOption {
+  protected applyOption(
+    command: string[],
+    config: vscode.WorkspaceConfiguration
+  ): string[] {
+    const scanners = ['misconfig', 'vuln'];
+
+    if (config.get<boolean>('secretScanning')) {
+      scanners.push('secret');
     }
 
-    let requireChecks = 'misconfig,vuln';
-    if (config.get<boolean>('secretScanning')) {
-      requireChecks = `${requireChecks},secret`;
-    }
-    command.push(`--scanners=${requireChecks}`);
+    command.push(`--scanners=${scanners.join(',')}`);
+    command.push('--list-all-pkgs');
+
     return command;
   }
 }
 
-export class RequiredSeveritiesOption implements TrivyCommandOption {
-  apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
-    // if onlyUseConfigFile is set, we don't need to add the scanners option
-    if (config.get<boolean>('onlyUseConfigFile')) {
+/**
+ * Option to set the minimum severity level for reporting
+ */
+export class RequiredSeveritiesOption extends ConfigAwareOption {
+  private static readonly SEVERITIES = [
+    'CRITICAL',
+    'HIGH',
+    'MEDIUM',
+    'LOW',
+    'UNKNOWN',
+  ];
+
+  protected applyOption(
+    command: string[],
+    config: vscode.WorkspaceConfiguration
+  ): string[] {
+    const minRequired = config.get<string>('minimumReportedSeverity');
+    if (!minRequired) {
       return command;
     }
-    const requiredSeverities: string[] = [];
 
-    const minRequired = config.get<string>('minimumReportedSeverity');
-    const severities: string[] = [
-      'CRITICAL',
-      'HIGH',
-      'MEDIUM',
-      'LOW',
-      'UNKNOWN',
-    ];
+    const requiredSeverities = this.getSeveritiesByMinimum(minRequired);
+    if (requiredSeverities.length > 0) {
+      command.push(`--severity=${requiredSeverities.join(',')}`);
+    }
 
-    for (let i = 0; i < severities.length; i++) {
-      const s = severities[i];
-      if (!s) {
-        continue;
-      }
-      requiredSeverities.push(s);
-      if (s === minRequired) {
+    return command;
+  }
+
+  /**
+   * Get all severities from CRITICAL down to the specified minimum
+   * @param minimum The minimum severity level to include
+   * @returns Array of severity levels
+   */
+  private getSeveritiesByMinimum(minimum: string): string[] {
+    const result: string[] = [];
+
+    for (const severity of RequiredSeveritiesOption.SEVERITIES) {
+      result.push(severity);
+      if (severity === minimum) {
         break;
       }
     }
-    command.push(`--severity=${requiredSeverities.join(',')}`);
 
-    return command;
+    return result;
   }
 }
 
-export class OfflineScanOption implements TrivyCommandOption {
-  apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
-    // if onlyUseConfigFile is set, we don't need to add the scanners option
-    if (config.get<boolean>('onlyUseConfigFile')) {
-      return command;
-    }
+/**
+ * Option to enable offline scanning
+ */
+export class OfflineScanOption extends ConfigAwareOption {
+  protected applyOption(
+    command: string[],
+    config: vscode.WorkspaceConfiguration
+  ): string[] {
     if (config.get<boolean>('offlineScan')) {
       command.push('--offline-scan');
     }
@@ -82,58 +144,92 @@ export class OfflineScanOption implements TrivyCommandOption {
   }
 }
 
+/**
+ * Option to only show fixed vulnerabilities
+ */
 export class FixedOnlyOption implements TrivyCommandOption {
   apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
     if (config.get<boolean>('fixedOnly')) {
       command.push('--ignore-unfixed');
     }
-
     return command;
   }
 }
 
-export class IgnoreFilePathOption implements TrivyCommandOption {
-  apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
-    // if onlyUseConfigFile is set, we don't need to add the scanners option
-    if (config.get<boolean>('onlyUseConfigFile')) {
+/**
+ * Base class for file path options
+ */
+abstract class FilePathOption extends ConfigAwareOption {
+  constructor(
+    protected readonly configKey: string,
+    protected readonly flagName: string,
+    protected readonly errorMessage: string
+  ) {
+    super();
+  }
+
+  protected applyOption(
+    command: string[],
+    config: vscode.WorkspaceConfiguration
+  ): string[] {
+    const useFlag = config.get<boolean>(
+      `use${this.capitalizeFirst(this.configKey)}`
+    );
+
+    if (!useFlag) {
       return command;
     }
-    const ignoreFilePath = config.get<string>('ignoreFilePath');
-    if (config.get<boolean>('useIgnoreFile')) {
-      if (ignoreFilePath) {
-        command.push(`--ignorefile=${ignoreFilePath}`);
-      } else {
-        vscode.window.showWarningMessage('Trivy ignore file path is not set.');
-        config.update('useIgnoreFile', false);
-      }
+
+    const filePath = config.get<string>(`${this.configKey}Path`);
+    if (filePath) {
+      command.push(`--${this.flagName}=${filePath}`);
+    } else {
+      showErrorMessage(this.errorMessage);
+      void config.update(
+        `use${this.capitalizeFirst(this.configKey)}`,
+        false,
+        vscode.ConfigurationTarget.Workspace
+      );
     }
 
     return command;
   }
-}
 
-export class ConfigFilePathOption implements TrivyCommandOption {
-  apply(command: string[], config: vscode.WorkspaceConfiguration): string[] {
-    // if onlyUseConfigFile is set, we don't need to add the scanners option
-    if (config.get<boolean>('onlyUseConfigFile')) {
-      return command;
-    }
-    const configFilePath = config.get<string>('configFilePath');
-    if (config.get<boolean>('useConfigFile')) {
-      if (configFilePath) {
-        command.push(`--config=${configFilePath}`);
-      } else {
-        vscode.window.showWarningMessage(
-          'Trivy config file path override is not set.'
-        );
-        config.update('useConfigFile', false);
-      }
-    }
-
-    return command;
+  /**
+   * Capitalize the first letter of a string
+   * @param str Input string
+   * @returns String with first letter capitalized
+   */
+  private capitalizeFirst(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }
 
+/**
+ * Option to set the ignore file path
+ */
+export class IgnoreFilePathOption extends FilePathOption {
+  constructor() {
+    super('ignoreFile', 'ignorefile', 'Trivy ignore file path is not set.');
+  }
+}
+
+/**
+ * Option to set the config file path
+ */
+export class ConfigFilePathOption extends FilePathOption {
+  constructor() {
+    super(
+      'configFilePath',
+      'config',
+      'Trivy config file path override is not set.'
+    );
+  }
+}
+
+/**
+ * Option to set JSON output format
+ */
 export class JSONFormatOption implements TrivyCommandOption {
   apply(command: string[]): string[] {
     command.push('--format=json');
@@ -141,8 +237,14 @@ export class JSONFormatOption implements TrivyCommandOption {
   }
 }
 
+/**
+ * Option to set the output file path
+ */
 export class ResultsOutputOption implements TrivyCommandOption {
-  constructor(private resultsPath: string) {}
+  /**
+   * @param resultsPath Path where results should be saved
+   */
+  constructor(private readonly resultsPath: string) {}
 
   apply(command: string[]): string[] {
     command.push(`--output=${this.resultsPath}`);
@@ -150,8 +252,14 @@ export class ResultsOutputOption implements TrivyCommandOption {
   }
 }
 
+/**
+ * Option to set a custom exit code
+ */
 export class ExitCodeOption implements TrivyCommandOption {
-  constructor(private exitCode: number) {}
+  /**
+   * @param exitCode Exit code to use
+   */
+  constructor(private readonly exitCode: number) {}
 
   apply(command: string[]): string[] {
     command.push(`--exit-code=${this.exitCode}`);
@@ -159,6 +267,9 @@ export class ExitCodeOption implements TrivyCommandOption {
   }
 }
 
+/**
+ * Option to suppress output
+ */
 export class QuietOption implements TrivyCommandOption {
   apply(command: string[]): string[] {
     command.push('--quiet');

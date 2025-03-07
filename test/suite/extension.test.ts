@@ -6,33 +6,32 @@ import * as fs from 'fs';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 
-
 import * as vscode from 'vscode';
 
 import path from 'path';
-import { TrivyWrapper } from '../../src/command/command';
+import { ScanType, TrivyWrapper } from '../../src/command/command';
 import { ExitCodeOption, QuietOption } from '../../src/command/options';
 import * as child from 'child_process';
 
 const testsRoot = path.resolve(__dirname, '..');
-  
+
 suite('extension', function (): void {
   this.timeout(10000); // Give the test 10 seconds to allow for the CI vscode to download
   vscode.window.showInformationMessage('Start all tests.');
 
-  const runCommand = function(projectPath: string): string {
+  const runCommand = function (projectPath: string): string {
     const targetDir = fs.mkdtempSync(projectPath);
-    const wrapper = new TrivyWrapper(
-      vscode.window.createOutputChannel('Trivy Scan'),
-      targetDir
-    );
+    const extensionDir = path.resolve(__dirname, '../../');
+    const wrapper = new TrivyWrapper(targetDir, extensionDir);
 
-    const commandArgs = wrapper.buildCommand(projectPath, 'workspace1', [
-      new QuietOption(),
-      new ExitCodeOption(10)
-    ])
+    const commandArgs = wrapper.buildCommand(
+      projectPath,
+      'workspace1',
+      ScanType.FilesystemScan,
+      [new QuietOption(), new ExitCodeOption(10)]
+    );
     const command = `trivy ${commandArgs.join(' ')}`;
-  
+
     console.log('Running command: ' + command);
 
     try {
@@ -54,9 +53,9 @@ suite('extension', function (): void {
           return result.stdout.toString();
         }
       }
-    }  
-  return '';
-  }
+    }
+    return '';
+  };
 
   test('Sample test', () => {
     console.log('Running sample test...');
