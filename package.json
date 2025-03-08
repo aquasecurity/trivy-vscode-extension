@@ -498,7 +498,7 @@
     "copy-resources": "copyfiles -u 1 \"resources/**/*\" out/resources/",
     "compile-tests": "tsc -p ./tsconfig.test.json",
     "test-compile": "npm run esbuild && npm run compile-tests && npm run copy-test-resources",
-    "copy-test-resources": "mkdir -p out/test && cp -r test/golden ./out/test/ && cp -r test/mocks ./out/test/",
+    "copy-test-resources": "mkdir -p out/test && cp -r test/golden ./out/test/",
     "compile": "rm -rf out && npm run esbuild && npm run copy-resources",
     "pretest": "npm run test-compile && npm run lint",
     "test": "node ./out/test/runTest.js",
