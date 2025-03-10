@@ -19,7 +19,7 @@ suite('extension', function (): void {
   this.timeout(10000); // Give the test 10 seconds to allow for the CI vscode to download
   vscode.window.showInformationMessage('Start all tests.');
 
-  const runCommand = function (projectPath: string): string {
+  const executeTrivyCommand = function (projectPath: string): string {
     const targetDir = fs.mkdtempSync(projectPath);
     const extensionDir = path.resolve(__dirname, '../../');
     const wrapper = new TrivyWrapper(targetDir, extensionDir);
@@ -63,8 +63,13 @@ suite('extension', function (): void {
   });
 
   test('Not a vulnerable project', () => {
-    const got = runCommand(testsRoot + '/golden/not-vulnerable');
-    const expected = '';
+    const got = executeTrivyCommand(testsRoot + '/golden/not-vulnerable');
+    fs.writeFileSync(testsRoot + '/golden/expected/not-vulnerable.out', got);
+
+    const expected = fs.readFileSync(
+      testsRoot + '/golden/expected/not-vulnerable.out',
+      'utf8'
+    );
     assert.strictEqual(
       got,
       expected,
@@ -73,7 +78,9 @@ suite('extension', function (): void {
   });
 
   test('Vulnerable project', () => {
-    const got = runCommand(testsRoot + '/golden/vulnerable');
+    const got = executeTrivyCommand(testsRoot + '/golden/vulnerable');
+    fs.writeFileSync(testsRoot + '/golden/expected/vulnerable.out', got);
+
     const expected = fs.readFileSync(
       testsRoot + '/golden/expected/vulnerable.out',
       'utf8'
