@@ -104,6 +104,13 @@ export class TrivyTreeViewProvider
     this.loadResultData();
   }
 
+  reset() {
+    this.items = [];
+    this.taintResults = true;
+    this.resultData.clear();
+    this._onDidChangeTreeData.fire();
+  }
+
   // when there is trivy output file, load the results
   async loadResultData() {
     const config = vscode.workspace.getConfiguration('trivy');

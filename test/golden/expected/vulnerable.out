@@ -1,4 +1,16 @@
 
+Report Summary
+
+┌───────────────────┬──────┬─────────────────┬─────────┐
+│      Target       │ Type │ Vulnerabilities │ Secrets │
+├───────────────────┼──────┼─────────────────┼─────────┤
+│ package-lock.json │ npm  │       11        │    -    │
+└───────────────────┴──────┴─────────────────┴─────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
 package-lock.json (npm)
 =======================
 Total: 11 (UNKNOWN: 0, LOW: 1, MEDIUM: 6, HIGH: 3, CRITICAL: 1)

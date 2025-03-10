@@ -18,10 +18,10 @@ export function run(): Promise<void> {
         return reject(err);
       }
 
-      files.forEach(file => mocha.addFile(path.resolve(testsRoot, file)));
+      files.forEach((file) => mocha.addFile(path.resolve(testsRoot, file)));
 
       try {
-        mocha.run(failures => {
+        mocha.run((failures) => {
           if (failures > 0) {
             reject(new Error(`${failures} tests failed.`));
           } else {
