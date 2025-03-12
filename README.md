@@ -1,148 +1,81 @@
-<div align="center">
-<img src="docs/imgs/logo.png" width="200">
+![Deploy Extension](https://github.com/aquasecurity/trivy-vscode-extension/workflows/Deploy%20Extension/badge.svg)
 
-[![GitHub Release][release-img]][release]
-[![Test][test-img]][test]
-[![Go Report Card][go-report-img]][go-report]
-[![License: Apache-2.0][license-img]][license]
-[![GitHub Downloads][github-downloads-img]][release]
-![Docker Pulls][docker-pulls]
+# Trivy Vulnerability Scanner Plugin
 
-[📖 Documentation][docs]
+Trivy Vulnerability Scanner is a VS Code plugin that helps you find vulnerabilities in your software projects
+without leaving the comfort of your VS Code window.
 
-</div>
+## Demo 
 
-Trivy ([pronunciation][pronunciation]) is a comprehensive and versatile security scanner.
-Trivy has _scanners_ that look for security issues, and _targets_ where it can find those issues.
+![Trivy Scan in Action](.github/images/trivy-scan.gif)
 
-Targets (what Trivy can scan):
+### Findings Explorer
 
-- Container Image
-- Filesystem
-- Git Repository (remote)
-- Virtual Machine Image
-- Kubernetes
+The Trivy VS Code plugin now has a findings explorer which allows you to more easily navigate the config and vulnerability findings in your project
+![Trivy Findings Explorer](.github/images/findings-explorer.gif)
 
-Scanners (what Trivy can find there):
+## Requirements
 
-- OS packages and software dependencies in use (SBOM)
-- Known vulnerabilities (CVEs)
-- IaC issues and misconfigurations
-- Sensitive information and secrets
-- Software licenses
+1. [Trivy](https://github.com/aquasecurity/trivy#installation) version v0.9.1 and above.
 
-Trivy supports most popular programming languages, operating systems, and platforms. For a complete list, see the [Scanning Coverage] page.
+## Known Issues
 
-To learn more, go to the [Trivy homepage][homepage] for feature highlights, or to the [Documentation site][docs] for detailed information.
+If you find one, please file a GitHub Issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).
 
-## Quick Start
+## Feature Requests
 
-### Get Trivy
+Have a feature you desire? Please let us know by filing an issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).
 
-Trivy is available in most common distribution channels. The full list of installation options is available in the [Installation] page. Here are a few popular examples:
+## Release Notes
 
-- `brew install trivy`
-- `docker run aquasec/trivy`
-- Download binary from <https://github.com/aquasecurity/trivy/releases/latest/>
-- See [Installation] for more
+### 1.0.0
 
-Trivy is integrated with many popular platforms and applications. The complete list of integrations is available in the [Ecosystem] page. Here are a few popular examples:
+- Add support for installing and updating a built in version of Trivy
+- Add support for the Aqua plugin
+  - Use Aqua Key and Secret to get Assurance results
+- Rework the Tree view to be more informative
+- Only allow single runs to happen at anyone time
+- Rework the icons to be more consistent
+- Switch to using webpack to package vsix and streamline significantly
 
-- [GitHub Actions](https://github.com/aquasecurity/trivy-action)
-- [Kubernetes operator](https://github.com/aquasecurity/trivy-operator)
-- [VS Code plugin](https://github.com/aquasecurity/trivy-vscode-extension)
-- See [Ecosystem] for more
+### 0.9.0
 
-### Canary builds
+- Add Trivy findings to the Problems view
 
-There are canary builds ([Docker Hub](https://hub.docker.com/r/aquasec/trivy/tags?page=1&name=canary), [GitHub](https://github.com/aquasecurity/trivy/pkgs/container/trivy/75776514?tag=canary), [ECR](https://gallery.ecr.aws/aquasecurity/trivy#canary) images and [binaries](https://github.com/aquasecurity/trivy/actions/workflows/canary.yaml)) as generated every push to main branch.
+### 0.8.0
+- Add support for managing the config through the UI
+- Add support for multiple workspaces in the explorer
+- Add tests and process around the code
 
-Please be aware: canary builds might have critical bugs, it's not recommended for use in production.
+### 0.6.1
+Handle findings inside tarballs
 
-### General usage
+### 0.6.0
+Add support for secrets - turn on in the extension settings
 
-```bash
-trivy <target> [--scanners <scanner1,scanner2>] <subject>
-```
+### 0.5.1
+Fix json check
 
-Examples:
+### 0.5.0
 
-```bash
-trivy image python:3.4-alpine
-```
+Add support for newer format of json results
 
-<details>
-<summary>Result</summary>
+### 0.4.1
 
-https://user-images.githubusercontent.com/1161307/171013513-95f18734-233d-45d3-aaf5-d6aec687db0e.mov
+Fix typo in the configuration settings
 
-</details>
+### 0.4.0
 
-```bash
-trivy fs --scanners vuln,secret,misconfig myproject/
-```
+Add additional settings for offline and minimum severity
 
-<details>
-<summary>Result</summary>
+### 0.3.0
 
-https://user-images.githubusercontent.com/1161307/171013917-b1f37810-f434-465c-b01a-22de036bd9b3.mov
+Add Findings viewer and help
 
-</details>
+### 0.2.0
 
-```bash
-trivy k8s --report summary cluster
-```
+Automatic detection of old Trivy versions.
 
-<details>
-<summary>Result</summary>
+### 0.1.1
 
-![k8s summary](docs/imgs/trivy-k8s.png)
-
-</details>
-
-## FAQ
-
-### How to pronounce the name "Trivy"?
-
-`tri` is pronounced like **tri**gger, `vy` is pronounced like en**vy**.
-
-## Want more? Check out Aqua
-
-If you liked Trivy, you will love Aqua which builds on top of Trivy to provide even more enhanced capabilities for a complete security management offering.  
-You can find a high level comparison table specific to Trivy users [here](https://trivy.dev/latest/commercial/compare/).
-In addition check out the <https://aquasec.com> website for more information about our products and services.
-If you'd like to contact Aqua or request a demo, please use this form: <https://www.aquasec.com/demo>
-
-## Community
-
-Trivy is an [Aqua Security][aquasec] open source project.  
-Learn about our open source work and portfolio [here][oss].  
-Contact us about any matter by opening a GitHub Discussion [here][discussions]
-Join our [Slack community][slack] to stay up to date with community efforts.
-
-Please ensure to abide by our [Code of Conduct][code-of-conduct] during all interactions.
-
-[test]: https://github.com/aquasecurity/trivy/actions/workflows/test.yaml
-[test-img]: https://github.com/aquasecurity/trivy/actions/workflows/test.yaml/badge.svg
-[go-report]: https://goreportcard.com/report/github.com/aquasecurity/trivy
-[go-report-img]: https://goreportcard.com/badge/github.com/aquasecurity/trivy
-[release]: https://github.com/aquasecurity/trivy/releases
-[release-img]: https://img.shields.io/github/release/aquasecurity/trivy.svg?logo=github
-[github-downloads-img]: https://img.shields.io/github/downloads/aquasecurity/trivy/total?logo=github
-[docker-pulls]: https://img.shields.io/docker/pulls/aquasec/trivy?logo=docker&label=docker%20pulls%20%2F%20trivy
-[license]: https://github.com/aquasecurity/trivy/blob/main/LICENSE
-[license-img]: https://img.shields.io/badge/License-Apache%202.0-blue.svg
-[homepage]: https://trivy.dev
-[docs]: https://trivy.dev/trivy
-[pronunciation]: #how-to-pronounce-the-name-trivy
-[slack]: https://slack.aquasec.com
-[code-of-conduct]: https://github.com/aquasecurity/community/blob/main/CODE_OF_CONDUCT.md
-[Installation]: https://trivy.dev/latest/getting-started/installation/
-[Ecosystem]: https://trivy.dev/latest/ecosystem/
-[Scanning Coverage]: https://trivy.dev/latest/docs/coverage/
-[alpine]: https://ariadne.space/2021/06/08/the-vulnerability-remediation-lifecycle-of-alpine-containers/
-[rego]: https://www.openpolicyagent.org/docs/latest/#rego
-[sigstore]: https://www.sigstore.dev/
-[aquasec]: https://aquasec.com
-[oss]: https://www.aquasec.com/products/open-source-projects/
-[discussions]: https://github.com/aquasecurity/trivy/discussions
+Initial release with basic project scanning.
