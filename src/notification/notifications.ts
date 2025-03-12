@@ -1,12 +1,23 @@
 import * as vscode from 'vscode';
-import { Output } from '../command/output';
 
-export function showErrorMessage(message: string) {
-  showInformationMessage(`Error: ${message}`);
-}
+import { Output } from '../command/output';
 
 let statusBarItem: vscode.StatusBarItem;
 
+/**
+ * Shows an error message
+ * @param message The message to display
+ * @param asPopup If true, the message will be displayed as a popup
+ */
+export function showErrorMessage(message: string, asPopup: boolean = true) {
+  showInformationMessage(`Error: ${message}`, asPopup);
+}
+
+/*
+ * Shows an information message
+ * @param message The message to display
+ * @param asPopup If true, the message will be displayed as a popup
+ */
 export function showInformationMessage(
   message: string,
   asPopup: boolean = false

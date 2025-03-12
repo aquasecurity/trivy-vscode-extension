@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { Secret, TrivyResult } from './explorer/result';
 
 /**
@@ -90,7 +91,9 @@ export const sortBySeverity = (a: TrivyResult, b: TrivyResult): number => {
 export function stripAnsi(str: string): string {
   if (!str) return '';
   // Pattern to match ANSI escape sequences
-  return str.replace(/\\u001b\[\d+m/g, '').replace(/\\u001b\[\d+;\d+m/g, '');
+  // eslint-disable-next-line no-control-regex
+  const clean = str.replace(/\u001b\[\d+m/g, '').replace(/\x1b\[\d+;\d+m/g, '');
+  return clean;
 }
 
 /**
@@ -126,4 +129,16 @@ export function showErrorMessage(message: string): void {
  */
 export function isNullOrEmpty(value?: string | null): boolean {
   return value === null || value === undefined || value.trim() === '';
+}
+
+/**
+ * Prettify the name by splitting on multiple camel case and capital letters
+ * @param name The name to prettify
+ * @returns The prettified name
+ */
+export function prettifyName(name: string): string {
+  // split the sentence on any camel case
+  const split = stripAnsi(name.replace('\n', ' '));
+
+  return split;
 }

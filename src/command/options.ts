@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { showErrorMessage } from '../notification/notifications';
 
 /**
@@ -158,6 +159,8 @@ export class FixedOnlyOption implements TrivyCommandOption {
 
 /**
  * Base class for file path options
+ * @abstract
+ * @extends ConfigAwareOption
  */
 abstract class FilePathOption extends ConfigAwareOption {
   constructor(

@@ -1,12 +1,15 @@
+import * as crypto from 'crypto';
+import * as fs from 'fs';
 import * as https from 'https';
 import * as os from 'os';
-import { window } from 'vscode';
-import * as fs from 'fs';
-import * as crypto from 'crypto';
 import path from 'path';
-import { Output } from './output';
+
 import * as tar from 'tar';
+import { window } from 'vscode';
 import * as vscode from 'vscode';
+
+import { TrivyWrapper } from './command';
+import { Output } from './output';
 
 /**
  * Fetches the latest release tag from GitHub for the Trivy repository
@@ -163,6 +166,12 @@ function verifyChecksum(checksumPath: string, filePath: string): Promise<void> {
   });
 }
 
+/**
+ * Extracts a tarball to the specified directory
+ * @param archivePath Path to the tarball
+ * @param outputDir Directory to extract the tarball to
+ * @returns Promise that resolves when the tarball has been extracted
+ */
 async function extractTar(archivePath: string, outputDir: string) {
   await tar.x({
     file: archivePath,
@@ -171,6 +180,11 @@ async function extractTar(archivePath: string, outputDir: string) {
   console.log(`Extracted to ${outputDir}`);
 }
 
+/**
+ * Installs Trivy by downloading the latest release from GitHub
+ * @param extensionPath Path to the extension directory
+ * @param updating If true, the installation is an update
+ */
 export async function installTrivy(
   extensionPath: string,
   updating = false
@@ -198,7 +212,7 @@ export async function installTrivy(
 
         // get the OS and arch
         const { os: osName, arch } = getPlatformInfo();
-        output.appendLine(`Detecting OS: ${osName}, Arch: ${arch}`);
+        output.appendLine(`Detected OS: ${osName}, Arch: ${arch}`);
 
         // Construct download URL for Trivy and the checksum file
         // Example URL format: https://github.com/aquasecurity/trivy/releases/download/v0.60.0/trivy_0.60.0_macOS-ARM64.tar.gz
@@ -321,4 +335,50 @@ export async function installTrivy(
       }
     }
   );
+}
+
+/**
+ * Verifies Trivy installation and sets context
+ * @param config Workspace configuration
+ */
+export async function verifyTrivyInstallation(
+  trivyWrapper: TrivyWrapper
+): Promise<void> {
+  try {
+    trivyWrapper.isInstalled().then((isInstalled) => {
+      vscode.commands.executeCommand(
+        'setContext',
+        'trivy.installed',
+        isInstalled
+      );
+      // now check if the installed version
+      if (trivyWrapper.vscodeTrivyInstall) {
+        // if trivy is installed, check the version
+        trivyWrapper.getInstalledTrivyVersion().then((version) => {
+          getLatestTrivyReleaseTag().then((latestVersion) => {
+            const isLatest = version === latestVersion;
+            vscode.commands.executeCommand(
+              'setContext',
+              'trivy.isLatest',
+              isLatest
+            );
+            if (!isLatest) {
+              vscode.window
+                .showInformationMessage(
+                  `You're currently using ${version}, you should update Trivy to ${latestVersion}`,
+                  'Update'
+                )
+                .then((action) => {
+                  if (action === 'Update') {
+                    vscode.commands.executeCommand('trivy.update');
+                  }
+                });
+            }
+          });
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error verifying Trivy installation:', error);
+  }
 }

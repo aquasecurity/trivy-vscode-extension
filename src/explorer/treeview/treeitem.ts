@@ -1,7 +1,15 @@
 import path from 'path';
-import * as vscode from 'vscode';
-import { TrivyResult } from './result';
 
+import * as vscode from 'vscode';
+
+import { PolicyResult, TrivyResult } from '../result';
+
+import { TrivyTreeItemType } from './treeitem_types';
+
+/**
+ * Tree item for the Trivy tree view
+ * @extends vscode.TreeItem
+ */
 export class TrivyTreeItem extends vscode.TreeItem {
   public filename: string;
 
@@ -19,7 +27,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
     public collapsibleState: vscode.TreeItemCollapsibleState,
     public itemType: TrivyTreeItemType,
     public properties?: {
-      check?: TrivyResult;
+      check?: TrivyResult | PolicyResult;
       command?: vscode.Command;
       workspacePath?: string;
     }
@@ -35,6 +43,24 @@ export class TrivyTreeItem extends vscode.TreeItem {
     this.code = properties?.check?.id || '';
 
     switch (itemType) {
+      case TrivyTreeItemType.assurancePolicy:
+        this.code = (properties?.check as PolicyResult)?.matchCode || '';
+        this.title = (properties?.check as PolicyResult)?.title || '';
+        this.tooltip = (properties?.check as PolicyResult)?.description || '';
+        this.iconPath = new vscode.ThemeIcon('output');
+        break;
+      case TrivyTreeItemType.assuranceControl:
+        this.iconPath = new vscode.ThemeIcon(
+          'output',
+          new vscode.ThemeColor(this.getSeverityColor(this.severity.toString()))
+        );
+        break;
+      case TrivyTreeItemType.assuranceControlResult:
+        this.iconPath = new vscode.ThemeIcon(
+          'output',
+          new vscode.ThemeColor(this.getSeverityColor(this.severity.toString()))
+        );
+        break;
       case TrivyTreeItemType.workspace:
         this.title = workspaceName;
         this.tooltip = properties?.workspacePath;
@@ -44,6 +70,8 @@ export class TrivyTreeItem extends vscode.TreeItem {
       case TrivyTreeItemType.vulnerabilityFile:
       case TrivyTreeItemType.secretFile:
       case TrivyTreeItemType.misconfigInstance:
+      case TrivyTreeItemType.singleCodeAssurancePolicy:
+      case TrivyTreeItemType.multiCodeAssurancePolicy:
         this.tooltip = `${properties?.check?.description}`;
         this.iconPath = vscode.ThemeIcon.File;
         this.resourceUri = vscode.Uri.parse(this.filename);
@@ -70,53 +98,42 @@ export class TrivyTreeItem extends vscode.TreeItem {
           ),
         };
         break;
+      case TrivyTreeItemType.vulnerablePackage:
+        this.iconPath = new vscode.ThemeIcon('package');
+        break;
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.vulnerabilityCode:
         this.tooltip = properties?.check?.title;
-        this.iconPath = {
-          light: path.join(
-            __filename,
-            '..',
-            '..',
-            'resources',
-            this.severityIcon(this.severity)
-          ),
-          dark: path.join(
-            __filename,
-            '..',
-            '..',
-            'resources',
-            this.severityIcon(this.severity)
-          ),
-        };
+        this.iconPath = new vscode.ThemeIcon(
+          'debug-breakpoint',
+          new vscode.ThemeColor(this.getSeverityColor(this.severity.toString()))
+        );
         break;
     }
   }
 
-  severityIcon = (severity: string): string => {
-    switch (severity) {
+  /**
+   * Returns the color for the severity of the finding
+   * @param severity The severity of the finding
+   * @returns The color for the severity
+   * @private
+   */
+  private getSeverityColor(severity: string): string {
+    switch (severity.toUpperCase()) {
       case 'CRITICAL':
-        return 'critical.svg';
+      case '4':
+        return 'editorError.foreground'; // Built-in VS Code theme color for errors
       case 'HIGH':
-        return 'high.svg';
+      case '3':
+        return 'errorForeground'; // For high warnings
       case 'MEDIUM':
-        return 'medium.svg';
+      case '2':
+        return 'editorWarning.foreground'; // For medium severity
       case 'LOW':
-        return 'low.svg';
+      case '1':
+        return 'editorInfo.foreground'; // For low severity
+      default:
+        return 'foreground'; // Default color
     }
-    return 'unknown.svg';
-  };
-}
-
-export enum TrivyTreeItemType {
-  misconfigCode = 0,
-  misconfigInstance = 1,
-  vulnerablePackage = 2,
-  vulnerabilityCode = 3,
-  misconfigFile = 4,
-  vulnerabilityFile = 5,
-  secretFile = 6,
-  secretInstance = 7,
-  secretCode = 8,
-  workspace = 9,
+  }
 }
