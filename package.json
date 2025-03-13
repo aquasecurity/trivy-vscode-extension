@@ -1,8 +1,8 @@
 {
   "name": "trivy-vulnerability-scanner",
-  "displayName": "Trivy Vulnerability Scanner",
+  "displayName": "Aqua Trivy",
   "publisher": "AquaSecurityOfficial",
-  "description": "A VS Code extension for Trivy.",
+  "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
   "version": "1.0.0",
   "engines": {

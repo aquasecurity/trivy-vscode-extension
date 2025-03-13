@@ -1,22 +1,21 @@
 ![Deploy Extension](https://github.com/aquasecurity/trivy-vscode-extension/workflows/Deploy%20Extension/badge.svg)
 
-# Trivy Vulnerability Scanner Plugin
+# Aqua Trivy
 
-Trivy Vulnerability Scanner is a VS Code plugin that helps you find vulnerabilities in your software projects
+Trivy Vulnerability Scanner is a VS Code extension that helps you find vulnerabilities in your software projects
 without leaving the comfort of your VS Code window.
 
-## Demo 
+## Demo
 
-![Trivy Scan in Action](.github/images/trivy-scan.gif)
+The Trivy extension comes with a walkthrough - shown in the gif below.
 
-### Findings Explorer
-
-The Trivy VS Code plugin now has a findings explorer which allows you to more easily navigate the config and vulnerability findings in your project
 ![Trivy Findings Explorer](.github/images/findings-explorer.gif)
 
 ## Requirements
 
-1. [Trivy](https://github.com/aquasecurity/trivy#installation) version v0.9.1 and above.
+Trivy is required for the plugin - if it is available on the `PATH` then the extension will use that version. If it can't be found, you will be presented with the choice of specifying where it is or installing.
+
+If you choose to install, the output window will open with the details of what is being installed and where, it will be installed to the extensions directory and be removed when the extension is uninstalled.
 
 ## Known Issues
 
@@ -43,17 +42,21 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 - Add Trivy findings to the Problems view
 
 ### 0.8.0
+
 - Add support for managing the config through the UI
 - Add support for multiple workspaces in the explorer
 - Add tests and process around the code
 
 ### 0.6.1
+
 Handle findings inside tarballs
 
 ### 0.6.0
+
 Add support for secrets - turn on in the extension settings
 
 ### 0.5.1
+
 Fix json check
 
 ### 0.5.0
