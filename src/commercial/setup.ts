@@ -173,7 +173,7 @@ function getWebviewContent(
            <img class="logo" src="${trivyLogo}" alt="Trivy logo" width="150" height="150">
            <h1>Configure Trivy for Aqua Platform</h1>
            <p>Use this screen to configure the credentials and configuration for the Aqua Platform.</p>
-           <p>You will need to <a href="https://cloud-dev.aquasec.com/ah/#/cspm/apikeys">generate API Key and Secret from the Aqua Platform</a> </p>
+           <p>You will need to <a href="https://cloud.aquasec.com/ah/#/cspm/apikeys">generate API Key and Secret from the Aqua Platform</a> </p>
            <br />
            <br />
            

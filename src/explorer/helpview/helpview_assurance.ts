@@ -70,7 +70,7 @@ export function getPolicyData(item: TrivyTreeItem, html: string): string {
 
     <h4>More Information</h4>
     <ul>
-    <li><a href="https://cloud-dev.aquasec.com/ah/#/supplychain/policies/${result.id}">Aqua Platform (${result.avdId})</a></li>
+    <li><a href="https://cloud.aquasec.com/ah/#/supplychain/policies/${result.id}">Aqua Platform (${result.avdId})</a></li>
     `;
 
   if (result.references) {

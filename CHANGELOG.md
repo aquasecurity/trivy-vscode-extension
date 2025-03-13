@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.0.2
+
+- Remove hard coded links to dev env
+
 ### 1.0.1
 
 - Fix issue with required resources and node_modules for webview
