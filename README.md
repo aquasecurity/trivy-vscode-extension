@@ -1,22 +1,41 @@
 ![Deploy Extension](https://github.com/aquasecurity/trivy-vscode-extension/workflows/Deploy%20Extension/badge.svg)
 
-# Trivy Vulnerability Scanner Plugin
+# Aqua Trivy
 
-Trivy Vulnerability Scanner is a VS Code plugin that helps you find vulnerabilities in your software projects
+Trivy Vulnerability Scanner is a VS Code extension that helps you find vulnerabilities in your software projects
 without leaving the comfort of your VS Code window.
-
-## Demo 
-
-![Trivy Scan in Action](.github/images/trivy-scan.gif)
-
-### Findings Explorer
-
-The Trivy VS Code plugin now has a findings explorer which allows you to more easily navigate the config and vulnerability findings in your project
-![Trivy Findings Explorer](.github/images/findings-explorer.gif)
 
 ## Requirements
 
-1. [Trivy](https://github.com/aquasecurity/trivy#installation) version v0.9.1 and above.
+Trivy is required for the plugin - if it is available on the `PATH` then the extension will use that version. If it can't be found, you will be presented with the choice of specifying where it is or installing.
+
+![install](.github/images/install.png)
+
+If you choose to install, the output window will open with the details of what is being installed and where, it will be installed to the extensions directory and be removed when the extension is uninstalled.
+
+## Usage
+
+The Aqua Trivy extension comes with a walkthrough quick start to show you the key areas, we recommend you look at that the first time you use it.
+
+When the extension is opened and Trivy is installed, you can run a scan of the current project or workspaces and it will generate a list of issues broken down by file.
+
+![findings](.github/images/scan_results.png)
+
+The menu allows you to turn on workspace specific options as part of the scan.
+
+![menu](.github/images/menu.png)
+
+## Aqua Plugin
+
+If you are an Aqua customer, you can use your `AQUA_KEY` and `AQUA_SECRET` to get additional assurance policy results.
+
+### Configure for Aqua Platform
+
+From the menu, select `Trivy Aqua Platform Integration` and provide your Aqua details.
+
+![integration](media/platform.png)
+
+Now run a scan as normal and you will have additional policy results.
 
 ## Known Issues
 
@@ -43,17 +62,21 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 - Add Trivy findings to the Problems view
 
 ### 0.8.0
+
 - Add support for managing the config through the UI
 - Add support for multiple workspaces in the explorer
 - Add tests and process around the code
 
 ### 0.6.1
+
 Handle findings inside tarballs
 
 ### 0.6.0
+
 Add support for secrets - turn on in the extension settings
 
 ### 0.5.1
+
 Fix json check
 
 ### 0.5.0
