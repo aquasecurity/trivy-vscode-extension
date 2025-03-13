@@ -6,9 +6,11 @@ src/**
 **/.eslintrc.json
 **/*.map
 **/*.ts
-node_modules
+node_modules/** 
+!node_modules/@vscode/codicons/dist/**
+!node_modules/@vscode/webview-ui-toolkit/dist/**/
 src/
-resources/
+# resources/
 test/
 .github/
 eslint*

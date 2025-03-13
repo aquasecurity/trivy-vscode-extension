@@ -25,7 +25,8 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
         vscode.Uri.joinPath(
           context.extensionUri,
           'node_modules',
-          '@vscode/codicons',
+          '@vscode',
+          'codicons',
           'dist'
         ),
       ],
@@ -45,7 +46,8 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
     vscode.Uri.joinPath(
       context.extensionUri,
       'node_modules',
-      '@vscode/codicons',
+      '@vscode',
+      'codicons',
       'dist',
       'codicon.css'
     )
