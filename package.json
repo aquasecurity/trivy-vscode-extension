@@ -580,7 +580,7 @@
     "format": "prettier --write .",
     "clean": "rimraf out",
     "package": "vsce package",
-    "publish": "vsce publish -p $VSCE_TOKEN"
+    "publish": "vsce publish -p $PUBLISHER_TOKEN"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
