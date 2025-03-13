@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.0.1
+
+- Fix issue with required resources and node_modules for webview
+
 ### 1.0.0
 
 - Add support for installing and updating a built in version of Trivy
