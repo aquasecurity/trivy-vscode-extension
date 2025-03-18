@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.0.3
+
+- Validate Aqua Platform settings before setting
+
 ### 1.0.2
 
 - Remove hard coded links to dev env

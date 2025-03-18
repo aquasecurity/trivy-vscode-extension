@@ -3,14 +3,6 @@ import * as vscode from 'vscode';
 import { showErrorMessage } from '../notification/notifications';
 
 /**
- * Default service URLs for Aqua Platform
- */
-const AQUA_DEFAULTS = Object.freeze({
-  API_URL: 'https://api.aquasec.com',
-  AUTHENTICATION_URL: 'https://cloud.aquasec.com',
-});
-
-/**
  * Environment variable keys used by Aqua Platform integration
  */
 const ENV_KEYS = Object.freeze({
@@ -61,11 +53,13 @@ export async function updateEnvironment(
     }
 
     // Set environment variables for Aqua Platform integration
-    newEnv[ENV_KEYS.API_URL] =
-      config.get<string>('aquaApiUrl') || AQUA_DEFAULTS.API_URL;
-    newEnv[ENV_KEYS.AUTH_URL] =
-      config.get<string>('aquaAuthenticationUrl') ||
-      AQUA_DEFAULTS.AUTHENTICATION_URL;
+    const aquaApiUrl = config.get<string>('aquaApiUrl');
+    const aquaAuthUrl = config.get<string>('aquaAuthenticationUrl');
+
+    if (aquaApiUrl && aquaAuthUrl) {
+      newEnv[ENV_KEYS.API_URL] = aquaApiUrl;
+      newEnv[ENV_KEYS.AUTH_URL] = aquaAuthUrl;
+    }
     newEnv[ENV_KEYS.API_KEY] = apiKey;
     newEnv[ENV_KEYS.API_SECRET] = apiSecret;
     newEnv[ENV_KEYS.RUN_MODE] = 'aqua';
