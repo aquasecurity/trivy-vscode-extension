@@ -1,5 +1,6 @@
 import * as child from 'child_process';
 import { unlinkSync, readdirSync, existsSync } from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
 import * as vscode from 'vscode';
@@ -32,15 +33,6 @@ export enum ScanType {
   FilesystemScan = 'fs',
   ImageScan = 'image',
   GitScan = 'repository',
-}
-
-/**
- * Result of a Trivy execution
- */
-interface ExecutionResult {
-  success: boolean;
-  message?: string;
-  error?: Error;
 }
 
 /**
@@ -385,7 +377,8 @@ export class TrivyWrapper {
       command = option.apply(command, config);
     }
 
-    command.push(workingPath);
+    command.push(`.`);
+
     return command;
   }
 
@@ -438,7 +431,7 @@ export class TrivyWrapper {
           const execution = child.spawn(binary, command, {
             cwd: workingPath,
             env,
-            shell: process.platform === 'win32', // Use shell on Windows
+            shell: os.platform() !== 'darwin',
           });
 
           // Handle cancellation
@@ -513,37 +506,5 @@ export class TrivyWrapper {
         });
       }
     );
-  }
-
-  /**
-   * Execute a simple Trivy command and return the result
-   * @param args Command arguments
-   * @returns Promise resolving to execution result
-   */
-  async executeCommand(args: string[]): Promise<ExecutionResult> {
-    if (!this.checkTrivyInstalled()) {
-      return {
-        success: false,
-        message: 'Trivy is not installed or not found in PATH',
-        error: new Error('Trivy not installed'),
-      };
-    }
-
-    const binary = this.getBinaryPath();
-    const command = `"${binary}" ${args.join(' ')}`;
-
-    try {
-      const output = child.execSync(command, { encoding: 'utf-8' });
-      return { success: true, message: output };
-    } catch (error) {
-      if (error instanceof Error) {
-        return { success: false, message: error.message, error };
-      }
-      return {
-        success: false,
-        message: 'Unknown error',
-        error: new Error('Unknown error'),
-      };
-    }
   }
 }

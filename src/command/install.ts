@@ -4,6 +4,7 @@ import * as https from 'https';
 import * as os from 'os';
 import path from 'path';
 
+import AdmZip from 'adm-zip';
 import * as tar from 'tar';
 import { window } from 'vscode';
 import * as vscode from 'vscode';
@@ -85,7 +86,7 @@ function getPlatformInfo(): { os: string; arch: string } {
 
   switch (arch) {
     case 'x64':
-      archName = 'AMD64';
+      archName = '64bit';
       break;
     case 'arm64':
       archName = 'ARM64';
@@ -167,6 +168,18 @@ function verifyChecksum(checksumPath: string, filePath: string): Promise<void> {
 }
 
 /**
+ * Extracts a zip archive to the specified directory
+ * @param archivePath Path to the zip archive
+ * @param outputDir Directory to extract the zip archive to
+ * @returns Promise that resolves when the zip archive has been extracted
+ */
+async function extractZip(archivePath: string, outputDir: string) {
+  const zip = new AdmZip(archivePath);
+  zip.extractEntryTo('trivy.exe', outputDir, false, true);
+  console.log(`Extracted to ${outputDir}`);
+}
+
+/**
  * Extracts a tarball to the specified directory
  * @param archivePath Path to the tarball
  * @param outputDir Directory to extract the tarball to
@@ -176,6 +189,7 @@ async function extractTar(archivePath: string, outputDir: string) {
   await tar.x({
     file: archivePath,
     C: outputDir, // Output directory
+    filter: (path) => path === 'trivy', // Only extract the trivy binary
   });
   console.log(`Extracted to ${outputDir}`);
 }
@@ -214,9 +228,11 @@ export async function installTrivy(
         const { os: osName, arch } = getPlatformInfo();
         output.appendLine(`Detected OS: ${osName}, Arch: ${arch}`);
 
+        const suffix = osName === 'windows' ? '.zip' : '.tar.gz';
+
         // Construct download URL for Trivy and the checksum file
         // Example URL format: https://github.com/aquasecurity/trivy/releases/download/v0.60.0/trivy_0.60.0_macOS-ARM64.tar.gz
-        const downloadUrl = `https://github.com/aquasecurity/trivy/releases/download/v${latestReleaseTag}/trivy_${latestReleaseTag}_${osName}-${arch}.tar.gz`;
+        const downloadUrl = `https://github.com/aquasecurity/trivy/releases/download/v${latestReleaseTag}/trivy_${latestReleaseTag}_${osName}-${arch}${suffix}`;
         const checksumUrl = `https://github.com/aquasecurity/trivy/releases/download/v${latestReleaseTag}/trivy_${latestReleaseTag}_checksums.txt`;
 
         // download the files to a temporary directory
@@ -225,7 +241,7 @@ export async function installTrivy(
         output.appendLine(`Creating temporary directory ${trivyDownloadDir}`);
         fs.mkdirSync(trivyDownloadDir, { recursive: true });
 
-        const trivyDownloadPath = `${trivyDownloadDir}/trivy_${latestReleaseTag}_${osName}-${arch}.tar.gz`;
+        const trivyDownloadPath = `${trivyDownloadDir}/trivy_${latestReleaseTag}_${osName}-${arch}${suffix}`;
         const checksumDownloadPath = `${trivyDownloadDir}/checksums.txt`;
 
         // download the tarball and checksum
@@ -261,48 +277,94 @@ export async function installTrivy(
                     fs.mkdirSync(trivyInstallDir, { recursive: true });
                     // untar the downloaded file
                     output.appendLine(`Extracting Trivy to ${trivyInstallDir}`);
-                    await extractTar(trivyDownloadPath, trivyInstallDir)
-                      .then(async () => {
-                        output.appendLine(
-                          `Trivy has been installed to ${trivyInstallDir}`
-                        );
-                        output.appendLine(
-                          `Cleaning up temporary directory ${trivyDownloadDir}`
-                        );
-                        fs.rmdirSync(trivyDownloadDir, { recursive: true });
-                        output.appendLine(
-                          `Setting path to Trivy in the config`
-                        );
-                        const config =
-                          vscode.workspace.getConfiguration('trivy');
-                        config.update(
-                          'binaryPath',
-                          `${trivyInstallDir}/trivy`,
-                          true
-                        );
-                        vscode.commands.executeCommand(
-                          'setContext',
-                          'trivy.installed',
-                          true
-                        );
-                        vscode.commands.executeCommand(
-                          'setContext',
-                          'trivy.isLatest',
-                          true
-                        );
-                        window.showInformationMessage(
-                          'Trivy has been installed'
-                        );
-                        progress.report({ increment: 100, message: 'Done' });
-                      })
-                      .catch((error) => {
-                        output.appendLine(
-                          `Failed to extract Trivy: ${error.message}`
-                        );
-                        throw new Error(
-                          `Failed to extract Trivy: ${error.message}`
-                        );
-                      });
+                    if (osName === 'windows') {
+                      // extract zip file
+                      await extractZip(trivyDownloadPath, trivyInstallDir)
+                        .then(async () => {
+                          output.appendLine(
+                            `Trivy has been installed to ${trivyInstallDir}`
+                          );
+                          output.appendLine(
+                            `Cleaning up temporary directory ${trivyDownloadDir}`
+                          );
+                          fs.rmdirSync(trivyDownloadDir, { recursive: true });
+                          output.appendLine(
+                            `Setting path to Trivy in the config`
+                          );
+                          const config =
+                            vscode.workspace.getConfiguration('trivy');
+                          config.update(
+                            'binaryPath',
+                            `${trivyInstallDir}/trivy.exe`,
+                            true
+                          );
+                          vscode.commands.executeCommand(
+                            'setContext',
+                            'trivy.installed',
+                            true
+                          );
+                          vscode.commands.executeCommand(
+                            'setContext',
+                            'trivy.isLatest',
+                            true
+                          );
+                          window.showInformationMessage(
+                            'Trivy has been installed'
+                          );
+                          progress.report({ increment: 100, message: 'Done' });
+                        })
+                        .catch((error) => {
+                          output.appendLine(
+                            `Failed to extract Trivy: ${error.message}`
+                          );
+                          throw new Error(
+                            `Failed to extract Trivy: ${error.message}`
+                          );
+                        });
+                    } else {
+                      await extractTar(trivyDownloadPath, trivyInstallDir)
+                        .then(async () => {
+                          output.appendLine(
+                            `Trivy has been installed to ${trivyInstallDir}`
+                          );
+                          output.appendLine(
+                            `Cleaning up temporary directory ${trivyDownloadDir}`
+                          );
+                          fs.rmdirSync(trivyDownloadDir, { recursive: true });
+                          output.appendLine(
+                            `Setting path to Trivy in the config`
+                          );
+                          const config =
+                            vscode.workspace.getConfiguration('trivy');
+                          config.update(
+                            'binaryPath',
+                            `${trivyInstallDir}/trivy`,
+                            true
+                          );
+                          vscode.commands.executeCommand(
+                            'setContext',
+                            'trivy.installed',
+                            true
+                          );
+                          vscode.commands.executeCommand(
+                            'setContext',
+                            'trivy.isLatest',
+                            true
+                          );
+                          window.showInformationMessage(
+                            'Trivy has been installed'
+                          );
+                          progress.report({ increment: 100, message: 'Done' });
+                        })
+                        .catch((error) => {
+                          output.appendLine(
+                            `Failed to extract Trivy: ${error.message}`
+                          );
+                          throw new Error(
+                            `Failed to extract Trivy: ${error.message}`
+                          );
+                        });
+                    }
                   })
                   .catch((error) => {
                     output.appendLine(
