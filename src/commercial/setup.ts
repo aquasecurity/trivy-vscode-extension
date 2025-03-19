@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 
+import { Output } from '../command/output';
 import { showInformationMessage } from '../notification/notifications';
+import { showWarningWithLink } from '../utils';
+
+import checkCredentialConnection from './cred_check';
 
 /**
  * Setup the Aqua Platform configuration
@@ -72,27 +76,69 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
   );
 
   const config = vscode.workspace.getConfiguration('trivy');
-
   panel.webview.onDidReceiveMessage(
     async (message) => {
       switch (message.command) {
-        case 'storeSecrets':
-          config.update('aquaApiUrl', message.apiUrl);
-          config.update('aquaAuthenticationUrl', message.authUrl);
-          config.update('useAquaPlatform', message.enableAquaPlatform);
-          vscode.commands.executeCommand(
-            'setContext',
-            'trivy.useAquaPlatform',
-            message.enableAquaPlatform
-          );
-          config.update('uploadResults', message.uploadResults);
-          await context.secrets.store('apiKey', message.apiKey);
-          await context.secrets.store('apiSecret', message.apiSecret);
-          showInformationMessage(
-            'Aqua Platform configuration saved successfully'
-          );
-          panel.dispose();
-          return;
+        case 'storeSecrets': {
+          let validCreds = true;
+          if (message.enableAquaPlatform) {
+            if (
+              message.apiKey === '' ||
+              message.apiSecret === '' ||
+              message.apiUrl === '' ||
+              message.authUrl === ''
+            ) {
+              showInformationMessage('Please fill in all the required fields');
+              return;
+            }
+            await checkCredentialConnection({
+              apiKey: message.apiKey,
+              apiSecret: message.apiSecret,
+              aquaUrl: message.apiUrl,
+              cspmUrl: message.authUrl,
+            })
+              .then(async (result: boolean) => {
+                if (!result) {
+                  throw new Error('Failed to validate credentials');
+                }
+              })
+              .catch((error) => {
+                Output.getInstance().appendLine(error.message);
+                validCreds = false;
+                showWarningWithLink(
+                  `Failed to validate credentials`,
+                  'Learn more',
+                  'https://docs.aquasec.com/saas/getting-started/welcome/saas-regions/'
+                );
+              });
+          }
+
+          if (validCreds) {
+            if (message.enableAquaPlatform) {
+              vscode.window.showInformationMessage(
+                'Aqua Platform credentials validated successfully'
+              );
+            }
+            config.update('aquaApiUrl', message.apiUrl);
+            config.update('aquaAuthenticationUrl', message.authUrl);
+            config.update('useAquaPlatform', message.enableAquaPlatform);
+            vscode.commands.executeCommand(
+              'setContext',
+              'trivy.useAquaPlatform',
+              message.enableAquaPlatform
+            );
+            config.update('uploadResults', message.uploadResults);
+            await context.secrets.store('apiKey', message.apiKey);
+            await context.secrets.store('apiSecret', message.apiSecret);
+            showInformationMessage(
+              'Aqua Platform configuration saved successfully'
+            );
+            panel.dispose();
+            return;
+          }
+
+          break;
+        }
         case 'openExtenalLink':
           vscode.env.openExternal(vscode.Uri.parse(message.url));
           return;
@@ -187,11 +233,8 @@ function getWebviewContent(
               API Secret
               <span slot="start" class="codicon codicon-key"></span>
               </vscode-text-field><br>
-              <vscode-checkbox id="uploadResults" name="uploadResults" ${uploadResults ? 'checked' : ''}>Upload Results</vscode-checkbox> <br>
-              <br />
-              <details>
-                 <summary>Advanced setup <i>(should really be left alone)</i></summary>
-                 <p>Only change these if you know what you are doing, otherwise leave them blank.</p>
+
+          
                  <vscode-text-field size="64" id="apiUrl" name="apiUrl" value="${aquaApiUrl}">
                  Aqua API URL
                  <span slot="start" class="codicon codicon-globe"></span>
@@ -200,8 +243,8 @@ function getWebviewContent(
                  Authentication Endpoint
                  <span slot="start" class="codicon codicon-globe"></span>
                  </vscode-text-field><br />
-              </details>
-              <br>
+                 <vscode-checkbox id="uploadResults" name="uploadResults" ${uploadResults ? 'checked' : ''}>Upload Results</vscode-checkbox> <br>
+                 <br />
               <vscode-button id="save-button" appearance="primary" type="submit" >Save</vscode-button>
               <!-- <button type="submit">Save</button> -->
            </form>

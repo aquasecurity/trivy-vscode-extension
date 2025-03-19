@@ -421,9 +421,8 @@ export class TrivyWrapper {
 
           // Function to update progress bar
           const updateProgress = () => {
-            progressCounter += 2;
-            if (progressCounter > progressMax) {
-              progressCounter = 0;
+            if (progressCounter <= progressMax) {
+              progressCounter += 2;
             }
 
             progress.report({
