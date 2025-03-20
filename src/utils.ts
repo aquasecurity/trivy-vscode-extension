@@ -1,3 +1,6 @@
+import * as os from 'os';
+import path from 'path';
+
 import * as vscode from 'vscode';
 
 import { Secret, TrivyResult } from './explorer/result';
@@ -141,4 +144,22 @@ export function prettifyName(name: string): string {
   const split = stripAnsi(name.replace('\n', ' '));
 
   return split;
+}
+
+export function getSafeResultsPath(
+  storagePath: string,
+  workspaceName: string,
+  resultType: 'assurance' | 'results',
+  suffix?: string
+): string {
+  const p = path.join(
+    storagePath,
+    `${workspaceName}_${resultType}.json${suffix ? `.${suffix}` : ''}`
+  );
+  if (os.platform() !== 'darwin') {
+    // escape the path for windows
+    // return p.replace(/ /g, '\\ ');
+  }
+
+  return p;
 }

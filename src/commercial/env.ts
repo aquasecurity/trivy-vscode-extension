@@ -63,7 +63,7 @@ export async function updateEnvironment(
     newEnv[ENV_KEYS.API_KEY] = apiKey;
     newEnv[ENV_KEYS.API_SECRET] = apiSecret;
     newEnv[ENV_KEYS.RUN_MODE] = 'aqua';
-    newEnv[ENV_KEYS.ASSURANCE_EXPORT] = assuranceReportPath;
+    newEnv[ENV_KEYS.ASSURANCE_EXPORT] = `${assuranceReportPath}`;
 
     return newEnv;
   } catch (error) {

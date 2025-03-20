@@ -6,4 +6,5 @@ node_modules
 tsconfig.tsbuildinfo
 contrib
 trivy
+trivy.exe
 .vscode/settings.json

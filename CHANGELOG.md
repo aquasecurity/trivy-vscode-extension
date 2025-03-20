@@ -1,5 +1,10 @@
 # Change Log
 
+### 1.0.4
+
+- Fixes the Trivy installer for Windows and Linux
+- Correctly handle spaces in directories
+
 ### 1.0.3
 
 - Validate Aqua Platform settings before setting

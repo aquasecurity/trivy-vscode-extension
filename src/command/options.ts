@@ -1,3 +1,5 @@
+import * as os from 'os';
+
 import * as vscode from 'vscode';
 
 import { showErrorMessage } from '../notification/notifications';
@@ -250,7 +252,13 @@ export class ResultsOutputOption implements TrivyCommandOption {
   constructor(private readonly resultsPath: string) {}
 
   apply(command: string[]): string[] {
-    command.push(`--output=${this.resultsPath}`);
+    if (os.platform() !== 'darwin') {
+      // wrap the path in quotes for windows and linux
+      command.push(`--output="${this.resultsPath}"`);
+    } else {
+      command.push(`--output=${this.resultsPath}`);
+    }
+
     return command;
   }
 }

@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -584,6 +584,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
+    "@types/adm-zip": "^0.5.7",
     "@types/crypto-js": "^4.2.2",
     "@types/glob": "^7.1.1",
     "@types/mocha": "^7.0.2",
@@ -620,6 +621,7 @@
     "@types/tar": "^6.1.13",
     "@vscode/codicons": "^0.0.36",
     "@vscode/webview-ui-toolkit": "^1.4.0",
+    "adm-zip": "^0.5.16",
     "crypto-js": "^4.2.0",
     "ignore": "^7.0.3",
     "moment": "^2.30.1",
