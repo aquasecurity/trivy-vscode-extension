@@ -218,11 +218,11 @@
       },
       {
         "command": "trivy.scanForSecrets",
-        "title": "Scan for secrets"
+        "title": "Scan for sensitive data"
       },
       {
         "command": "trivy.disableScanForSecrets",
-        "title": "✓ Scan for secrets"
+        "title": "✓ Scan for sensitive data"
       },
       {
         "command": "trivy.onlyFixedIssues",
@@ -274,9 +274,9 @@
       "trivy": [
         {
           "id": "trivyIssueViewer",
-          "name": "Findings Explorer",
+          "name": "Findings",
           "icon": "media/trivy.svg",
-          "contextualTitle": "Findings Explorer"
+          "contextualTitle": "Findings"
         },
         {
           "id": "trivyAssuranceViewer",
