@@ -71,7 +71,15 @@ export class ScannersOption extends ConfigAwareOption {
     command: string[],
     config: vscode.WorkspaceConfiguration
   ): string[] {
-    const scanners = ['misconfig', 'vuln'];
+    const scanners = [];
+
+    if (config.get<boolean>('vulnScanning')) {
+      scanners.push('vuln');
+    }
+
+    if (config.get<boolean>('misconfigScanning')) {
+      scanners.push('misconfig');
+    }
 
     if (config.get<boolean>('secretScanning')) {
       scanners.push('secret');

@@ -18,6 +18,8 @@ const disposables: vscode.Disposable[] = [];
 const CONFIG_BOOLEAN_KEYS = [
   'useIgnoreFile',
   'offlineScan',
+  'vulnScanning',
+  'misconfigScanning',
   'secretScanning',
   'fixedOnly',
   'onlyUseConfigFile',

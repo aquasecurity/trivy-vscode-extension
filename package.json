@@ -27,6 +27,18 @@
           "default": false,
           "description": "Run Trivy with vebose flag to get more information"
         },
+        "trivy.vulnScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Trivy should scan for vulnerabilities",
+          "scope": "window"
+        },
+        "trivy.misconfigScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Trivy should scan for misconfigurations",
+          "scope": "window"
+        },
         "trivy.secretScanning": {
           "type": "boolean",
           "default": false,
@@ -189,6 +201,22 @@
         "title": "✓ Offline scanning"
       },
       {
+        "command": "trivy.scanForVulns",
+        "title": "Scan for vulnerabilities"
+      },
+      {
+        "command": "trivy.disableScanForVulns",
+        "title": "✓ Scan for vulnerabilities"
+      },
+      {
+        "command": "trivy.scanForMisconfigs",
+        "title": "Scan for misconfigurations"
+      },
+      {
+        "command": "trivy.disableScanForMisconfigs",
+        "title": "✓ Scan for misconfigurations"
+      },
+      {
         "command": "trivy.scanForSecrets",
         "title": "Scan for secrets"
       },
@@ -322,16 +350,6 @@
           "group": "3_setting@1"
         },
         {
-          "command": "trivy.scanForSecrets",
-          "when": "view == trivyIssueViewer && !trivy.secretScanning",
-          "group": "3_setting@2"
-        },
-        {
-          "command": "trivy.disableScanForSecrets",
-          "when": "view == trivyIssueViewer && trivy.secretScanning",
-          "group": "3_setting@2"
-        },
-        {
           "command": "trivy.onlyFixedIssues",
           "when": "view == trivyIssueViewer && !trivy.fixedOnly",
           "group": "3_setting@3"
@@ -340,6 +358,36 @@
           "command": "trivy.disableOnlyFixedIssues",
           "when": "view == trivyIssueViewer && trivy.fixedOnly",
           "group": "3_setting@3"
+        },
+        {
+          "command": "trivy.scanForVulns",
+          "when": "view == trivyIssueViewer && !trivy.vulnScanning",
+          "group": "3_scanners@1"
+        },
+        {
+          "command": "trivy.disableScanForVulns",
+          "when": "view == trivyIssueViewer && trivy.vulnScanning",
+          "group": "3_scanners@1"
+        },
+        {
+          "command": "trivy.scanForMisconfigs",
+          "when": "view == trivyIssueViewer && !trivy.misconfigScanning",
+          "group": "3_scanners@2"
+        },
+        {
+          "command": "trivy.disableScanForMisconfigs",
+          "when": "view == trivyIssueViewer && trivy.misconfigScanning",
+          "group": "3_scanners@2"
+        },
+        {
+          "command": "trivy.scanForSecrets",
+          "when": "view == trivyIssueViewer && !trivy.secretScanning",
+          "group": "3_scanners@3"
+        },
+        {
+          "command": "trivy.disableScanForSecrets",
+          "when": "view == trivyIssueViewer && trivy.secretScanning",
+          "group": "3_scanners@3"
         },
         {
           "command": "trivy.setupCommercial",
