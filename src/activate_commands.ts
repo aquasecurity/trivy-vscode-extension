@@ -185,6 +185,18 @@ export function registerCommands(
   registerCommand(context, 'trivy.disableOfflineScan', () =>
     updateConfigAndContext(config, 'offlineScan', false)
   );
+  registerCommand(context, 'trivy.scanForVulns', () =>
+    updateConfigAndContext(config, 'vulnScanning', true)
+  );
+  registerCommand(context, 'trivy.disableScanForVulns', () =>
+    updateConfigAndContext(config, 'vulnScanning', false)
+  );
+  registerCommand(context, 'trivy.scanForMisconfigs', () =>
+    updateConfigAndContext(config, 'misconfigScanning', true)
+  );
+  registerCommand(context, 'trivy.disableScanForMisconfigs', () =>
+    updateConfigAndContext(config, 'misconfigScanning', false)
+  );
   registerCommand(context, 'trivy.scanForSecrets', () =>
     updateConfigAndContext(config, 'secretScanning', true)
   );

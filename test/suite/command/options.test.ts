@@ -41,8 +41,12 @@ suite('trivy command options', function (): void {
     assert.strictEqual(command.join(' '), '--debug');
   });
 
-  test('Trivy scanners command option', () => {
+  test('Trivy scanners command option with all enabled', () => {
     const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
+    config.update('vulnScanning', true);
+    config.update('misconfigScanning', true);
+    config.update('secretScanning', true);
+
     let command: string[] = [];
 
     const commandOption = new ScannersOption();
@@ -50,7 +54,34 @@ suite('trivy command options', function (): void {
 
     assert.strictEqual(
       command.join(' '),
-      '--scanners=misconfig,vuln --list-all-pkgs'
+      '--scanners=vuln,misconfig,secret --list-all-pkgs'
+    );
+  });
+
+  test('Trivy scanners command option with vuln enabled', () => {
+    const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
+    config.update('vulnScanning', true);
+
+    let command: string[] = [];
+
+    const commandOption = new ScannersOption();
+    command = commandOption.apply(command, config);
+
+    assert.strictEqual(command.join(' '), '--scanners=vuln --list-all-pkgs');
+  });
+
+  test('Trivy scanners command option with misconfig enabled', () => {
+    const config = new mockConfig() as unknown as vscode.WorkspaceConfiguration;
+    config.update('misconfigScanning', true);
+
+    let command: string[] = [];
+
+    const commandOption = new ScannersOption();
+    command = commandOption.apply(command, config);
+
+    assert.strictEqual(
+      command.join(' '),
+      '--scanners=misconfig --list-all-pkgs'
     );
   });
 
@@ -63,10 +94,7 @@ suite('trivy command options', function (): void {
     const commandOption = new ScannersOption();
     command = commandOption.apply(command, config);
 
-    assert.strictEqual(
-      command.join(' '),
-      '--scanners=misconfig,vuln,secret --list-all-pkgs'
-    );
+    assert.strictEqual(command.join(' '), '--scanners=secret --list-all-pkgs');
   });
 
   test('Trivy offline scan command option', () => {
