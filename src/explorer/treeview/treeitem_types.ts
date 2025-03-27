@@ -18,4 +18,10 @@ export enum TrivyTreeItemType {
   assuranceControlResult = 12,
   multiCodeAssurancePolicy = 13,
   singleCodeAssurancePolicy = 14,
+  vulnerabilityRoot = 15,
+  misconfigRoot = 16,
+  secretRoot = 17,
+  vulnerabilitySeverity,
+  misconfigSeverity,
+  secretSeverity,
 }

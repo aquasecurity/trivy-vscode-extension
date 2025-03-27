@@ -30,6 +30,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
       check?: TrivyResult | PolicyResult;
       command?: vscode.Command;
       workspacePath?: string;
+      requiredSeverity?: string;
     }
   ) {
     super(title, collapsibleState);
@@ -43,6 +44,16 @@ export class TrivyTreeItem extends vscode.TreeItem {
     this.code = properties?.check?.id || '';
 
     switch (itemType) {
+      case TrivyTreeItemType.vulnerabilitySeverity:
+      case TrivyTreeItemType.misconfigSeverity:
+      case TrivyTreeItemType.secretSeverity:
+        this.iconPath = new vscode.ThemeIcon(
+          'debug-breakpoint',
+          new vscode.ThemeColor(
+            this.getSeverityColor(this.properties?.requiredSeverity || '')
+          )
+        );
+        break;
       case TrivyTreeItemType.assurancePolicy:
         this.code = (properties?.check as PolicyResult)?.matchCode || '';
         this.title = (properties?.check as PolicyResult)?.title || '';

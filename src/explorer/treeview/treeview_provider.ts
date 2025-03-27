@@ -24,10 +24,16 @@ import {
   getTopLevelPolicies,
 } from './assurance';
 import {
+  getMisconfigSeverityRoots,
   getMisconfigurationInstances,
   getSecretInstances,
+  getSecretRoots,
   getTopLevelFindings,
   getVulnerabilityChildren,
+  getVulnerabilitySeverityRoots,
+  getVulnerabilitiesBySeverity,
+  getMisconfigurationsBySeverity,
+  getSecretsBySeverity,
 } from './findings';
 import { TrivyTreeItem } from './treeitem';
 import { TrivyTreeItemType } from './treeitem_types';
@@ -321,11 +327,28 @@ export class TrivyTreeViewProvider
         return getAssurancePolicyChildrenMultiCode(resultData, element);
       case TrivyTreeItemType.singleCodeAssurancePolicy:
         return getAssurancePolicyChildrenSingleCode(resultData, element);
+      case TrivyTreeItemType.vulnerabilityRoot:
+        return getVulnerabilitySeverityRoots(resultData);
+      case TrivyTreeItemType.vulnerabilitySeverity:
+        return getVulnerabilitiesBySeverity(resultData, element.title);
+      case TrivyTreeItemType.misconfigSeverity:
+        return getMisconfigurationsBySeverity(resultData, element.title);
+      case TrivyTreeItemType.secretSeverity:
+        return getSecretsBySeverity(resultData, element.title);
+      case TrivyTreeItemType.misconfigRoot:
+        return getMisconfigSeverityRoots(resultData);
+      case TrivyTreeItemType.secretRoot:
+        return getSecretRoots(resultData);
     }
 
     const filtered = resultData.filter(
       (c: PolicyResult | TrivyResult) =>
-        c.filename === element.filename && c instanceof TrivyResult
+        c.filename === element.filename &&
+        c instanceof TrivyResult &&
+        (element.properties?.requiredSeverity
+          ? c.severity.toLowerCase() ===
+            element.properties?.requiredSeverity.toLowerCase()
+          : true)
     );
 
     switch (element.itemType) {
@@ -373,7 +396,11 @@ export class TrivyTreeViewProvider
               result.extraData instanceof Secret
                 ? TrivyTreeItemType.secretInstance
                 : TrivyTreeItemType.misconfigCode,
-              { check: result, command: cmd }
+              {
+                check: result,
+                command: cmd,
+                requiredSeverity: element.properties?.requiredSeverity,
+              }
             )
           );
           break;
@@ -392,7 +419,10 @@ export class TrivyTreeViewProvider
                 extraData.pkgName,
                 vscode.TreeItemCollapsibleState.Collapsed,
                 TrivyTreeItemType.vulnerablePackage,
-                { check: result }
+                {
+                  check: result,
+                  requiredSeverity: element.properties?.requiredSeverity,
+                }
               )
             );
           }
