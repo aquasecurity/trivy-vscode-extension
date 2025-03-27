@@ -47,6 +47,24 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 1.1.0
+
+- Configure Scanners to use for scan
+- Update the Treeview when using Aqua Platform
+
+### 1.0.4
+
+- Fixes the Trivy installer for Windows and Linux
+- Correctly handle spaces in directories
+
+### 1.0.3
+
+- Validate Aqua Platform settings before setting
+
+### 1.0.2
+
+- Remove hard coded links to dev env
+
 ### 1.0.1
 
 - Fix issue with required resources and node_modules for webview

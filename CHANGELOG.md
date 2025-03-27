@@ -1,5 +1,10 @@
 # Change Log
 
+### 1.1.0
+
+- Configure Scanners to use for scan
+- Update the Treeview when using Aqua Platform
+
 ### 1.0.4
 
 - Fixes the Trivy installer for Windows and Linux
