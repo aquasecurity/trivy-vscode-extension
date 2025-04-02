@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.2.0
+
+- Make order by type and severity available to all users
+
 ### 1.1.0
 
 - Configure Scanners to use for scan
