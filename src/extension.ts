@@ -25,6 +25,7 @@ const CONFIG_BOOLEAN_KEYS = [
   'onlyUseConfigFile',
   'useConfigFile',
   'useAquaPlatform',
+  'orderResultsByType',
 ];
 
 /*
