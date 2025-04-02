@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.2.1
+
+- Make order by severity the default view
+
 ## 1.2.0
 
 - Make order by type and severity available to all users

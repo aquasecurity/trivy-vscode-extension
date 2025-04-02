@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -130,7 +130,7 @@
         },
         "trivy.orderResultsByType": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Order results by type",
           "scope": "application"
         }
