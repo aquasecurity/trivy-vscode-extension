@@ -47,6 +47,14 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 1.2.1
+
+- Make order by severity the default view
+
+### 1.2.0
+
+- Make order by type and severity available to all users
+
 ### 1.1.0
 
 - Configure Scanners to use for scan
