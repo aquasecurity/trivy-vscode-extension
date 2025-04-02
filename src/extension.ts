@@ -25,6 +25,7 @@ const CONFIG_BOOLEAN_KEYS = [
   'onlyUseConfigFile',
   'useConfigFile',
   'useAquaPlatform',
+  'orderResultsByType',
 ];
 
 /*
@@ -167,6 +168,7 @@ async function registerViews(
 
   // Register commands
   const config = vscode.workspace.getConfiguration('trivy');
+
   registerCommands(
     context,
     trivyWrapper,

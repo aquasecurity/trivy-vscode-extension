@@ -230,4 +230,24 @@ export function registerCommands(
   registerCommand(context, 'trivy.setupCommercial', async () => {
     await setupCommercial(context);
   });
+  registerCommand(context, 'trivy.setOrderResultsByType', async () => {
+    await updateConfigAndContext(
+      config,
+      'orderResultsByType',
+      true,
+      vscode.ConfigurationTarget.Global
+    );
+    misconfigProvider.refresh();
+    assuranceProvider.refresh();
+  });
+  registerCommand(context, 'trivy.unsetOrderResultsByType', async () => {
+    await updateConfigAndContext(
+      config,
+      'orderResultsByType',
+      false,
+      vscode.ConfigurationTarget.Global
+    );
+    misconfigProvider.refresh();
+    assuranceProvider.refresh();
+  });
 }

@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -127,6 +127,12 @@
           "default": false,
           "description": "Upload results to Aqua Platform",
           "scope": "window"
+        },
+        "trivy.orderResultsByType": {
+          "type": "boolean",
+          "default": false,
+          "description": "Order results by type",
+          "scope": "application"
         }
       }
     },
@@ -257,6 +263,14 @@
         "title": "✓ Set explicit config file"
       },
       {
+        "command": "trivy.setOrderResultsByType",
+        "title": "Order results by type and severity"
+      },
+      {
+        "command": "trivy.unsetOrderResultsByType",
+        "title": "✓ Order results by type and severity"
+      },
+      {
         "command": "trivy.update",
         "title": "Update Trivy"
       }
@@ -358,6 +372,16 @@
           "command": "trivy.disableOnlyFixedIssues",
           "when": "view == trivyIssueViewer && trivy.fixedOnly",
           "group": "3_setting@3"
+        },
+        {
+          "command": "trivy.setOrderResultsByType",
+          "when": "view == trivyIssueViewer && !trivy.orderResultsByType",
+          "group": "3_setting@4"
+        },
+        {
+          "command": "trivy.unsetOrderResultsByType",
+          "when": "view == trivyIssueViewer && trivy.orderResultsByType",
+          "group": "3_setting@4"
         },
         {
           "command": "trivy.scanForVulns",
