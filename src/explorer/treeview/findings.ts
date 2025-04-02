@@ -23,8 +23,8 @@ export function getTopLevelFindings<T extends TrivyResult | PolicyResult>(
   resultData: T[]
 ): TrivyTreeItem[] {
   const config = vscode.workspace.getConfiguration('trivy');
-  const useAquaPlatform = config.get<boolean>('useAquaPlatform');
-  if (useAquaPlatform) {
+  const orderResultsByType = config.get<boolean>('orderResultsByType') ?? false;
+  if (orderResultsByType) {
     return groupResultsBySeverity(resultData);
   } else {
     return groupResultsByFile(resultData);
