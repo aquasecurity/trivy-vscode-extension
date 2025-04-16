@@ -256,6 +256,12 @@ export function getSecretInstances<T extends TrivyResult | PolicyResult>(
   return results;
 }
 
+/**
+ *
+ * @param resultData the result data to extract the children from
+ * @param resultData which is an array of TrivyResult or PolicyResult
+ * @returns TrivyTreeItem[]
+ */
 export function getVulnerabilitySeverityRoots<
   T extends TrivyResult | PolicyResult,
 >(resultData: T[]): TrivyTreeItem[] {
@@ -285,6 +291,12 @@ export function getVulnerabilitySeverityRoots<
   return results;
 }
 
+/**
+ * getMisconfigurationSeverityRoots returns the top level
+ * misconfiguration severity roots for the given result data.
+ * @param resultData the result data to extract the children from
+ * @returns TrivytreeItem[]
+ */
 export function getMisconfigSeverityRoots(
   resultData: (TrivyResult | PolicyResult)[]
 ): TrivyTreeItem[] {

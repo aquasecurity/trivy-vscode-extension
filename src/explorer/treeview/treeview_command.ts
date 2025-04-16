@@ -3,6 +3,7 @@ import path from 'path';
 
 import * as vscode from 'vscode';
 
+import { VulnerabilityCodeLensProvider } from '../../codelens_provider';
 import { Misconfiguration, PolicyResult, TrivyResult } from '../result';
 
 /**
@@ -57,6 +58,11 @@ export function createFileOpenCommand(
     new vscode.Position(result.startLine - 1, 0),
     new vscode.Position(result.endLine, 0)
   );
+
+  VulnerabilityCodeLensProvider.instance().updateResults([
+    result as TrivyResult,
+  ]);
+
   return {
     command: 'vscode.open',
     title: '',
