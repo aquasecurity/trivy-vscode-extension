@@ -168,7 +168,6 @@ function getWebviewContent(
   const useAquaPlatform = config.get<boolean>('useAquaPlatform');
   const aquaApiUrl = config.get('aquaApiUrl');
   const aquaAuthenticationUrl = config.get('aquaAuthenticationUrl');
-  const uploadResults = config.get<boolean>('uploadResults');
 
   return /* html */ `
   <!DOCTYPE html>
@@ -243,7 +242,6 @@ function getWebviewContent(
                  Authentication Endpoint
                  <span slot="start" class="codicon codicon-globe"></span>
                  </vscode-text-field><br />
-                 <vscode-checkbox id="uploadResults" name="uploadResults" ${uploadResults ? 'checked' : ''}>Upload Results</vscode-checkbox> <br>
                  <br />
               <vscode-button id="save-button" appearance="primary" type="submit" >Save</vscode-button>
               <!-- <button type="submit">Save</button> -->
@@ -275,7 +273,6 @@ function getWebviewContent(
                const apiUrl = document.getElementById('apiUrl').value;
                const authUrl = document.getElementById('authUrl').value;
                const enableAquaPlatform = document.getElementById('enableAquaPlatform').checked;
-               const uploadResults = document.getElementById('uploadResults').checked;
                vscode.postMessage({ command: 'storeSecrets', apiKey, apiSecret, apiUrl, authUrl, enableAquaPlatform, uploadResults });
            });
         </script>
