@@ -45,6 +45,7 @@ export class TrivyWrapper {
   // Stores whether the currently used version of Trivy
   // is installed and maintained by VSCode
   public vscodeTrivyInstall = false;
+  extensionPath: string;
 
   /**
    * Creates a new instance of TrivyWrapper
@@ -52,14 +53,16 @@ export class TrivyWrapper {
    */
   constructor(
     private readonly resultsStoragePath: string,
-    private readonly extensionPath: string
-  ) {}
+    private readonly extensionContext: vscode.ExtensionContext
+  ) {
+    this.extensionPath = this.extensionContext.extensionPath;
+  }
 
   /**
    * Runs Trivy scan on all workspace folders
    * @param secrets Secret storage for API keys and tokens
    */
-  async run(secrets: vscode.SecretStorage): Promise<void> {
+  async run(noUpdate?: boolean): Promise<void> {
     try {
       if (this.running) {
         return;
@@ -92,12 +95,12 @@ export class TrivyWrapper {
       await this.cleanupPreviousResults();
 
       // Get the Trivy binary path
-      const binary = this.getBinaryPath();
+      const binary = this.getTrivyBinaryPath();
 
       // Run scans for each workspace folder in sequence
       for (const workspaceFolder of workspaceFolders) {
         try {
-          await this.scanWorkspaceFolder(workspaceFolder, binary, secrets);
+          await this.scanWorkspaceFolder(workspaceFolder, binary);
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
@@ -109,6 +112,10 @@ export class TrivyWrapper {
 
       // Use a slight delay to ensure files are written before refreshing
       setTimeout(() => {
+        if (!noUpdate) {
+          // don't update the treeview
+          return;
+        }
         vscode.commands.executeCommand('trivy.refresh');
       }, 250);
 
@@ -137,7 +144,7 @@ export class TrivyWrapper {
   async isInstalled(): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       try {
-        const binary = this.getBinaryPath();
+        const binary = this.getTrivyBinaryPath();
         child.execSync(`"${binary}" --help`, { stdio: 'ignore' });
         if (binary === `${this.extensionPath}/trivy`) {
           this.vscodeTrivyInstall = true;
@@ -176,8 +183,7 @@ export class TrivyWrapper {
    */
   private async scanWorkspaceFolder(
     workspaceFolder: vscode.WorkspaceFolder,
-    binary: string,
-    secrets: vscode.SecretStorage
+    binary: string
   ): Promise<void> {
     // Get configuration
     const config = vscode.workspace.getConfiguration('trivy');
@@ -191,7 +197,12 @@ export class TrivyWrapper {
         this.resultsStoragePath,
         `${workspaceFolder.name}_assurance.json`
       );
-      env = await updateEnvironment(config, secrets, env, assuranceReportPath);
+      env = await updateEnvironment(
+        config,
+        this.extensionContext.secrets,
+        env,
+        assuranceReportPath
+      );
     }
 
     // Build command
@@ -257,7 +268,7 @@ export class TrivyWrapper {
    * Get the path to the Trivy binary
    * @returns Path to the Trivy binary
    */
-  private getBinaryPath(): string {
+  getTrivyBinaryPath(): string {
     const config = vscode.workspace.getConfiguration('trivy');
     const binary = config.get<string>('binaryPath', 'trivy') || 'trivy';
     return binary;
@@ -268,7 +279,7 @@ export class TrivyWrapper {
    * @returns true if Trivy is installed, false otherwise
    */
   private checkTrivyInstalled(): boolean {
-    const binaryPath = this.getBinaryPath();
+    const binaryPath = this.getTrivyBinaryPath();
 
     try {
       child.execSync(`"${binaryPath}" --help`, { stdio: 'ignore' });
@@ -295,7 +306,7 @@ export class TrivyWrapper {
       return '';
     }
 
-    const binary = this.getBinaryPath();
+    const binary = this.getTrivyBinaryPath();
 
     return new Promise<string>((resolve, reject) => {
       try {

@@ -31,10 +31,14 @@ export class Vulnerability {
   public pkgName: string;
   public installedVersion: string;
   public fixedVersion: string;
-  constructor(vulnerabitlity: any) {
-    this.pkgName = vulnerabitlity.PkgName;
-    this.installedVersion = vulnerabitlity.InstalledVersion;
-    this.fixedVersion = vulnerabitlity.FixedVersion;
+  public indirect: boolean;
+  public rootPackage: string;
+  constructor(vulnerability: any) {
+    this.pkgName = vulnerability.PkgName;
+    this.installedVersion = vulnerability.InstalledVersion;
+    this.fixedVersion = vulnerability.FixedVersion;
+    this.indirect = vulnerability.Indirect;
+    this.rootPackage = vulnerability.RootPackage;
   }
 }
 
@@ -317,6 +321,7 @@ export function processResult(
       if (ignorer.isFileIgnored(result.Target, workspaceName)) {
         continue;
       }
+
       const element = result.Vulnerabilities[i];
       const id = element.VulnerabilityID;
       const title = element.Title;
@@ -324,8 +329,24 @@ export function processResult(
       const target = result.Target;
       const severity = element.Severity;
       const references = element.References;
-      const extra = new Vulnerability(element);
+
       const location = getLocation(element, result.Packages);
+
+      element.Indirect = false;
+      if (Object.prototype.hasOwnProperty.call(element, 'Custom')) {
+        const custom = element.Custom;
+        if (
+          custom &&
+          Object.prototype.hasOwnProperty.call(custom, 'pkgRoots')
+        ) {
+          element.RootPackage = custom.pkgRoots[0];
+          if (Object.prototype.hasOwnProperty.call(custom, 'indirect')) {
+            element.Indirect = custom.indirect;
+          }
+        }
+      }
+
+      const extra = new Vulnerability(element);
 
       try {
         results.push(
@@ -399,11 +420,7 @@ function getPolicyPkgLocation(e: any, packages: Package[]): Location {
         pkg.Name === element.PkgName && pkg.Version === element.InstalledVersion
     );
     if (matchingPackage && matchingPackage.Locations) {
-      if (matchingPackage.Locations.length > 1) {
-        return matchingPackage.Locations[0];
-      } else {
-        return matchingPackage.Locations[0];
-      }
+      return matchingPackage.Locations[0];
     }
   }
   return { StartLine: 1, EndLine: 1 };
@@ -417,6 +434,16 @@ function getPolicyPkgLocation(e: any, packages: Package[]): Location {
  */
 function getLocation(e: any, packages: Package[]): Location {
   const element = e;
+
+  if (element && Object.prototype.hasOwnProperty.call(element, 'Custom')) {
+    const custom = element.Custom;
+    if (custom && Object.prototype.hasOwnProperty.call(custom, 'lineNumber')) {
+      return {
+        StartLine: custom.lineNumber,
+        EndLine: custom.lineNumber,
+      };
+    }
+  }
 
   if (element && packages) {
     const matchingPackage = packages.find(

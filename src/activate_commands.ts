@@ -150,7 +150,7 @@ export function registerCommands(
       misconfigProvider.reset();
       assuranceProvider.reset();
       helpProvider.clear();
-      trivyWrapper.run(context.secrets);
+      trivyWrapper.run();
     },
     'Failed to run Trivy scan'
   );

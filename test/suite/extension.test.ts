@@ -4,6 +4,8 @@ import * as child from 'child_process';
 import * as fs from 'fs';
 import path from 'path';
 
+import { ExtensionContext } from 'vscode';
+
 import { ScanType, TrivyWrapper } from '../../src/command/command';
 import { ExitCodeOption, QuietOption } from '../../src/command/options';
 import {
@@ -20,7 +22,10 @@ suite('extension', function (): void {
   const executeTrivyCommand = function (projectPath: string): string {
     const targetDir = fs.mkdtempSync(projectPath);
     const extensionDir = path.resolve(__dirname, '../../');
-    const wrapper = new TrivyWrapper(targetDir, extensionDir);
+    const context = {
+      extensionPath: extensionDir,
+    };
+    const wrapper = new TrivyWrapper(targetDir, context as ExtensionContext);
 
     const commandArgs = wrapper.buildCommand(
       projectPath,

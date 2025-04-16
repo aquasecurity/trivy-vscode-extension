@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 
 import { registerCommands } from './activate_commands';
+import { VulnerabilityCodeLensProvider } from './codelens_provider';
 import { TrivyWrapper } from './command/command';
 import { verifyTrivyInstallation } from './command/install';
 import { TrivyHelpProvider } from './explorer/helpview/helpview';
 import { TrivyTreeViewProvider } from './explorer/treeview/treeview_provider';
+import { MCPServer } from './mcp/server';
 import { showErrorMessage } from './notification/notifications';
 
 /**
@@ -59,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     const trivyWrapper = new TrivyWrapper(
       misconfigProvider.resultsStoragePath,
-      context.extensionPath
+      context
     );
 
     await registerViews(
@@ -92,6 +94,23 @@ export async function activate(context: vscode.ExtensionContext) {
     await verifyTrivyInstallation(trivyWrapper);
 
     vscode.commands.executeCommand('setContext', 'trivy.extensionLoaded', true);
+
+    // Add to your activation function in extension.ts
+    context.subscriptions.push(
+      vscode.languages.registerCodeLensProvider(
+        { scheme: 'file' },
+        VulnerabilityCodeLensProvider.instance()
+      )
+    );
+
+    // if the vscode version is greater than 1.99.0, register the mcp
+    if (parseInt(vscode.version.split('.')[1]) > 98) {
+      const mcpServer = new MCPServer(trivyWrapper);
+      await mcpServer.startMcpServer();
+      //mcpServer.registerHandlers(context);
+      // context.subscriptions.push(mcpServer);
+    }
+
     // Log successful activation
     console.log('Trivy extension activated');
   } catch (error) {
