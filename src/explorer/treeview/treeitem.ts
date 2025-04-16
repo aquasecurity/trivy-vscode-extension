@@ -91,21 +91,11 @@ export class TrivyTreeItem extends vscode.TreeItem {
       case TrivyTreeItemType.secretCode:
         this.tooltip = this.id;
         this.iconPath = {
-          light: path.join(
-            __filename,
-            '..',
-            '..',
-            'resources',
-            'light',
-            'key.svg'
+          light: vscode.Uri.file(
+            path.join(__filename, '..', '..', 'resources', 'light', 'key.svg')
           ),
-          dark: path.join(
-            __filename,
-            '..',
-            '..',
-            'resources',
-            'dark',
-            'key.svg'
+          dark: vscode.Uri.file(
+            path.join(__filename, '..', '..', 'resources', 'dark', 'key.svg')
           ),
         };
         break;

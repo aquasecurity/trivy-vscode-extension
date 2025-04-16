@@ -65,6 +65,10 @@ export async function updateEnvironment(
     newEnv[ENV_KEYS.RUN_MODE] = 'aqua';
     newEnv[ENV_KEYS.ASSURANCE_EXPORT] = `${assuranceReportPath}`;
 
+    // don't upload the results to the aqua platform
+    newEnv['TRIVY_SKIP_REPOSITORY_UPLOAD'] = 'true';
+    newEnv['TRIVY_SKIP_RESULT_UPLOAD'] = 'true';
+
     return newEnv;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
