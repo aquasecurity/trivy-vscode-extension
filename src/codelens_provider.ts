@@ -63,7 +63,7 @@ export class VulnerabilityCodeLensProvider implements vscode.CodeLensProvider {
 
       // Check if this result's file path matches the current document
       const resultPath = result.filename;
-      const fullResultPath = filePath.endsWith(resultPath);
+      const fullResultPath = path.resolve(wsFolder.uri.fsPath, resultPath) === filePath;
 
       return fullResultPath;
     });
