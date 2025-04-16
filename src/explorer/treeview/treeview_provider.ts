@@ -412,6 +412,7 @@ export class TrivyTreeViewProvider
             if (resolvedNodes.includes(extraData.pkgName)) {
               continue;
             }
+
             resolvedNodes.push(extraData.pkgName);
             trivyResults.push(
               new TrivyTreeItem(
@@ -422,6 +423,7 @@ export class TrivyTreeViewProvider
                 {
                   check: result,
                   requiredSeverity: element.properties?.requiredSeverity,
+                  indirect: extraData.indirect,
                 }
               )
             );
