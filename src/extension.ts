@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { registerCommands } from './activate_commands';
+import { VulnerabilityCodeLensProvider } from './codelens_provider';
 import { TrivyWrapper } from './command/command';
 import { verifyTrivyInstallation } from './command/install';
 import { TrivyHelpProvider } from './explorer/helpview/helpview';
@@ -90,6 +91,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // verify if trivy is installed
     await verifyTrivyInstallation(trivyWrapper);
+
+    // Add to your activation function in extension.ts
+    context.subscriptions.push(
+      vscode.languages.registerCodeLensProvider(
+        { scheme: 'file' },
+        VulnerabilityCodeLensProvider.instance()
+      )
+    );
 
     vscode.commands.executeCommand('setContext', 'trivy.extensionLoaded', true);
     // Log successful activation

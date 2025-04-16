@@ -31,6 +31,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
       command?: vscode.Command;
       workspacePath?: string;
       requiredSeverity?: string;
+      indirect?: boolean;
     }
   ) {
     super(title, collapsibleState);
@@ -101,6 +102,9 @@ export class TrivyTreeItem extends vscode.TreeItem {
         break;
       case TrivyTreeItemType.vulnerablePackage:
         this.iconPath = new vscode.ThemeIcon('package');
+        this.label = properties?.indirect
+          ? `${this.title} (indirect)`
+          : this.title;
         break;
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.vulnerabilityCode:

@@ -127,7 +127,7 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
               'trivy.useAquaPlatform',
               message.enableAquaPlatform
             );
-            config.update('uploadResults', message.uploadResults);
+
             await context.secrets.store('apiKey', message.apiKey);
             await context.secrets.store('apiSecret', message.apiSecret);
             showInformationMessage(
@@ -273,7 +273,7 @@ function getWebviewContent(
                const apiUrl = document.getElementById('apiUrl').value;
                const authUrl = document.getElementById('authUrl').value;
                const enableAquaPlatform = document.getElementById('enableAquaPlatform').checked;
-               vscode.postMessage({ command: 'storeSecrets', apiKey, apiSecret, apiUrl, authUrl, enableAquaPlatform, uploadResults });
+               vscode.postMessage({ command: 'storeSecrets', apiKey, apiSecret, apiUrl, authUrl, enableAquaPlatform });
            });
         </script>
      </body>

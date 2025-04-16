@@ -1,7 +1,8 @@
 # Change Log
 
-## 1.2.2
+## 1.3.0
 
+- Add codelens for transitive dependencies
 - Remove the option to upload the results to the Aqua Platform
 
 ## 1.2.1

@@ -47,6 +47,11 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 1.3.0
+
+- Add codelens for transitive dependencies
+- Remove the option to upload the results to the Aqua Platform
+
 ### 1.2.1
 
 - Make order by severity the default view
