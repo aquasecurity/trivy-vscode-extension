@@ -3,8 +3,12 @@ import path from 'path';
 
 import * as vscode from 'vscode';
 
-import { VulnerabilityCodeLensProvider } from '../../codelens_provider';
-import { Misconfiguration, PolicyResult, TrivyResult } from '../result';
+import {
+  Misconfiguration,
+  PolicyResult,
+  TrivyResult,
+} from '../../cache/result';
+import { VulnerabilityCodeLensProvider } from '../codelens_provider';
 
 /**
  * Creates a command to open the file containing the result

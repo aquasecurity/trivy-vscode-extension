@@ -1,4 +1,4 @@
-import { PolicyResult } from '../result';
+import { PolicyResult } from '../../cache/result';
 import { TrivyTreeItem } from '../treeview/treeitem';
 
 const tick = '✅';

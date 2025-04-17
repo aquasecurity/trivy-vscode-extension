@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { Output } from '../command/output';
-import { showInformationMessage } from '../notification/notifications';
+import { showInformationMessage } from '../ui/notification/notifications';
 import { showWarningWithLink } from '../utils';
 
 import checkCredentialConnection from './cred_check';

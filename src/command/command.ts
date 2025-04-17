@@ -5,12 +5,13 @@ import * as path from 'path';
 
 import * as vscode from 'vscode';
 
+import { loader } from '../cache/loader';
 import { updateEnvironment } from '../commercial/env';
 import {
   showErrorMessage,
   showInformationMessage,
   showWarningWithLink,
-} from '../notification/notifications';
+} from '../ui/notification/notifications';
 
 import {
   ConfigFilePathOption,
@@ -110,7 +111,7 @@ export class TrivyWrapper {
       // Use a slight delay to ensure files are written before refreshing
       setTimeout(() => {
         vscode.commands.executeCommand('trivy.refresh');
-      }, 250);
+      }, 50);
 
       // Indicate that scanning is complete
       showInformationMessage('Trivy scanning complete');
@@ -185,18 +186,31 @@ export class TrivyWrapper {
 
     // Set up environment
     let env = { ...process.env };
+    const workspaceName = workspaceFolder.name;
+    let assuranceReportPath = '';
 
     if (isAquaPlatformRun) {
-      const assuranceReportPath = path.join(
+      assuranceReportPath = path.join(
         this.resultsStoragePath,
-        `${workspaceFolder.name}_assurance.json`
+        `_assurance.json`
       );
       env = await updateEnvironment(config, secrets, env, assuranceReportPath);
     }
 
+    const suffix = isAquaPlatformRun ? '.dump' : '';
+
+    const resultsPath = path.join(
+      this.resultsStoragePath,
+      `${workspaceName}_results.json${suffix}`
+    );
+
     // Build command
     const workingPath = workspaceFolder.uri.fsPath;
-    const command = this.buildCommand(workingPath, workspaceFolder.name);
+    const command = this.buildCommand(
+      workingPath,
+      workspaceFolder.name,
+      resultsPath
+    );
 
     // Log the command (sensitive info is handled in updateEnvironment)
     this.outputChannel.appendLine(
@@ -210,7 +224,12 @@ export class TrivyWrapper {
       workingPath,
       env,
       isAquaPlatformRun
-    );
+    ).then(async () => {
+      await loader(
+        workspaceName,
+        isAquaPlatformRun ? assuranceReportPath : resultsPath
+      );
+    });
   }
 
   /**
@@ -344,19 +363,12 @@ export class TrivyWrapper {
   buildCommand(
     workingPath: string,
     workspaceName: string,
+    resultsPath: string,
     scanType: ScanType = ScanType.FilesystemScan,
     trivyOptions?: TrivyCommandOption[]
   ): string[] {
     const config = vscode.workspace.getConfiguration('trivy');
     let command: string[] = [scanType];
-
-    const isAquaPlatform = config.get<boolean>('useAquaPlatform');
-    const suffix = isAquaPlatform ? '.dump' : '';
-
-    const resultsPath = path.join(
-      this.resultsStoragePath,
-      `${workspaceName}_results.json${suffix}`
-    );
 
     if (!trivyOptions) {
       trivyOptions = [
@@ -409,13 +421,14 @@ export class TrivyWrapper {
         return new Promise<void>((resolve, reject) => {
           let killed = false;
           let progressCounter = 0;
+          let progressIncrement = 1;
           const progressMax = 100;
           let currentPhase = 'Running';
 
           // Function to update progress bar
           const updateProgress = () => {
             if (progressCounter <= progressMax) {
-              progressCounter += 2;
+              progressCounter += progressIncrement;
             }
 
             progress.report({
@@ -456,23 +469,26 @@ export class TrivyWrapper {
           execution.stdout.on('data', (data) => {
             const output = data.toString();
             this.outputChannel.appendLine(output);
-
-            // Update progress based on output
-            if (output.includes('Scanning')) {
-              currentPhase = 'Scanning files';
-              progress.report({ message: `${currentPhase}...` });
-            } else if (output.includes('Analyzing')) {
-              currentPhase = 'Analyzing dependencies';
-              progress.report({ message: `${currentPhase}...` });
-            } else if (output.includes('Detecting')) {
-              currentPhase = 'Detecting vulnerabilities';
-              progress.report({ message: `${currentPhase}...` });
-            }
           });
 
           // Handle stderr
           execution.stderr.on('data', (data) => {
-            this.outputChannel.appendLine(data.toString());
+            const output = data.toString();
+            this.outputChannel.appendLine(output);
+
+            // Update progress based on output
+            if (output.includes('Vulnerability scanning is enabled')) {
+              progressIncrement = 4;
+              currentPhase = '\nScanning for vulnerabilities';
+            } else if (output.includes('Secret scanning is enabled')) {
+              progressIncrement = 4;
+              currentPhase = '\nScanning for secrets...';
+            } else if (
+              output.includes('Misconfiguration scanning is enabled')
+            ) {
+              progressIncrement = 4;
+              currentPhase = '\nScanning for misconfigurations...';
+            }
           });
 
           // Handle execution errors

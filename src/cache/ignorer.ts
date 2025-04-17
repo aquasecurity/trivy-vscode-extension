@@ -4,7 +4,7 @@ import * as path from 'path';
 import ignore, { Ignore } from 'ignore';
 import * as vscode from 'vscode';
 
-import { Output } from './command/output';
+import { Output } from '../command/output';
 
 /**
  * Manages file ignoring based on gitignore rules and custom ignore patterns

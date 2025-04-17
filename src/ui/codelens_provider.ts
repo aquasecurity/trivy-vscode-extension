@@ -2,7 +2,7 @@ import path from 'path';
 
 import * as vscode from 'vscode';
 
-import { TrivyResult, Vulnerability } from './explorer/result';
+import { TrivyResult, Vulnerability } from '../cache/result';
 
 /**
  * CodeLens provider for indirect vulnerabilities

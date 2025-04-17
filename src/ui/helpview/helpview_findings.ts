@@ -3,7 +3,7 @@ import {
   Secret,
   TrivyResult,
   Vulnerability,
-} from '../result';
+} from '../../cache/result';
 import { TrivyTreeItem } from '../treeview/treeitem';
 import { TrivyTreeItemType } from '../treeview/treeitem_types';
 
