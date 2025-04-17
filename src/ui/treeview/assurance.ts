@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
+import { PolicyResult, TrivyResult } from '../../cache/result';
 import { prettifyName } from '../../utils';
-import { PolicyResult, TrivyResult } from '../result';
 
 import { TrivyTreeItem } from './treeitem';
 import { TrivyTreeItemType } from './treeitem_types';
@@ -12,7 +12,7 @@ import { createFileOpenCommand } from './treeview_command';
  * @param resultData to extract the top level policies from
  * @returns
  */
-export function getTopLevelPolicies<T extends TrivyResult | PolicyResult>(
+export function getTopLevelPolicies<T extends PolicyResult>(
   resultData: T[]
 ): TrivyTreeItem[] {
   const results: TrivyTreeItem[] = [];

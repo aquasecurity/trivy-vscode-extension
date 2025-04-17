@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { Output } from '../command/output';
+import { Output } from '../../command/output';
 
 let statusBarItem: vscode.StatusBarItem;
 

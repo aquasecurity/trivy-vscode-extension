@@ -1,12 +1,15 @@
+import * as fs from 'fs';
+import path from 'path';
+
 import * as vscode from 'vscode';
 
 import { registerCommands } from './activate_commands';
-import { VulnerabilityCodeLensProvider } from './codelens_provider';
 import { TrivyWrapper } from './command/command';
 import { verifyTrivyInstallation } from './command/install';
-import { TrivyHelpProvider } from './explorer/helpview/helpview';
-import { TrivyTreeViewProvider } from './explorer/treeview/treeview_provider';
-import { showErrorMessage } from './notification/notifications';
+import { VulnerabilityCodeLensProvider } from './ui/codelens_provider';
+import { TrivyHelpProvider } from './ui/helpview/helpview';
+import { showErrorMessage } from './ui/notification/notifications';
+import { TrivyTreeViewProvider } from './ui/treeview/treeview_provider';
 
 /**
  * Disposables to clean up when extension is deactivated
@@ -41,6 +44,29 @@ export async function activate(context: vscode.ExtensionContext) {
       return;
     }
 
+    // ensure that there is a results storage path available
+    let resultsStoragePath: string = '';
+
+    if (context.storageUri) {
+      const storagePath = context.storageUri.fsPath;
+      console.log(`storage path is ${storagePath}`);
+      if (!fs.existsSync(storagePath)) {
+        fs.mkdirSync(storagePath);
+      }
+      resultsStoragePath = path.join(storagePath, '/.trivy/');
+      if (!fs.existsSync(resultsStoragePath)) {
+        fs.mkdirSync(resultsStoragePath);
+      }
+    }
+
+    // Check if the results storage path exists
+    if (resultsStoragePath === '') {
+      showErrorMessage(
+        'Trivy: Unable to create results storage path. Please check your settings.'
+      );
+      return;
+    }
+
     // Initialize diagnostics collection
     const diagnosticsCollection =
       vscode.languages.createDiagnosticCollection('trivy');
@@ -48,18 +74,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Create providers
     const helpProvider = new TrivyHelpProvider();
-    const misconfigProvider = new TrivyTreeViewProvider(
-      context,
-      diagnosticsCollection,
-      'finding'
-    );
-    const assuranceProvider = new TrivyTreeViewProvider(
-      context,
-      diagnosticsCollection,
-      'policy'
-    );
+    const misconfigProvider = new TrivyTreeViewProvider(context, 'finding');
+    const assuranceProvider = new TrivyTreeViewProvider(context, 'policy');
     const trivyWrapper = new TrivyWrapper(
-      misconfigProvider.resultsStoragePath,
+      resultsStoragePath,
       context.extensionPath
     );
 

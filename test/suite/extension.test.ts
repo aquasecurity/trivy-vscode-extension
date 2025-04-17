@@ -9,7 +9,7 @@ import { ExitCodeOption, QuietOption } from '../../src/command/options';
 import {
   showErrorMessage,
   showInformationMessage,
-} from '../../src/notification/notifications';
+} from '../../src/ui/notification/notifications';
 
 const testsRoot = path.resolve(__dirname, '..');
 
@@ -21,10 +21,15 @@ suite('extension', function (): void {
     const targetDir = fs.mkdtempSync(projectPath);
     const extensionDir = path.resolve(__dirname, '../../');
     const wrapper = new TrivyWrapper(targetDir, extensionDir);
+    const resultsPath = path.join(extensionDir, '.trivy', 'results.json');
+    if (!fs.existsSync(resultsPath)) {
+      fs.mkdirSync(resultsPath, { recursive: true });
+    }
 
     const commandArgs = wrapper.buildCommand(
       projectPath,
       'workspace1',
+      resultsPath,
       ScanType.FilesystemScan,
       [new QuietOption(), new ExitCodeOption(10)]
     );

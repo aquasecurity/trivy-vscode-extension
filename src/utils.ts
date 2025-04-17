@@ -3,7 +3,7 @@ import path from 'path';
 
 import * as vscode from 'vscode';
 
-import { Secret, TrivyResult } from './explorer/result';
+import { Secret, TrivyResult } from './cache/result';
 
 /**
  * Severity levels in descending order of criticality

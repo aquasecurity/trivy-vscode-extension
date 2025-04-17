@@ -2,7 +2,7 @@ import path from 'path';
 
 import * as vscode from 'vscode';
 
-import { PolicyResult, TrivyResult } from '../result';
+import { PolicyResult, TrivyResult } from '../../cache/result';
 
 import { TrivyTreeItemType } from './treeitem_types';
 

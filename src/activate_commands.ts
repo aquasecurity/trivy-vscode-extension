@@ -4,9 +4,9 @@ import * as vscode from 'vscode';
 import { TrivyWrapper } from './command/command';
 import { installTrivy } from './command/install';
 import { setupCommercial } from './commercial/setup';
-import { TrivyHelpProvider } from './explorer/helpview/helpview';
-import { TrivyTreeViewProvider } from './explorer/treeview/treeview_provider';
-import { showErrorMessage } from './notification/notifications';
+import { TrivyHelpProvider } from './ui/helpview/helpview';
+import { showErrorMessage } from './ui/notification/notifications';
+import { TrivyTreeViewProvider } from './ui/treeview/treeview_provider';
 
 /**
  * Opens a file picker dialog and updates configuration with selected path

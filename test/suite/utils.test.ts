@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 
-import { TrivyResult } from '../../src/explorer/result';
+import { TrivyResult } from '../../src/cache/result';
 import { getSeverityPosition, sortBySeverity } from '../../src/utils';
 
 suite('utils', function (): void {

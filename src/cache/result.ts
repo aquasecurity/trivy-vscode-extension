@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Ignorer } from '../ignorer';
 import { prettifyName } from '../utils';
+
+import { Ignorer } from './ignorer';
 
 /*
  * Represents a Trivy result

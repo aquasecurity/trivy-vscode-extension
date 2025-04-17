@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { showErrorMessage } from '../notification/notifications';
+import { showErrorMessage } from '../ui/notification/notifications';
 
 /**
  * Environment variable keys used by Aqua Platform integration

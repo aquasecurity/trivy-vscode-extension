@@ -2,7 +2,7 @@ import * as os from 'os';
 
 import * as vscode from 'vscode';
 
-import { showErrorMessage } from '../notification/notifications';
+import { showErrorMessage } from '../ui/notification/notifications';
 
 /**
  * Interface defining a command option that can be applied to a Trivy command
