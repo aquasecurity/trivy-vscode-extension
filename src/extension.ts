@@ -50,12 +50,17 @@ export async function activate(context: vscode.ExtensionContext) {
     if (context.storageUri) {
       const storagePath = context.storageUri.fsPath;
       console.log(`storage path is ${storagePath}`);
-      if (!fs.existsSync(storagePath)) {
-        fs.mkdirSync(storagePath);
+
+      try {
+        await fs.promises.access(storagePath);
+      } catch {
+        await fs.promises.mkdir(storagePath, { recursive: true });
       }
       resultsStoragePath = path.join(storagePath, '/.trivy/');
-      if (!fs.existsSync(resultsStoragePath)) {
-        fs.mkdirSync(resultsStoragePath);
+      try {
+        await fs.promises.access(resultsStoragePath);
+      } catch {
+        await fs.promises.mkdir(resultsStoragePath, { recursive: true });
       }
     }
 
