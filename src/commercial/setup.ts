@@ -327,7 +327,6 @@ function getWebviewContent(
            
            document.getElementById('save-button').addEventListener('click', event => {
                event.preventDefault();
-               debugger
                const apiKey = document.getElementById('apiKey').value;
                const apiSecret = document.getElementById('apiSecret').value;
 
