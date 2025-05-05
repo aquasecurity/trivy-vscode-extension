@@ -47,6 +47,11 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 1.4.0
+
+- Switch to using a cache for the results
+- Remove Aqua Platform URL and use a region selector
+
 ### 1.3.0
 
 - Add codelens for transitive dependencies
