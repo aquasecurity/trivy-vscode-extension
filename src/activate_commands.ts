@@ -203,6 +203,24 @@ export function registerCommands(
   registerCommand(context, 'trivy.disableScanForSecrets', () =>
     updateConfigAndContext(config, 'secretScanning', false)
   );
+  registerCommand(context, 'trivy.setPackageJsonScanning', () =>
+    updateConfigAndContext(config, 'packageJsonScanning', true)
+  );
+  registerCommand(context, 'trivy.disablePackageJsonScanning', () =>
+    updateConfigAndContext(config, 'packageJsonScanning', false)
+  );
+  registerCommand(context, 'trivy.setGradleScanning', () =>
+    updateConfigAndContext(config, 'gradleScanning', true)
+  );
+  registerCommand(context, 'trivy.disableGradleScanning', () =>
+    updateConfigAndContext(config, 'gradleScanning', false)
+  );
+  registerCommand(context, 'trivy.setDotnetProjScanning', () =>
+    updateConfigAndContext(config, 'dotnetProjScanning', true)
+  );
+  registerCommand(context, 'trivy.disableDotnetProjScanning', () =>
+    updateConfigAndContext(config, 'dotnetProjScanning', false)
+  );
   registerCommand(context, 'trivy.onlyFixedIssues', () =>
     updateConfigAndContext(config, 'fixedOnly', true)
   );

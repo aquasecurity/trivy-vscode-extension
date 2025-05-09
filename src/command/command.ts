@@ -12,6 +12,7 @@ import {
   showInformationMessage,
   showWarningWithLink,
 } from '../ui/notification/notifications';
+import { stripAnsiEscapeCodes } from '../utils';
 
 import {
   ConfigFilePathOption,
@@ -425,20 +426,51 @@ export class TrivyWrapper {
           const progressMax = 100;
           let currentPhase = 'Running';
 
+          const handleOutput = (data: string) => {
+            const output = stripAnsiEscapeCodes(data);
+            // Update progress based on output
+            if (output.includes('Vulnerability scanning is enabled')) {
+              progressIncrement = 4;
+              currentPhase = '\nScanning for vulnerabilities';
+            } else if (output.includes('Secret scanning is enabled')) {
+              progressIncrement = 4;
+              currentPhase = '\nScanning for secrets...';
+            } else if (
+              output.includes('Misconfiguration scanning is enabled')
+            ) {
+              progressIncrement = 4;
+              currentPhase = '\nScanning for misconfigurations...';
+            } else if (output.includes('context=trivy-plugin')) {
+              progressIncrement = 1;
+              currentPhase = '\nPreparing scan...';
+            }
+          };
+
           // Function to update progress bar
           const updateProgress = () => {
             if (progressCounter <= progressMax) {
+              if (progressCounter === 50 && progressIncrement === 1) {
+                // what we have here is a slow start, so let's slow things down a bit
+                progressIncrement = 0;
+
+                // Fallback mechanism to ensure progress continues
+                setTimeout(() => {
+                  if (progressIncrement === 0) {
+                    progressIncrement = 1; // Resume with a smaller increment
+                  }
+                }, 10000); // Wait for 10 seconds before applying the fallback
+              }
               progressCounter += progressIncrement;
             }
 
             progress.report({
-              increment: 2,
+              increment: progressIncrement,
               message: `${currentPhase} (${Math.min(progressCounter, 100)}%)`,
             });
           };
 
           // Start progress update interval
-          const progressInterval = setInterval(updateProgress, 400);
+          const progressInterval = setInterval(updateProgress, 600);
 
           // Spawn process
           const execution = child.spawn(binary, command, {
@@ -469,26 +501,14 @@ export class TrivyWrapper {
           execution.stdout.on('data', (data) => {
             const output = data.toString();
             this.outputChannel.appendLine(output);
+            handleOutput(output);
           });
 
           // Handle stderr
           execution.stderr.on('data', (data) => {
             const output = data.toString();
             this.outputChannel.appendLine(output);
-
-            // Update progress based on output
-            if (output.includes('Vulnerability scanning is enabled')) {
-              progressIncrement = 4;
-              currentPhase = '\nScanning for vulnerabilities';
-            } else if (output.includes('Secret scanning is enabled')) {
-              progressIncrement = 4;
-              currentPhase = '\nScanning for secrets...';
-            } else if (
-              output.includes('Misconfiguration scanning is enabled')
-            ) {
-              progressIncrement = 4;
-              currentPhase = '\nScanning for misconfigurations...';
-            }
+            handleOutput(output);
           });
 
           // Handle execution errors

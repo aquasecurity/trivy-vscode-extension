@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { stripAnsi } from '../utils';
+import { stripAnsiEscapeCodes } from '../utils';
 
 /**
  * Output manager for Trivy extension logging
@@ -59,7 +59,7 @@ export class Output {
    */
   public appendLine(message: string, timestamp = false): void {
     try {
-      const cleanMessage = stripAnsi(message);
+      const cleanMessage = stripAnsiEscapeCodes(message);
 
       if (timestamp) {
         const now = new Date();

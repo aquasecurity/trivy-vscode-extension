@@ -65,6 +65,19 @@ export async function updateEnvironment(
     newEnv[ENV_KEYS.RUN_MODE] = 'aqua';
     newEnv[ENV_KEYS.ASSURANCE_EXPORT] = `${assuranceReportPath}`;
 
+    // set scan settings
+    if (config.get<boolean>('packageJsonScanning')) {
+      newEnv['PACKAGE_JSON'] = '1';
+    }
+
+    if (config.get<boolean>('gradleScanning')) {
+      newEnv['GRADLE'] = '1';
+    }
+
+    if (config.get<boolean>('dotnetProjScanning')) {
+      newEnv['DOTNET_PROJ'] = '1';
+    }
+
     // don't upload the results to the aqua platform
     newEnv['TRIVY_SKIP_REPOSITORY_UPLOAD'] = 'true';
     newEnv['TRIVY_SKIP_RESULT_UPLOAD'] = 'true';

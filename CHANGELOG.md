@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.5.0
+
+- Add support for the aqua platform settings
+
 ## 1.4.0
 
 - Switch to using a cache for the results

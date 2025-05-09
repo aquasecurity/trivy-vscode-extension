@@ -91,7 +91,7 @@ export const sortBySeverity = (a: TrivyResult, b: TrivyResult): number => {
  * @param str The string to remove ANSI codes from
  * @returns The cleaned string
  */
-export function stripAnsi(str: string): string {
+export function stripAnsiEscapeCodes(str: string): string {
   if (!str) return '';
   // Pattern to match ANSI escape sequences
   // eslint-disable-next-line no-control-regex
@@ -141,7 +141,7 @@ export function isNullOrEmpty(value?: string | null): boolean {
  */
 export function prettifyName(name: string): string {
   // split the sentence on any camel case
-  const split = stripAnsi(name.replace('\n', ' '));
+  const split = stripAnsiEscapeCodes(name.replace('\n', ' '));
 
   return split;
 }
