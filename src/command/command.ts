@@ -450,8 +450,15 @@ export class TrivyWrapper {
           const updateProgress = () => {
             if (progressCounter <= progressMax) {
               if (progressCounter === 50 && progressIncrement === 1) {
-                // what we have here is a slow start, so lets slow things down a bit
+                // what we have here is a slow start, so let's slow things down a bit
                 progressIncrement = 0;
+
+                // Fallback mechanism to ensure progress continues
+                setTimeout(() => {
+                  if (progressIncrement === 0) {
+                    progressIncrement = 1; // Resume with a smaller increment
+                  }
+                }, 10000); // Wait for 10 seconds before applying the fallback
               }
               progressCounter += progressIncrement;
             }
