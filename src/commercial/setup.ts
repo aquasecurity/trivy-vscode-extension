@@ -106,14 +106,14 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
       switch (message.command) {
         case 'storeSecrets': {
           let validCreds = true;
+          const regionalUrls =
+            regionMap[message.aquaRegionValue as keyof typeof regionMap];
           if (message.enableAquaPlatform) {
             if (message.apiKey === '' || message.apiSecret === '') {
               showInformationMessage('Please fill in all the required fields');
               return;
             }
 
-            const regionalUrls =
-              regionMap[message.aquaRegionValue as keyof typeof regionMap];
             if (!regionalUrls) {
               showWarningWithLink(
                 `Invalid region selected`,
@@ -151,8 +151,8 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
                 'Aqua Platform credentials validated successfully'
               );
             }
-            config.update('aquaApiUrl', message.apiUrl);
-            config.update('aquaAuthenticationUrl', message.authUrl);
+            config.update('aquaApiUrl', regionalUrls.apiUrl);
+            config.update('aquaAuthenticationUrl', regionalUrls.authUrl);
             config.update('useAquaPlatform', message.enableAquaPlatform);
             vscode.commands.executeCommand(
               'setContext',
@@ -293,7 +293,7 @@ function getWebviewContent(
               <vscode-option value="ap-1">Singapore</vscode-option>
               <vscode-option value="ap-2">Sydney</vscode-option>
               <!-- TODO: remove dev region -->
-              <!-- <vscode-option value="dev">Dev</vscode-option>  -->
+              <vscode-option value="dev">Dev</vscode-option>  
               </vscode-dropdown>
             </div>
               <vscode-button id="save-button" appearance="primary" type="submit" >Save</vscode-button>

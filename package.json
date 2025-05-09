@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -43,6 +43,24 @@
           "type": "boolean",
           "default": false,
           "description": "Trivy should also scan for secrets, requires Trivy >=v0.27.0",
+          "scope": "window"
+        },
+        "trivy.packageJsonScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan package.json without lock file",
+          "scope": "window"
+        },
+        "trivy.gradleScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan gradle without lock file",
+          "scope": "window"
+        },
+        "trivy.dotnetProjScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan .NET project without lock file",
           "scope": "window"
         },
         "trivy.offlineScan": {
@@ -271,6 +289,38 @@
         "title": "✓ Order results by type and severity"
       },
       {
+        "command": "trivy.setPackageJsonScanning",
+        "title": "Scan package.json without lock file"
+      },
+      {
+        "command": "trivy.disablePackageJsonScanning",
+        "title": "✓ Scan package.json without lock file"
+      },
+      {
+        "command": "trivy.setGradleScanning",
+        "title": "Scan gradle without lock file"
+      },
+      {
+        "command": "trivy.disableGradleScanning",
+        "title": "✓ Scan gradle without lock file"
+      },
+      {
+        "command": "trivy.setDotnetProjScanning",
+        "title": "Scan .NET project without lock file"
+      },
+      {
+        "command": "trivy.disableDotnetProjScanning",
+        "title": "✓ Scan .NET project without lock file"
+      },
+      {
+        "command": "trivy.useAquaPlatform",
+        "title": "Use Aqua Platform"
+      },
+      {
+        "command": "trivy.disableUseAquaPlatform",
+        "title": "✓ Use Aqua Platform"
+      },
+      {
         "command": "trivy.update",
         "title": "Update Trivy"
       }
@@ -355,12 +405,12 @@
         },
         {
           "command": "trivy.offlineScan",
-          "when": "view == trivyIssueViewer && !trivy.offlineScan",
+          "when": "view == trivyIssueViewer && !trivy.offlineScan && !trivy.useAquaPlatform",
           "group": "3_setting@1"
         },
         {
           "command": "trivy.disableOfflineScan",
-          "when": "view == trivyIssueViewer && trivy.offlineScan",
+          "when": "view == trivyIssueViewer && trivy.offlineScan && !trivy.useAquaPlatform",
           "group": "3_setting@1"
         },
         {
@@ -412,6 +462,36 @@
           "command": "trivy.disableScanForSecrets",
           "when": "view == trivyIssueViewer && trivy.secretScanning",
           "group": "3_scanners@3"
+        },
+        {
+          "command": "trivy.setPackageJsonScanning",
+          "when": "view == trivyIssueViewer && !trivy.packageJsonScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@4"
+        },
+        {
+          "command": "trivy.disablePackageJsonScanning",
+          "when": "view == trivyIssueViewer && trivy.packageJsonScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@4"
+        },
+        {
+          "command": "trivy.setGradleScanning",
+          "when": "view == trivyIssueViewer && !trivy.gradleScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@5"
+        },
+        {
+          "command": "trivy.disableGradleScanning",
+          "when": "view == trivyIssueViewer && trivy.gradleScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@5"
+        },
+        {
+          "command": "trivy.setDotnetProjScanning",
+          "when": "view == trivyIssueViewer && !trivy.dotnetProjScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@6"
+        },
+        {
+          "command": "trivy.disableDotnetProjScanning",
+          "when": "view == trivyIssueViewer && trivy.dotnetProjScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@6"
         },
         {
           "command": "trivy.setupCommercial",
