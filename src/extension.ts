@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import { registerCommands } from './activate_commands';
 import { TrivyWrapper } from './command/command';
 import { verifyTrivyInstallation } from './command/install';
+import { Output } from './command/output';
 import { VulnerabilityCodeLensProvider } from './ui/codelens_provider';
 import { TrivyHelpProvider } from './ui/helpview/helpview';
 import { showErrorMessage } from './ui/notification/notifications';
@@ -46,8 +47,16 @@ export async function activate(context: vscode.ExtensionContext) {
     // Listen for workspace folder changes
     const workspaceFolderChangeDisposable =
       vscode.workspace.onDidChangeWorkspaceFolders(async () => {
-        outputChannel.appendLine('Workspace folders changed, reactivating Trivy extension');
-        cleanupDisposables();
+        Output.getInstance().appendLine('Workspace folder changed');
+        // Clear the current diagnostics
+        disposables.forEach((d) => {
+          d.dispose();
+        });
+
+        context.subscriptions.forEach((d) => {
+          d.dispose();
+        });
+
         await activateExtension(context);
       });
 
