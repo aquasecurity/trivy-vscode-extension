@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import { registerCommands } from './activate_commands';
 import { TrivyWrapper } from './command/command';
 import { verifyTrivyInstallation } from './command/install';
+import { Output } from './command/output';
 import { VulnerabilityCodeLensProvider } from './ui/codelens_provider';
 import { TrivyHelpProvider } from './ui/helpview/helpview';
 import { showErrorMessage } from './ui/notification/notifications';
@@ -41,30 +42,56 @@ const CONFIG_BOOLEAN_KEYS = [
  */
 export async function activate(context: vscode.ExtensionContext) {
   try {
-    const projectRootPath = vscode.workspace.getWorkspaceFolder;
-    if (projectRootPath === undefined) {
-      showErrorMessage('Trivy: Must open a project file to scan.');
-      return;
+    await activateExtension(context);
+
+    // Listen for workspace folder changes
+    const workspaceFolderChangeDisposable =
+      vscode.workspace.onDidChangeWorkspaceFolders(async () => {
+        Output.getInstance().appendLine('Workspace folder changed');
+        // Clear the current diagnostics
+        disposables.forEach((d) => {
+          d.dispose();
+        });
+
+        context.subscriptions.forEach((d) => {
+          d.dispose();
+        });
+
+        await activateExtension(context);
+      });
+
+    context.subscriptions.push(workspaceFolderChangeDisposable);
+    disposables.push(workspaceFolderChangeDisposable);
+  } catch (error) {
+    showErrorMessage(`Failed to activate Trivy extension: ${error}`);
+    console.error('Error activating Trivy extension:', error);
+  }
+}
+
+async function activateExtension(context: vscode.ExtensionContext) {
+  const projectRootPath = vscode.workspace.getWorkspaceFolder;
+  if (projectRootPath === undefined) {
+    showErrorMessage('Trivy: Must open a project file to scan.');
+    return;
+  }
+
+  // ensure that there is a results storage path available
+  let resultsStoragePath: string = '';
+
+  if (context.storageUri) {
+    const storagePath = context.storageUri.fsPath;
+    console.log(`storage path is ${storagePath}`);
+
+    try {
+      await fs.promises.access(storagePath);
+    } catch {
+      await fs.promises.mkdir(storagePath, { recursive: true });
     }
-
-    // ensure that there is a results storage path available
-    let resultsStoragePath: string = '';
-
-    if (context.storageUri) {
-      const storagePath = context.storageUri.fsPath;
-      console.log(`storage path is ${storagePath}`);
-
-      try {
-        await fs.promises.access(storagePath);
-      } catch {
-        await fs.promises.mkdir(storagePath, { recursive: true });
-      }
-      resultsStoragePath = path.join(storagePath, '/.trivy/');
-      try {
-        await fs.promises.access(resultsStoragePath);
-      } catch {
-        await fs.promises.mkdir(resultsStoragePath, { recursive: true });
-      }
+    resultsStoragePath = path.join(storagePath, '/.trivy/');
+    try {
+      await fs.promises.access(resultsStoragePath);
+    } catch {
+      await fs.promises.mkdir(resultsStoragePath, { recursive: true });
     }
 
     // Check if the results storage path exists
@@ -74,65 +101,61 @@ export async function activate(context: vscode.ExtensionContext) {
       );
       return;
     }
-
-    // Initialize diagnostics collection
-    const diagnosticsCollection =
-      vscode.languages.createDiagnosticCollection('trivy');
-    context.subscriptions.push(diagnosticsCollection);
-
-    // Create providers
-    const helpProvider = new TrivyHelpProvider();
-    const misconfigProvider = new TrivyTreeViewProvider(context, 'finding');
-    const assuranceProvider = new TrivyTreeViewProvider(context, 'policy');
-    const trivyWrapper = new TrivyWrapper(
-      resultsStoragePath,
-      context.extensionPath
-    );
-
-    await registerViews(
-      context,
-      helpProvider,
-      misconfigProvider,
-      assuranceProvider,
-      trivyWrapper
-    );
-
-    // Capture when the configuration changes
-    // so that we can update the context accordingly
-    const configChangeDisposable = vscode.workspace.onDidChangeConfiguration(
-      (event: vscode.ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration('trivy')) {
-          const config = vscode.workspace.getConfiguration('trivy');
-          syncContextWithConfig(config);
-          verifyTrivyInstallation(trivyWrapper);
-        }
-      }
-    );
-    context.subscriptions.push(configChangeDisposable);
-    disposables.push(configChangeDisposable);
-
-    // Set initial context and verify installation
-    const config = vscode.workspace.getConfiguration('trivy');
-    syncContextWithConfig(config);
-
-    // verify if trivy is installed
-    await verifyTrivyInstallation(trivyWrapper);
-
-    // Add to your activation function in extension.ts
-    context.subscriptions.push(
-      vscode.languages.registerCodeLensProvider(
-        { scheme: 'file' },
-        VulnerabilityCodeLensProvider.instance()
-      )
-    );
-
-    vscode.commands.executeCommand('setContext', 'trivy.extensionLoaded', true);
-    // Log successful activation
-    console.log('Trivy extension activated');
-  } catch (error) {
-    showErrorMessage(`Failed to activate Trivy extension: ${error}`);
-    console.error('Error activating Trivy extension:', error);
   }
+  // Initialize diagnostics collection
+  const diagnosticsCollection =
+    vscode.languages.createDiagnosticCollection('trivy');
+  context.subscriptions.push(diagnosticsCollection);
+
+  // Create providers
+  const helpProvider = new TrivyHelpProvider();
+  const misconfigProvider = new TrivyTreeViewProvider(context, 'finding');
+  const assuranceProvider = new TrivyTreeViewProvider(context, 'policy');
+  const trivyWrapper = new TrivyWrapper(
+    resultsStoragePath,
+    context.extensionPath
+  );
+
+  await registerViews(
+    context,
+    helpProvider,
+    misconfigProvider,
+    assuranceProvider,
+    trivyWrapper
+  );
+
+  // Capture when the configuration changes
+  // so that we can update the context accordingly
+  const configChangeDisposable = vscode.workspace.onDidChangeConfiguration(
+    (event: vscode.ConfigurationChangeEvent) => {
+      if (event.affectsConfiguration('trivy')) {
+        const config = vscode.workspace.getConfiguration('trivy');
+        syncContextWithConfig(config);
+        verifyTrivyInstallation(trivyWrapper);
+      }
+    }
+  );
+  context.subscriptions.push(configChangeDisposable);
+  disposables.push(configChangeDisposable);
+
+  // Set initial context and verify installation
+  const config = vscode.workspace.getConfiguration('trivy');
+  syncContextWithConfig(config);
+
+  // verify if trivy is installed
+  await verifyTrivyInstallation(trivyWrapper);
+
+  // Add to your activation function in extension.ts
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      { scheme: 'file' },
+      VulnerabilityCodeLensProvider.instance()
+    )
+  );
+
+  vscode.commands.executeCommand('setContext', 'trivy.extensionLoaded', true);
+  // Log successful activation
+  console.log('Trivy extension activated');
 }
 
 /**
