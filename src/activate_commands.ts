@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { TrivyWrapper } from './command/command';
 import { installTrivy } from './command/install';
 import { setupCommercial } from './commercial/setup';
+import { installTrivyMCPServer } from './mcp/install';
 import { TrivyHelpProvider } from './ui/helpview/helpview';
 import { showErrorMessage } from './ui/notification/notifications';
 import { TrivyTreeViewProvider } from './ui/treeview/treeview_provider';
@@ -140,6 +141,15 @@ export function registerCommands(
       await installTrivy(context.extensionPath, true);
     },
     'Failed to install Trivy'
+  );
+
+  registerCommand(
+    context,
+    'trivy.installMcpServer',
+    async () => {
+      await installTrivyMCPServer();
+    },
+    'Failed to install Trivy MCP server'
   );
 
   // Scanning commands
