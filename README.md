@@ -62,6 +62,10 @@ Have a feature you desire? Please let us know by filing an issue [here](https://
 
 ## Release Notes
 
+### 1.6.0
+
+- Add support for installing the Trivy MCP Server from the extension
+
 ### 1.5.0
 
 - Add support for the aqua platform settings
