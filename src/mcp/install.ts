@@ -42,17 +42,14 @@ export async function installTrivyMCPServer(): Promise<void> {
     );
   }
 
-  let mcpServers = vscode.workspace
-    .getConfiguration('mcp')
-    .get('servers') as Record<string, object>;
+  const mcpConfig = vscode.workspace.getConfiguration('mcp');
+  let mcpServers = mcpConfig.get('servers') as Record<string, object>;
   if (!mcpServers || typeof mcpServers !== 'object') {
     Output.getInstance().appendLineWithTimestamp(
       'No MCP servers configured. Initializing with an empty object.'
     );
     // Initialize mcpServers if it is not defined or not an object
-    await vscode.workspace
-      .getConfiguration('mcp')
-      .update('servers', {}, vscode.ConfigurationTarget.Global);
+    await mcpConfig.update('servers', {}, vscode.ConfigurationTarget.Global);
     mcpServers = {};
   }
 
@@ -98,18 +95,21 @@ export async function installTrivyMCPServer(): Promise<void> {
  */
 async function installPlugin(binary: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
-    try {
-      Output.getInstance().appendLineWithTimestamp('Installing MCP Plugin');
-      child.execSync(`"${binary}" plugin install mcp`, { stdio: 'ignore' });
+    Output.getInstance().appendLineWithTimestamp('Installing MCP Plugin');
+    child.exec(`"${binary}" plugin install mcp`, (error, _, stdErr) => {
+      Output.getInstance().appendLineWithTimestamp(stdErr);
+      if (error) {
+        Output.getInstance().appendLineWithTimestamp(
+          `Error installing MCP Plugin: ${error.message}`
+        );
+        resolve(false);
+        return;
+      }
+
       Output.getInstance().appendLineWithTimestamp(
         'MCP Plugin installed successfully.'
       );
       resolve(true);
-    } catch (error) {
-      Output.getInstance().appendLineWithTimestamp(
-        `Failed to install MCP Plugin: ${error instanceof Error ? error.message : String(error)}`
-      );
-      resolve(false);
-    }
+    });
   });
 }
