@@ -42,13 +42,18 @@ export async function installTrivyMCPServer(): Promise<void> {
     );
   }
 
-  const mcpServers = vscode.workspace
+  let mcpServers = vscode.workspace
     .getConfiguration('mcp')
     .get('servers') as Record<string, object>;
   if (!mcpServers || typeof mcpServers !== 'object') {
     Output.getInstance().appendLineWithTimestamp(
       'No MCP servers configured. Initializing with an empty object.'
     );
+    // Initialize mcpServers if it is not defined or not an object
+    await vscode.workspace
+      .getConfiguration('mcp')
+      .update('servers', {}, vscode.ConfigurationTarget.Global);
+    mcpServers = {};
   }
 
   // Ensure trivy plugin installed
@@ -88,7 +93,7 @@ export async function installTrivyMCPServer(): Promise<void> {
 }
 
 /**
- * Check if Trivy is installed
+ * Installs the MCP plugin for Trivy
  * @returns Promise resolving to true if installed, false otherwise
  */
 async function installPlugin(binary: string): Promise<boolean> {

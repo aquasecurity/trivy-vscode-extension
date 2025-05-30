@@ -176,6 +176,12 @@ export async function openSettingsAtSection(settingId: string): Promise<void> {
   );
 }
 
+/**
+ * Opens the settings JSON file at a specific section
+ * This is useful for advanced users who want to edit settings directly in JSON format.
+ * @param settingId The setting ID to focus on (e.g., "trivy.vulnScanning" or "mcp.servers")
+ * @returns A promise that resolves when the command is executed
+ */
 export async function openSettingsJsonAtSection(
   settingId: string
 ): Promise<void> {
