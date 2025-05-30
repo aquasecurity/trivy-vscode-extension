@@ -37,6 +37,21 @@ From the menu, select `Trivy Aqua Platform Integration` and provide your Aqua de
 
 Now run a scan as normal and you will have additional policy results.
 
+## Installing the Trivy MCP Server
+
+Trivy has an MCP Server that is compatible with VS Code. The MCP Server can be configured from this extension by pressing `F1` then searching for `Install Trivy MCP Server`
+
+The version of VS Code must be at least v1.99.0 - this was when MCP Server support was added.
+
+The installation process will:
+
+- install the `mcp` plugin for Trivy using `trivy plugin install mcp`
+- ensure that `chat.agent.enabled` and `chat.mcp.discovery.enabled` are both `true` in the settings
+- add a `trivy` mcp server if it isn't already present in the settings
+- open the `settings.json` to show the changes that have been made
+
+For more details about the Trivy MCP Server, check the MCP repo [README.md](https://github.com/aquasecurity/trivy-mcp/blob/main/README.md)
+
 ## Known Issues
 
 If you find one, please file a GitHub Issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).

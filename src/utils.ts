@@ -163,3 +163,30 @@ export function getSafeResultsPath(
 
   return p;
 }
+
+/**
+ * Opens VS Code settings UI at a specified setting
+ * @param settingId The setting ID to focus on (e.g., "trivy.vulnScanning" or "mcp.servers")
+ * @returns A promise that resolves when the command is executed
+ */
+export async function openSettingsAtSection(settingId: string): Promise<void> {
+  return vscode.commands.executeCommand(
+    'workbench.action.openSettings',
+    settingId
+  );
+}
+
+/**
+ * Opens the settings JSON file at a specific section
+ * This is useful for advanced users who want to edit settings directly in JSON format.
+ * @param settingId The setting ID to focus on (e.g., "trivy.vulnScanning" or "mcp.servers")
+ * @returns A promise that resolves when the command is executed
+ */
+export async function openSettingsJsonAtSection(
+  settingId: string
+): Promise<void> {
+  return vscode.commands.executeCommand(
+    'workbench.action.openSettingsJson',
+    settingId
+  );
+}

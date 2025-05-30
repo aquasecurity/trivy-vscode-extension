@@ -164,6 +164,10 @@
         "title": "Update Trivy"
       },
       {
+        "command": "trivy.installMcpServer",
+        "title": "Install Trivy MCP Server"
+      },
+      {
         "command": "trivy.scan",
         "title": "Trivy: Run trivy against workspace",
         "icon": {
@@ -645,6 +649,10 @@
         {
           "command": "trivy.useIgnoreFile",
           "when": "false"
+        },
+        {
+          "command": "trivy.installMcpServer",
+          "when": "trivy.mcpSupported"
         }
       ]
     },

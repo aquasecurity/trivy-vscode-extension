@@ -136,6 +136,10 @@ export class TrivyWrapper {
     }
   }
 
+  /**
+   * Check if Trivy is installed
+   * @returns Promise resolving to true if installed, false otherwise
+   */
   async isInstalled(): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       try {
