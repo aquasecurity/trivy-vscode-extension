@@ -140,12 +140,6 @@
           "description": "Use Aqua Platform for scanning",
           "scope": "window"
         },
-        "trivy.uploadResults": {
-          "type": "boolean",
-          "default": false,
-          "description": "Upload results to Aqua Platform",
-          "scope": "window"
-        },
         "trivy.orderResultsByType": {
           "type": "boolean",
           "default": true,
@@ -157,7 +151,7 @@
     "commands": [
       {
         "command": "trivy.install",
-        "title": "Trivy: Install Trivy"
+        "title": "Install Trivy"
       },
       {
         "command": "trivy.update",
@@ -169,7 +163,7 @@
       },
       {
         "command": "trivy.scan",
-        "title": "Trivy: Run trivy against workspace",
+        "title": "Run trivy against workspace",
         "icon": {
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
@@ -178,15 +172,7 @@
       },
       {
         "command": "trivy.reset",
-        "title": "Trivy: Reset the issue list",
-        "icon": {
-          "light": "resources/light/trash.svg",
-          "dark": "resources/dark/trash.svg"
-        }
-      },
-      {
-        "command": "trivy.reset",
-        "title": "Trivy: Reset the issue list",
+        "title": "Reset the Trivy issue list",
         "icon": {
           "light": "resources/light/trash.svg",
           "dark": "resources/dark/trash.svg"
@@ -653,6 +639,66 @@
         {
           "command": "trivy.installMcpServer",
           "when": "trivy.mcpSupported"
+        },
+        {
+          "command": "trivy.setupCommercial",
+          "when": "false"
+        },
+        {
+          "command": "trivy.scanForVulns",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableScanForVulns",
+          "when": "false"
+        },
+        {
+          "command": "trivy.scanForMisconfigs",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableScanForMisconfigs",
+          "when": "false"
+        },
+        {
+          "command": "trivy.setOrderResultsByType",
+          "when": "false"
+        },
+        {
+          "command": "trivy.unsetOrderResultsByType",
+          "when": "false"
+        },
+        {
+          "command": "trivy.setPackageJsonScanning",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disablePackageJsonScanning",
+          "when": "false"
+        },
+        {
+          "command": "trivy.setGradleScanning",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableGradleScanning",
+          "when": "false"
+        },
+        {
+          "command": "trivy.setDotnetProjScanning",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableDotnetProjScanning",
+          "when": "false"
+        },
+        {
+          "command": "trivy.useAquaPlatform",
+          "when": "false"
+        },
+        {
+          "command": "trivy.disableUseAquaPlatform",
+          "when": "false"
         }
       ]
     },

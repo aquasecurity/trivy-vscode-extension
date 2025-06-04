@@ -110,11 +110,18 @@ export function getAssurancePolicyChildrenSingleCode<
   T extends TrivyResult | PolicyResult,
 >(resultData: T[], element: TrivyTreeItem): TrivyTreeItem[] {
   const results: TrivyTreeItem[] = [];
+
+  const elementCheck = element.properties?.check as PolicyResult;
+  if (!elementCheck) {
+    return results;
+  }
+
   const filtered = resultData.filter(
     (c: PolicyResult | TrivyResult) =>
       c instanceof PolicyResult &&
       c.id == element.code &&
-      c.category == element.title
+      c.filename == element.filename &&
+      c.matchCode == elementCheck.matchCode
   );
 
   for (let index = 0; index < filtered.length; index++) {
@@ -343,7 +350,12 @@ export function getAssurancePolicyChildren<
 
     let addition = '';
     // if this is a solo file we can add the line numbers
-    if (command && policy.startLine && policy.startLine !== policy.endLine) {
+    if (
+      command &&
+      policy.startLine &&
+      policy.endLine &&
+      policy.startLine !== policy.endLine
+    ) {
       addition = `:${policy.startLine}-${policy.endLine}`;
     }
 
