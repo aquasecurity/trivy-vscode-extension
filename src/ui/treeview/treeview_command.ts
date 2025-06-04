@@ -28,7 +28,7 @@ export function createFileOpenCommand(
 
   let fileUri: string = '';
   let startLine = result.startLine;
-  let endLine = result.endLine;
+  let endLine = result.endLine ?? result.startLine;
   if (
     result instanceof TrivyResult &&
     result.extraData instanceof Misconfiguration &&
@@ -46,7 +46,8 @@ export function createFileOpenCommand(
         if (fs.existsSync(occurrencePath)) {
           fileUri = occurrencePath;
           startLine = occurrence.Location.StartLine;
-          endLine = occurrence.Location.EndLine;
+          endLine =
+            occurrence.Location.EndLine ?? occurrence.Location.StartLine;
           return;
         }
       }
@@ -59,8 +60,8 @@ export function createFileOpenCommand(
   }
 
   const issueRange = new vscode.Range(
-    new vscode.Position(result.startLine - 1, 0),
-    new vscode.Position(result.endLine, 0)
+    new vscode.Position(startLine - 1, 0),
+    new vscode.Position(endLine, 0)
   );
 
   VulnerabilityCodeLensProvider.instance().updateResults([

@@ -17,6 +17,7 @@ import { stripAnsiEscapeCodes } from '../utils';
 import {
   ConfigFilePathOption,
   DebugOption,
+  ExitCodeOption,
   FixedOnlyOption,
   IgnoreFilePathOption,
   JSONFormatOption,
@@ -384,6 +385,7 @@ export class TrivyWrapper {
         new FixedOnlyOption(),
         new IgnoreFilePathOption(),
         new DebugOption(),
+        new ExitCodeOption(0),
         new JSONFormatOption(),
         new ResultsOutputOption(resultsPath),
       ];
@@ -530,7 +532,8 @@ export class TrivyWrapper {
               return; // Already handled by cancellation
             }
 
-            if (code !== 0) {
+            // if not a clean exit or an assurance policy failure (code 13)
+            if (code !== 0 && code !== 13) {
               showWarningWithLink('Trivy failed to run.');
               reject(new Error(`Trivy failed with exit code ${code}`));
               return;
