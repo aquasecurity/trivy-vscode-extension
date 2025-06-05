@@ -19,28 +19,6 @@ If you find one, please file a GitHub Issue [here](https://github.com/aquasecuri
 
 Have a feature you desire? Please let us know by filing an issue [here](https://github.com/aquasecurity/trivy-vscode-extension/issues/new).
 
-## Release Notes
+## Change History
 
 Check the [Changelog](./CHANGELOG.md) for a more thorough history of changes
-
-### 1.6.0
-
-- Add support for installing the Trivy MCP Server from the extension
-
-### 1.5.0
-
-- Add support for the aqua platform settings
-
-### 1.4.0
-
-- Switch to using a cache for the results
-- Remove Aqua Platform URL and use a region selector
-
-### 1.3.0
-
-- Add codelens for transitive dependencies
-- Remove the option to upload the results to the Aqua Platform
-
-### 1.2.1
-
-- Make order by severity the default view

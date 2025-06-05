@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.6.1
+
+- Update the way assurance policy tree items are lazy loaded to ensure child nodes get created correctly
+
 ## 1.6.0
 
 - Add support for installing the Trivy MCP Server from the extension
