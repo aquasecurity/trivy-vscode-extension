@@ -55,7 +55,7 @@ export class Misconfiguration {
   public endline: number = 0;
   occurrences: any;
   constructor(misconfiguration: any) {
-    this.code = misconfiguration.ID;
+    this.code = misconfiguration.AVDID ?? misconfiguration.ID;
     this.message = misconfiguration.Message;
     this.resolution = misconfiguration.Resolution;
     this.status = misconfiguration.Status;
@@ -293,7 +293,7 @@ export function processResult(
       startLine = startLine && startLine > 0 ? startLine : 1;
       endLine = endLine && endLine > 0 ? endLine : 1;
 
-      const id = element.ID;
+      const id = element.AVDID ?? element.ID;
       const title = element.Title;
       const description = element.Description;
       const target = result.Target;
