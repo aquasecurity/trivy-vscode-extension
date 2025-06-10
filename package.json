@@ -4,9 +4,12 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "engines": {
     "vscode": "^1.56.0"
+  },
+  "repository": {
+    "url": "https://github.com/aquasecurity/trivy-vscode-extension"
   },
   "categories": [
     "Other"
@@ -313,6 +316,10 @@
       {
         "command": "trivy.update",
         "title": "Update Trivy"
+      },
+      {
+        "command": "trivy.addToIgnoreFile",
+        "title": "Add to Trivy ignore file"
       }
     ],
     "viewsContainers": {
@@ -507,6 +514,12 @@
           "command": "trivy.reset",
           "when": "view == trivyAssuranceViewer",
           "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "trivy.addToIgnoreFile",
+          "when": "view == trivyIssueViewer && viewItem == trivy.ignorable"
         }
       ],
       "trivyConfigMenu": [
@@ -793,6 +806,7 @@
     "@types/adm-zip": "^0.5.7",
     "@types/crypto-js": "^4.2.2",
     "@types/glob": "^7.2.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^7.0.2",
     "@types/node": "^16.0.0",
     "@types/vscode": "^1.54.0",
@@ -810,6 +824,7 @@
     "glob-promise": "^4.2.2",
     "globals": "^15.14.0",
     "install": "^0.13.0",
+    "js-yaml": "^4.1.0",
     "minimatch": "^3.0.8",
     "mocha": "^11.1.0",
     "prettier": "^3.5.3",
@@ -821,9 +836,6 @@
     "typescript-eslint": "^8.23.0",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"
-  },
-  "repository": {
-    "url": "https://github.com/aquasecurity/trivy-vscode-extension"
   },
   "dependencies": {
     "@types/moment": "^2.11.29",

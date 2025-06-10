@@ -449,6 +449,12 @@ export class TrivyWrapper {
             } else if (output.includes('context=trivy-plugin')) {
               progressIncrement = 1;
               currentPhase = '\nPreparing scan...';
+            } else if (output.includes('Detected config files')) {
+              progressIncrement = 1;
+              currentPhase = '\nProcessing results...';
+            } else if (output.includes('Scanning root module')) {
+              progressIncrement = 1;
+              currentPhase = '\nScanning...';
             }
           };
 

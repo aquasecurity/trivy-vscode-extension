@@ -108,6 +108,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
         break;
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.vulnerabilityCode:
+        this.contextValue = 'trivy.ignorable';
         this.tooltip = properties?.check?.title;
         this.iconPath = new vscode.ThemeIcon(
           'debug-breakpoint',

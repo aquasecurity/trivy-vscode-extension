@@ -4,9 +4,11 @@ import * as vscode from 'vscode';
 import { TrivyWrapper } from './command/command';
 import { installTrivy } from './command/install';
 import { setupCommercial } from './commercial/setup';
+import { addIgnoreFileEntry } from './ignore/ignore_file';
 import { installTrivyMCPServer } from './mcp/install';
 import { TrivyHelpProvider } from './ui/helpview/helpview';
 import { showErrorMessage } from './ui/notification/notifications';
+import { TrivyTreeItem } from './ui/treeview/treeitem';
 import { TrivyTreeViewProvider } from './ui/treeview/treeview_provider';
 
 /**
@@ -255,6 +257,9 @@ export function registerCommands(
   registerCommand(context, 'trivy.setConfigFilePath', async () => {
     await selectFilePath(config, 'Config file', 'configFilePath', ['*']);
   });
+  registerCommand(context, 'trivy.setIgnoreFilePath', async () => {
+    await selectFilePath(config, 'Ignore file', 'ignoreFilePath', ['*']);
+  });
   registerCommand(context, 'trivy.setupCommercial', async () => {
     await setupCommercial(context);
   });
@@ -278,4 +283,11 @@ export function registerCommands(
     misconfigProvider.refresh();
     assuranceProvider.refresh();
   });
+  registerCommand(
+    context,
+    'trivy.addToIgnoreFile',
+    async (item: TrivyTreeItem) => {
+      addIgnoreFileEntry(item);
+    }
+  );
 }
