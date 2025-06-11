@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.7.0
+
+- Add Context menu to issues to add them to the ignorefile if found, otherwise create a .trivyignore.yaml
+
 ## 1.6.1
 
 - Update the way assurance policy tree items are lazy loaded to ensure child nodes get created correctly
