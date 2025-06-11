@@ -195,7 +195,13 @@ abstract class FilePathOption extends ConfigAwareOption {
 
     const filePath = config.get<string>(`${this.configKey}Path`);
     if (filePath) {
-      command.push(`--${this.flagName}=${filePath}`);
+      // Ensure the file path is wrapped in quotes for proper command line parsing
+      if (os.platform() === 'win32') {
+        // On Windows, wrap the path in quotes to handle spaces correctly
+        command.push(`--${this.flagName}="${filePath}"`);
+      } else {
+        command.push(`--${this.flagName}=${filePath}`);
+      }
     } else {
       showErrorMessage(this.errorMessage);
       void config.update(
