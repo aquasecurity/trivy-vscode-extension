@@ -188,7 +188,7 @@ function getSastHtml(result?: TrivyResult): string {
   if (sast === undefined) {
     return '';
   }
-  const owaspHtml = sast.owasp.map((item) => item).join(',');
+  const owaspHtml = sast.owasp.join(',');
 
   return `
     <h2>${result.title}</h2>
