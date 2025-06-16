@@ -8,7 +8,7 @@ import { Ignorer } from './ignorer';
  * Represents a Trivy result
  */
 export class TrivyResult {
-  public extraData: Vulnerability | Misconfiguration | Secret | string;
+  public extraData: Vulnerability | Misconfiguration | Secret | Sast | string;
   constructor(
     public id: string,
     public title: string,
@@ -18,7 +18,7 @@ export class TrivyResult {
     public endLine: number,
     public severity: string,
     public references: string[],
-    extra: Vulnerability | Misconfiguration | Secret,
+    extra: Vulnerability | Misconfiguration | Secret | Sast,
     public workspaceName: string
   ) {
     this.extraData = extra;
@@ -72,6 +72,32 @@ export class Secret {
   constructor(secret: any) {
     this.category = secret.Category;
     this.match = secret.Match;
+  }
+}
+
+/*
+ * Represents a SAST result
+ */
+export class Sast {
+  public cwe: string;
+  public category: string;
+  public owasp: string[];
+  public confidence: string;
+  public likelihood: string;
+  public impact: string;
+  public remediation: string;
+  public startLine: number = 0;
+  public endLine: number = 0;
+  constructor(sast: any) {
+    this.cwe = sast.CWE;
+    this.category = prettifyName(sast.Category);
+    this.owasp = sast.OWASP || [];
+    this.confidence = prettifyName(sast.Confidence);
+    this.likelihood = prettifyName(sast.Likelihood);
+    this.impact = prettifyName(sast.Impact);
+    this.remediation = sast.Remediation;
+    this.startLine = sast.StartLine || 0;
+    this.endLine = sast.EndLine || 0;
   }
 }
 
@@ -402,6 +428,39 @@ export function processResult(
     }
   }
 
+  if (result.Sast) {
+    for (let i = 0; i < result.Sast.length; i++) {
+      if (ignorer.isFileIgnored(result.Target, workspaceName)) {
+        continue;
+      }
+      const element = result.Sast[i];
+      const id = element.ID;
+      const title = element.Title;
+      const description = element.Description;
+      const target = result.Target;
+      const severity = getSeverityString(element.Severity);
+      const references = element.References;
+      const extra = new Sast(element);
+      const startLine = extra.startLine || 1;
+      const endLine = extra.endLine || 1;
+
+      results.push(
+        new TrivyResult(
+          id,
+          title,
+          description,
+          target,
+          startLine,
+          endLine,
+          severity,
+          references,
+          extra,
+          workspaceName
+        )
+      );
+    }
+  }
+
   return results;
 }
 
@@ -460,4 +519,23 @@ function getLocation(e: any, packages: Package[]): Location {
   }
 
   return { StartLine: 1, EndLine: 1 };
+}
+
+function getSeverityString(severity: string): string {
+  switch (severity.toString()) {
+    case '0':
+      return 'Unknown';
+    case '1':
+      return 'Low';
+    case '2':
+      return 'Medium';
+    case '3':
+      return 'High';
+    case '4':
+      return 'Critical';
+    case '5':
+      return 'Max';
+    default:
+      return severity;
+  }
 }

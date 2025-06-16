@@ -8,41 +8,49 @@ import { ResultCache } from './result_cache';
 
 export async function loader(
   workspaceName: string,
-  resultsFilePath: string
+  resultsFilePath: string,
+  assuranceFilePath?: string
 ): Promise<void> {
   const config = vscode.workspace.getConfiguration('trivy');
   const ig = new Ignorer(config);
   const isAssurance = config.get<boolean>('useAquaPlatform', false);
   const content = fs.readFileSync(resultsFilePath, 'utf8');
+
   try {
-    const data = JSON.parse(content);
+    const report = JSON.parse(content);
     if (
-      data === null ||
-      data.Results === null ||
-      (data.Report === null && isAssurance)
+      report === null ||
+      report.Results === null ||
+      (report.Report === null && isAssurance)
     ) {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let results: any;
-    if (isAssurance) {
-      results = data.Report.Results;
-    } else {
-      results = data.Results;
+    let assuranceReport = undefined;
+    const assuranceContent =
+      assuranceFilePath !== undefined
+        ? fs.readFileSync(assuranceFilePath, 'utf8')
+        : null;
+    if (isAssurance && assuranceContent) {
+      assuranceReport = JSON.parse(assuranceContent);
+      if (assuranceReport === null || assuranceReport.Results === null) {
+        return;
+      }
     }
 
     const trivyResults: TrivyResult[] = [];
-    for (let i = 0; i < results.length; i++) {
-      const element = results[i];
+    for (let i = 0; i < report.Results.length; i++) {
+      const element = report.Results[i];
       trivyResults.push(...processResult(element, workspaceName, ig));
     }
+
     ResultCache.instance.setTrivyResults(workspaceName, trivyResults);
 
-    // process assurance polcies
-    if (isAssurance) {
+    // process assurance policies
+    if (isAssurance && assuranceReport && assuranceReport.Results) {
       const policyResults =
-        extractPolicyResults(data.Results, data.Report, workspaceName) || [];
+        extractPolicyResults(assuranceReport.Results, report, workspaceName) ||
+        [];
 
       ResultCache.instance.setPolicyResults(workspaceName, policyResults);
     }

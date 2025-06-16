@@ -1,5 +1,6 @@
 import {
   Misconfiguration,
+  Sast,
   Secret,
   TrivyResult,
   Vulnerability,
@@ -31,6 +32,9 @@ export function getTrivyResultData(item: TrivyTreeItem, html: string): string {
       break;
     case TrivyTreeItemType.secretInstance:
       html += getSecretHtml(result);
+      break;
+    case TrivyTreeItemType.sastCode:
+      html += getSastHtml(result);
       break;
     default:
       return '';
@@ -173,5 +177,47 @@ function getSecretHtml(result?: TrivyResult): string {
     </table>
 
 
+    `;
+}
+
+function getSastHtml(result?: TrivyResult): string {
+  if (result === undefined) {
+    return '';
+  }
+  const sast = result.extraData as Sast; // Replace 'any' with the actual type if available
+  if (sast === undefined) {
+    return '';
+  }
+  const owaspHtml = sast.owasp.map((item) => item).join(',');
+
+  return `
+    <h2>${result.title}</h2>
+
+    <h3>${sast.cwe}</h3>
+    ${result.description}
+
+    <br />
+    <br />
+    <table>
+    <tr>
+    <th>Severity</th>
+    <td>${result.severity}</td>
+    </tr>
+        <tr>
+    <th>Likelihood</th>
+    <td>${sast.likelihood[0] + sast.likelihood.substring(1).toLowerCase()}</td>
+    </tr>
+    <tr>
+    <th>Filename</th>
+    <td>${result.filename}</td>
+    </tr>
+      <tr>
+    <th>OWASP</th>
+    <td>${owaspHtml}</td>
+    </tr>
+    </table>
+    <h4>Remediation</h4>
+    <p>${sast.remediation}</p>
+    <h4>More Information</h4>
     `;
 }

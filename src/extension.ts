@@ -29,6 +29,7 @@ const CONFIG_BOOLEAN_KEYS = [
   'packageJsonScanning',
   'gradleScanning',
   'dotnetProjScanning',
+  'sastScanning',
   'fixedOnly',
   'onlyUseConfigFile',
   'useConfigFile',

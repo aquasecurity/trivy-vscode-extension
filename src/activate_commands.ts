@@ -233,6 +233,12 @@ export function registerCommands(
   registerCommand(context, 'trivy.disableDotnetProjScanning', () =>
     updateConfigAndContext(config, 'dotnetProjScanning', false)
   );
+  registerCommand(context, 'trivy.setSastScanning', () =>
+    updateConfigAndContext(config, 'sastScanning', true)
+  );
+  registerCommand(context, 'trivy.disableSastScanning', () =>
+    updateConfigAndContext(config, 'sastScanning', false)
+  );
   registerCommand(context, 'trivy.onlyFixedIssues', () =>
     updateConfigAndContext(config, 'fixedOnly', true)
   );
