@@ -194,7 +194,7 @@ function getSastHtml(result?: TrivyResult): string {
     <h2>${result.title}</h2>
 
     <h3>${sast.cwe}</h3>
-    ${result.description}
+    ${result.description ? result.description : ''}
 
     <br />
     <br />
