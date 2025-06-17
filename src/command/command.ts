@@ -38,6 +38,41 @@ export enum ScanType {
   GitScan = 'repository',
 }
 
+const phaseMap: Record<string, { phase: string; increment: number }> = {
+  'Vulnerability scanning is enabled': {
+    phase: 'Scanning for vulnerabilities',
+    increment: 4,
+  },
+  'Secret scanning is enabled': {
+    phase: 'Scanning for secrets...',
+    increment: 4,
+  },
+  'Misconfiguration scanning is enabled': {
+    phase: 'Scanning for misconfigurations...',
+    increment: 4,
+  },
+  'context=trivy-plugin': {
+    phase: 'Preparing scan...',
+    increment: 1,
+  },
+  'Detected config files': {
+    phase: 'Processing results...',
+    increment: 1,
+  },
+  'Detecting vulnerabilities': {
+    phase: 'Scanning...',
+    increment: 1,
+  },
+  'Scanning root module': {
+    phase: 'Scanning...',
+    increment: 1,
+  },
+  'Scanning SAST': {
+    phase: 'Scanning...',
+    increment: 1,
+  },
+};
+
 /**
  * Wrapper for executing Trivy commands and handling results
  */
@@ -198,7 +233,7 @@ export class TrivyWrapper {
     if (isAquaPlatformRun) {
       assuranceReportPath = path.join(
         this.resultsStoragePath,
-        `_assurance.json`
+        `assurance.json`
       );
       env = await updateEnvironment(config, secrets, env, assuranceReportPath);
     }
@@ -233,7 +268,8 @@ export class TrivyWrapper {
     ).then(async () => {
       await loader(
         workspaceName,
-        isAquaPlatformRun ? assuranceReportPath : resultsPath
+        resultsPath,
+        isAquaPlatformRun ? assuranceReportPath : undefined
       );
     });
   }
@@ -419,7 +455,9 @@ export class TrivyWrapper {
     return vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `Running Trivy Scan${isAquaPlatformRun ? ' (Aqua Platform)' : ''}`,
+        title: isAquaPlatformRun
+          ? 'Running Aqua Platform Scan'
+          : 'Running Trivy Scan',
         cancellable: true,
       },
       async (progress, token) => {
@@ -434,34 +472,21 @@ export class TrivyWrapper {
 
           const handleOutput = (data: string) => {
             const output = stripAnsiEscapeCodes(data);
-            // Update progress based on output
-            if (output.includes('Vulnerability scanning is enabled')) {
-              progressIncrement = 4;
-              currentPhase = '\nScanning for vulnerabilities';
-            } else if (output.includes('Secret scanning is enabled')) {
-              progressIncrement = 4;
-              currentPhase = '\nScanning for secrets...';
-            } else if (
-              output.includes('Misconfiguration scanning is enabled')
-            ) {
-              progressIncrement = 4;
-              currentPhase = '\nScanning for misconfigurations...';
-            } else if (output.includes('context=trivy-plugin')) {
-              progressIncrement = 1;
-              currentPhase = '\nPreparing scan...';
-            } else if (output.includes('Detected config files')) {
-              progressIncrement = 1;
-              currentPhase = '\nProcessing results...';
-            } else if (output.includes('Scanning root module')) {
-              progressIncrement = 1;
-              currentPhase = '\nScanning...';
+            for (const [key, value] of Object.entries(phaseMap)) {
+              if (output.includes(key)) {
+                currentPhase = value.phase;
+                progressIncrement = value.increment;
+                break; // Exit loop after first match}
+              }
             }
           };
 
           // Function to update progress bar
           const updateProgress = () => {
             if (progressCounter <= progressMax) {
-              if (progressCounter === 50 && progressIncrement === 1) {
+              // The threshold was changed from 50 to 75 based on observed scan behavior.
+              // At 75%, scans tend to slow down significantly, so we adjust the increment to avoid overshooting progress.
+              if (progressCounter === 75 && progressIncrement === 1) {
                 // what we have here is a slow start, so let's slow things down a bit
                 progressIncrement = 0;
 

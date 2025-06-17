@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.0
+
+- Add support for SAST when using the Aqua Platform scan
+
 ## 1.7.0
 
 - Add Context menu to issues to add them to the ignorefile if found, otherwise create a .trivyignore.yaml

@@ -48,6 +48,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
       case TrivyTreeItemType.vulnerabilitySeverity:
       case TrivyTreeItemType.misconfigSeverity:
       case TrivyTreeItemType.secretSeverity:
+      case TrivyTreeItemType.sastSeverity:
         this.iconPath = new vscode.ThemeIcon(
           'debug-breakpoint',
           new vscode.ThemeColor(
@@ -81,6 +82,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
       case TrivyTreeItemType.misconfigFile:
       case TrivyTreeItemType.vulnerabilityFile:
       case TrivyTreeItemType.secretFile:
+      case TrivyTreeItemType.sastFile:
       case TrivyTreeItemType.misconfigInstance:
       case TrivyTreeItemType.singleCodeAssurancePolicy:
       case TrivyTreeItemType.multiCodeAssurancePolicy:
@@ -108,6 +110,7 @@ export class TrivyTreeItem extends vscode.TreeItem {
         break;
       case TrivyTreeItemType.misconfigCode:
       case TrivyTreeItemType.vulnerabilityCode:
+      case TrivyTreeItemType.sastCode:
         this.contextValue = 'trivy.ignorable';
         this.tooltip = properties?.check?.title;
         this.iconPath = new vscode.ThemeIcon(

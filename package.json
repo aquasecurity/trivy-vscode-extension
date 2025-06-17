@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -64,6 +64,12 @@
           "type": "boolean",
           "default": true,
           "description": "Scan .NET project without lock file",
+          "scope": "window"
+        },
+        "trivy.sastScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Trivy should scan for SAST issues, requires aqua plugin >= v0.202.0",
           "scope": "window"
         },
         "trivy.offlineScan": {
@@ -183,7 +189,7 @@
       },
       {
         "command": "trivy.setupCommercial",
-        "title": "Trivy Aqua Platform Integration"
+        "title": "Configure Aqua Platform"
       },
       {
         "command": "trivy.refresh",
@@ -304,6 +310,14 @@
       {
         "command": "trivy.disableDotnetProjScanning",
         "title": "✓ Scan .NET project without lock file"
+      },
+      {
+        "command": "trivy.setSastScanning",
+        "title": "Enable SAST scanning"
+      },
+      {
+        "command": "trivy.disableSastScanning",
+        "title": "✓ Enable SAST scanning"
       },
       {
         "command": "trivy.useAquaPlatform",
@@ -489,6 +503,16 @@
           "command": "trivy.disableDotnetProjScanning",
           "when": "view == trivyIssueViewer && trivy.dotnetProjScanning && trivy.useAquaPlatform",
           "group": "4_aquaPlatform@6"
+        },
+        {
+          "command": "trivy.setSastScanning",
+          "when": "view == trivyIssueViewer && !trivy.sastScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@7"
+        },
+        {
+          "command": "trivy.disableSastScanning",
+          "when": "view == trivyIssueViewer && trivy.sastScanning && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@7"
         },
         {
           "command": "trivy.setupCommercial",

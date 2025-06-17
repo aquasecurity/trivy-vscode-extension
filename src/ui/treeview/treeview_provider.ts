@@ -28,6 +28,9 @@ import {
   getVulnerabilitiesBySeverity,
   getMisconfigurationsBySeverity,
   getSecretsBySeverity,
+  getSastRoots,
+  getSastBySeverity,
+  getSastInstances,
 } from './findings';
 import { Problems } from './problems';
 import { TrivyTreeItem } from './treeitem';
@@ -146,6 +149,11 @@ export class TrivyTreeViewProvider
           this.resultData.getTrivyResults(element.workspaceName),
           element
         );
+      case TrivyTreeItemType.sastFile:
+        return getSastInstances(
+          this.resultData.getTrivyResults(element.workspaceName),
+          element
+        );
       case TrivyTreeItemType.assurancePolicy:
         return getAssurancePolicyControlChildren(
           this.resultData.getPolicyResults(element.workspaceName),
@@ -171,10 +179,7 @@ export class TrivyTreeViewProvider
           this.resultData.getPolicyResults(element.workspaceName),
           element
         );
-      case TrivyTreeItemType.vulnerabilityRoot:
-        return getVulnerabilitySeverityRoots(
-          this.resultData.getTrivyResults(element.workspaceName)
-        );
+
       case TrivyTreeItemType.vulnerabilitySeverity:
         return getVulnerabilitiesBySeverity(
           this.resultData.getTrivyResults(element.workspaceName),
@@ -190,12 +195,25 @@ export class TrivyTreeViewProvider
           this.resultData.getTrivyResults(element.workspaceName),
           element.title
         );
+      case TrivyTreeItemType.sastSeverity:
+        return getSastBySeverity(
+          this.resultData.getTrivyResults(element.workspaceName),
+          element.title
+        );
+      case TrivyTreeItemType.vulnerabilityRoot:
+        return getVulnerabilitySeverityRoots(
+          this.resultData.getTrivyResults(element.workspaceName)
+        );
       case TrivyTreeItemType.misconfigRoot:
         return getMisconfigSeverityRoots(
           this.resultData.getTrivyResults(element.workspaceName)
         );
       case TrivyTreeItemType.secretRoot:
         return getSecretRoots(
+          this.resultData.getTrivyResults(element.workspaceName)
+        );
+      case TrivyTreeItemType.sastRoot:
+        return getSastRoots(
           this.resultData.getTrivyResults(element.workspaceName)
         );
     }

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import {
   Misconfiguration,
   PolicyResult,
+  Sast,
   Secret,
   TrivyResult,
   Vulnerability,
@@ -84,6 +85,22 @@ function groupResultsBySeverity<T extends TrivyResult | PolicyResult>(
     );
   }
 
+  if (
+    resultData.filter(
+      (c) => c instanceof TrivyResult && c.extraData instanceof Sast
+    ).length > 0
+  ) {
+    results.push(
+      new TrivyTreeItem(
+        resultData[0].workspaceName,
+        'SAST',
+        vscode.TreeItemCollapsibleState.Expanded,
+        TrivyTreeItemType.sastRoot,
+        {}
+      )
+    );
+  }
+
   return results;
 }
 
@@ -105,13 +122,28 @@ function groupResultsByFile<T extends TrivyResult | PolicyResult>(
 
     resolvedNodes.push(result.filename);
 
-    const itemType =
-      result instanceof TrivyResult && result.extraData instanceof Vulnerability
-        ? TrivyTreeItemType.vulnerabilityFile
-        : result instanceof TrivyResult &&
-            result.extraData instanceof Misconfiguration
-          ? TrivyTreeItemType.misconfigFile
-          : TrivyTreeItemType.secretFile;
+    let itemType: TrivyTreeItemType = TrivyTreeItemType.unknown;
+    if (
+      result instanceof TrivyResult &&
+      result.extraData instanceof Vulnerability
+    ) {
+      itemType = TrivyTreeItemType.vulnerabilityFile;
+    } else if (
+      result instanceof TrivyResult &&
+      result.extraData instanceof Misconfiguration
+    ) {
+      itemType = TrivyTreeItemType.misconfigFile;
+    } else if (
+      result instanceof TrivyResult &&
+      result.extraData instanceof Secret
+    ) {
+      itemType = TrivyTreeItemType.secretFile;
+    } else if (
+      result instanceof TrivyResult &&
+      result.extraData instanceof Sast
+    ) {
+      itemType = TrivyTreeItemType.sastFile;
+    }
     results.push(
       new TrivyTreeItem(
         result.workspaceName,
@@ -240,7 +272,12 @@ export function getSecretInstances<T extends TrivyResult | PolicyResult>(
       continue;
     }
 
-    const title = result.title ?? result.id;
+    let title = result.title ?? result.id;
+    if (result.startLine !== result.endLine) {
+      title += `:[${result.startLine}-${result.endLine}]`;
+    } else {
+      title += `:${result.startLine}`;
+    }
     const collapsedState = vscode.TreeItemCollapsibleState.None;
 
     const item = new TrivyTreeItem(
@@ -252,6 +289,63 @@ export function getSecretInstances<T extends TrivyResult | PolicyResult>(
     );
     results.push(item);
   }
+
+  return results;
+}
+
+/**
+ * Get Sast Instances
+ * @param resultData the result data to extract the children from
+ * @param element
+ * @returns
+ */
+export function getSastInstances<T extends TrivyResult | PolicyResult>(
+  resultData: T[],
+  element: TrivyTreeItem
+): TrivyTreeItem[] {
+  const results: TrivyTreeItem[] = [];
+
+  const filtered = resultData.filter(
+    (c: TrivyResult | PolicyResult) =>
+      c instanceof TrivyResult &&
+      c.filename === element.filename &&
+      c.severity.toLowerCase() === element.severity.toLowerCase()
+  );
+
+  for (let index = 0; index < filtered.length; index++) {
+    const result = filtered[index];
+
+    if (result === undefined || !(result instanceof TrivyResult)) {
+      continue;
+    }
+
+    let title = result.title ?? result.id;
+    if (result.startLine !== result.endLine) {
+      title += `:[${result.startLine}-${result.endLine}]`;
+    } else {
+      title += `:${result.startLine}`;
+    }
+    const collapsedState = vscode.TreeItemCollapsibleState.None;
+
+    const item = new TrivyTreeItem(
+      result.workspaceName,
+      title,
+      collapsedState,
+      TrivyTreeItemType.sastCode,
+      { check: result, command: createFileOpenCommand(result) }
+    );
+    results.push(item);
+  }
+
+  results.sort((a, b) => {
+    if (a.title < b.title) {
+      return -1;
+    }
+    if (a.title > b.title) {
+      return 1;
+    }
+    return 0;
+  });
 
   return results;
 }
@@ -272,7 +366,9 @@ export function getVulnerabilitySeverityRoots<
       c instanceof TrivyResult && c.extraData instanceof Vulnerability
   );
 
-  const severities = Array.from(new Set(filtered.map((c) => c.severity)));
+  const severities = Array.from(
+    new Set(filtered.map((c) => c.severity.toUpperCase()))
+  );
 
   SEVERITY_ORDER.forEach((sev) => {
     if (severities.includes(sev.toUpperCase())) {
@@ -347,6 +443,37 @@ export function getSecretRoots(
           sev,
           vscode.TreeItemCollapsibleState.Collapsed,
           TrivyTreeItemType.secretSeverity,
+          { requiredSeverity: sev }
+        )
+      );
+    }
+  });
+
+  return results;
+}
+
+export function getSastRoots(
+  resultData: (TrivyResult | PolicyResult)[]
+): TrivyTreeItem[] {
+  const results: TrivyTreeItem[] = [];
+
+  const filtered = resultData.filter(
+    (c: PolicyResult | TrivyResult) =>
+      c instanceof TrivyResult && c.extraData instanceof Sast
+  );
+
+  const severities = Array.from(
+    new Set(filtered.map((c) => c.severity.toUpperCase()))
+  );
+
+  SEVERITY_ORDER.forEach((sev) => {
+    if (severities.includes(sev.toUpperCase())) {
+      results.push(
+        new TrivyTreeItem(
+          resultData[0].workspaceName,
+          sev,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          TrivyTreeItemType.sastSeverity,
           { requiredSeverity: sev }
         )
       );
@@ -466,6 +593,46 @@ export function getSecretsBySeverity<T extends TrivyResult | PolicyResult>(
         result.filename,
         vscode.TreeItemCollapsibleState.Collapsed,
         TrivyTreeItemType.secretFile,
+        { check: result, requiredSeverity: severity }
+      )
+    );
+  }
+
+  return results;
+}
+
+export function getSastBySeverity<T extends TrivyResult | PolicyResult>(
+  resultData: T[],
+  severity: string
+): TrivyTreeItem[] {
+  const results: TrivyTreeItem[] = [];
+  const resolvedNodes: string[] = [];
+
+  const filtered = resultData.filter(
+    (c: PolicyResult | TrivyResult) =>
+      c instanceof TrivyResult &&
+      c.extraData instanceof Sast &&
+      c.severity.toLowerCase() === severity.toLowerCase()
+  );
+
+  for (let index = 0; index < filtered.length; index++) {
+    const result = filtered[index];
+    if (result === undefined) {
+      continue;
+    }
+
+    if (resolvedNodes.includes(result.filename)) {
+      continue;
+    }
+
+    resolvedNodes.push(result.filename);
+
+    results.push(
+      new TrivyTreeItem(
+        result.workspaceName,
+        result.filename,
+        vscode.TreeItemCollapsibleState.Collapsed,
+        TrivyTreeItemType.sastFile,
         { check: result, requiredSeverity: severity }
       )
     );
