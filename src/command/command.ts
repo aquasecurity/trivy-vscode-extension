@@ -484,6 +484,8 @@ export class TrivyWrapper {
           // Function to update progress bar
           const updateProgress = () => {
             if (progressCounter <= progressMax) {
+              // The threshold was changed from 50 to 75 based on observed scan behavior.
+              // At 75%, scans tend to slow down significantly, so we adjust the increment to avoid overshooting progress.
               if (progressCounter === 75 && progressIncrement === 1) {
                 // what we have here is a slow start, so let's slow things down a bit
                 progressIncrement = 0;
