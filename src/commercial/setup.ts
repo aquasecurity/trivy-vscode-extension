@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { Output } from '../command/output';
 import { showInformationMessage } from '../ui/notification/notifications';
-import { showWarningWithLink } from '../utils';
+import { showErrorMessage, showWarningWithLink } from '../utils';
 
 import checkCredentialConnection from './cred_check';
 
@@ -135,28 +135,35 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
               aquaUrl = regionalUrls.apiUrl;
               cspmUrl = regionalUrls.authUrl;
             }
-
-            await checkCredentialConnection({
-              apiKey: message.apiKey,
-              apiSecret: message.apiSecret,
-              aquaUrl: aquaUrl,
-              cspmUrl: cspmUrl,
-            })
-              .then(async (result: boolean) => {
-                if (!result) {
-                  throw new Error('Failed to validate credentials');
-                }
-              })
-              .catch((error) => {
-                Output.getInstance().appendLine(error.message);
-                validCreds = false;
-                showWarningWithLink(
-                  `Failed to validate credentials`,
-                  'Learn more',
-                  'https://docs.aquasec.com/saas/getting-started/welcome/saas-regions/'
-                );
-              });
+          } else {
+            if (aquaUrl === '' || cspmUrl === '') {
+              showErrorMessage(
+                `Custom region selected but API Url or Authentication Url is empty`
+              );
+              return;
+            }
           }
+
+          await checkCredentialConnection({
+            apiKey: message.apiKey,
+            apiSecret: message.apiSecret,
+            aquaUrl: aquaUrl,
+            cspmUrl: cspmUrl,
+          })
+            .then(async (result: boolean) => {
+              if (!result) {
+                throw new Error('Failed to validate credentials');
+              }
+            })
+            .catch((error) => {
+              Output.getInstance().appendLine(error.message);
+              validCreds = false;
+              showWarningWithLink(
+                `Failed to validate credentials`,
+                'Learn more',
+                'https://docs.aquasec.com/saas/getting-started/welcome/saas-regions/'
+              );
+            });
 
           if (validCreds) {
             if (message.enableAquaPlatform) {
@@ -371,9 +378,6 @@ function getWebviewContent(
                if (aquaRegionValue === 'custom') {
                    customApiUrl = document.getElementById('customApiUrl').value;
                    customAuthUrl = document.getElementById('custonAuthUrl').value;
-                   if (!customApiUrl || !customAuthUrl) {
-                       return;
-                   }
                } 
 
                const enableAquaPlatform = document.getElementById('enableAquaPlatform').checked;
