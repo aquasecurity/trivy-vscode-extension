@@ -3,6 +3,7 @@
 ## 1.8.0
 
 - Add support for SAST when using the Aqua Platform scan
+- Add option to use custom URLs for connecting to the Aqua Platform
 
 ## 1.7.0
 
