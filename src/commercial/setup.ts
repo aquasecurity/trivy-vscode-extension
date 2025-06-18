@@ -70,6 +70,10 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
   const apiSecret = (await context.secrets.get('apiSecret')) || '';
   const aquaRegion = (await context.secrets.get('aquaRegion')) || 'default';
 
+  const config = vscode.workspace.getConfiguration('trivy');
+  const customApiUrl = config.get<string>('aquaApiUrl') || '';
+  const customAuthUrl = config.get<string>('aquaAuthenticationUrl') || '';
+
   const codiconsSrc = panel.webview.asWebviewUri(
     vscode.Uri.joinPath(
       context.extensionUri,
@@ -96,38 +100,47 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
     apiKey,
     apiSecret,
     aquaRegion,
+    customApiUrl,
+    customAuthUrl,
     toolkitSrc,
     codiconsSrc
   );
 
-  const config = vscode.workspace.getConfiguration('trivy');
   panel.webview.onDidReceiveMessage(
     async (message) => {
       switch (message.command) {
         case 'storeSecrets': {
           let validCreds = true;
-          const regionalUrls =
-            regionMap[message.aquaRegionValue as keyof typeof regionMap];
-          if (message.enableAquaPlatform) {
-            if (message.apiKey === '' || message.apiSecret === '') {
-              showInformationMessage('Please fill in all the required fields');
-              return;
-            }
+          let aquaUrl = message.customApiUrl || '';
+          let cspmUrl = message.customAuthUrl || '';
+          if (message.aquaRegionValue !== 'custom') {
+            const regionalUrls =
+              regionMap[message.aquaRegionValue as keyof typeof regionMap];
+            if (message.enableAquaPlatform) {
+              if (message.apiKey === '' || message.apiSecret === '') {
+                showInformationMessage(
+                  'Please fill in all the required fields'
+                );
+                return;
+              }
 
-            if (!regionalUrls) {
-              showWarningWithLink(
-                `Invalid region selected`,
-                'Learn more',
-                'https://docs.aquasec.com/saas/getting-started/welcome/saas-regions/'
-              );
-              return;
+              if (!regionalUrls) {
+                showWarningWithLink(
+                  `Invalid region selected`,
+                  'Learn more',
+                  'https://docs.aquasec.com/saas/getting-started/welcome/saas-regions/'
+                );
+                return;
+              }
+              aquaUrl = regionalUrls.apiUrl;
+              cspmUrl = regionalUrls.authUrl;
             }
 
             await checkCredentialConnection({
               apiKey: message.apiKey,
               apiSecret: message.apiSecret,
-              aquaUrl: regionalUrls.apiUrl,
-              cspmUrl: regionalUrls.authUrl,
+              aquaUrl: aquaUrl,
+              cspmUrl: cspmUrl,
             })
               .then(async (result: boolean) => {
                 if (!result) {
@@ -151,8 +164,8 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
                 'Aqua Platform credentials validated successfully'
               );
             }
-            config.update('aquaApiUrl', regionalUrls.apiUrl);
-            config.update('aquaAuthenticationUrl', regionalUrls.authUrl);
+            config.update('aquaApiUrl', aquaUrl);
+            config.update('aquaAuthenticationUrl', cspmUrl);
             config.update('useAquaPlatform', message.enableAquaPlatform);
             vscode.commands.executeCommand(
               'setContext',
@@ -195,6 +208,8 @@ function getWebviewContent(
   apiKey: string,
   apiSecret: string,
   aquaRegion: string,
+  customApiUrl: string,
+  customAuthUrl: string,
   toolkitSrc: vscode.Uri,
   codiconsSrc: vscode.Uri
 ) {
@@ -286,15 +301,22 @@ function getWebviewContent(
               <span slot="start" class="codicon codicon-key"></span>
               </vscode-text-field><br>
               <div class="dropdown-container">
-              <label for="aqua-platform-region" id="region-label">Region:</label>
+              <label for="aqua-platform-region" id="region-label">Region</label>
               <vscode-dropdown id="aqua-platform-region" name="aqua-platform-region" value="${aquaRegion}" ${!useAquaPlatform ? 'disabled' : ''}>
               <vscode-option value="default">US (Default)</vscode-option>
               <vscode-option value="eu">EU</vscode-option>
               <vscode-option value="ap-1">Singapore</vscode-option>
               <vscode-option value="ap-2">Sydney</vscode-option>
-              <!-- TODO: remove dev region -->
-              <vscode-option value="dev">Dev</vscode-option>  
+              <vscode-option value="custom">Custom</vscode-option>
               </vscode-dropdown>
+              <vscode-text-field size="48" id="customApiUrl" name="customApiUrl" style="display: ${aquaRegion === 'custom' ? 'inline-block' : 'none'}" value="${customApiUrl}" ${!useAquaPlatform ? 'disabled' : ''}>
+              API Url
+              <span slot="start" class="codicon codicon-globe"></span>
+              </vscode-text-field>
+              <vscode-text-field size="48" id="custonAuthUrl" name="custonAuthUrl" style="display: ${aquaRegion === 'custom' ? 'inline-block' : 'none'}" value="${customAuthUrl}" ${!useAquaPlatform ? 'disabled' : ''}>
+              API Authentication Url
+              <span slot="start" class="codicon codicon-globe"></span>
+              </vscode-text-field>
             </div>
               <vscode-button id="save-button" appearance="primary" type="submit" >Save</vscode-button>
            </form>
@@ -309,9 +331,6 @@ function getWebviewContent(
             vscode.postMessage({ command: 'openExternalLink', url: target.href });
         }
     });
-
-
-
            document.getElementById('enableAquaPlatform').addEventListener('change', event => {
                 const checked = event.target.checked;
                 document.getElementById('apiKey').disabled = !checked;
@@ -324,16 +343,41 @@ function getWebviewContent(
                     regionLabel.classList.remove('disabled');
                 }
            });
+
+           document.getElementById('aqua-platform-region').addEventListener('change', event => {
+                const selectedValue = event.target.value;
+                const customApiUrl = document.getElementById('customApiUrl');
+                const customAuthUrl = document.getElementById('custonAuthUrl');
+
+                if (selectedValue === 'custom') {
+                  customApiUrl.style.display = 'inline-block';
+                  customAuthUrl.style.display = 'inline-block';
+                } else {
+                  customApiUrl.style.display = 'none';
+                  customAuthUrl.style.display = 'none';
+                }
+           });
            
            document.getElementById('save-button').addEventListener('click', event => {
                event.preventDefault();
                const apiKey = document.getElementById('apiKey').value;
                const apiSecret = document.getElementById('apiSecret').value;
 
-              const aquaRegion = document.getElementById('aqua-platform-region');
-                const aquaRegionValue = aquaRegion.options[aquaRegion.selectedIndex].value;
+               const aquaRegion = document.getElementById('aqua-platform-region');
+               const aquaRegionValue = aquaRegion.options[aquaRegion.selectedIndex].value;
+               let customApiUrl = '';
+                let customAuthUrl = '';
+
+               if (aquaRegionValue === 'custom') {
+                   customApiUrl = document.getElementById('customApiUrl').value;
+                   customAuthUrl = document.getElementById('custonAuthUrl').value;
+                   if (!customApiUrl || !customAuthUrl) {
+                       return;
+                   }
+               } 
+
                const enableAquaPlatform = document.getElementById('enableAquaPlatform').checked;
-               vscode.postMessage({ command: 'storeSecrets', apiKey, apiSecret, aquaRegionValue, enableAquaPlatform });
+               vscode.postMessage({ command: 'storeSecrets', apiKey, apiSecret, aquaRegionValue, enableAquaPlatform, customApiUrl, customAuthUrl });
            });
         </script>
      </body>
