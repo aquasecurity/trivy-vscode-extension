@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.1
+
+- Fix bug to ensure that problems are cleared on every scan
+
 ## 1.8.0
 
 - Add support for SAST when using the Aqua Platform scan
