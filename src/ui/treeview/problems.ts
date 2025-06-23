@@ -19,6 +19,8 @@ export class Problems {
   }
 
   public updateProblems(trivyResults: TrivyResult[]) {
+    //always clear problems before updating
+    this.clearProblems();
     if (trivyResults.length === 0) {
       return;
     }

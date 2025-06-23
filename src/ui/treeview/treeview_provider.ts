@@ -87,6 +87,7 @@ export class TrivyTreeViewProvider
     // this.taintResults = true;
     this.resultData.clear();
     this._onDidChangeTreeData.fire();
+    Problems.instance.clearProblems();
   }
 
   /**
