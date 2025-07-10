@@ -80,7 +80,7 @@ export async function updateEnvironment(
 
     if (config.get<boolean>('gradleScanning')) {
       newEnv[ENV_KEYS.GRADLE] = '1';
-  
+    }
 
     if (config.get<boolean>('dotnetProjScanning')) {
       newEnv[ENV_KEYS.DOTNET_PROJ] = '1';
