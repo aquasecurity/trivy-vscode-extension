@@ -71,7 +71,7 @@ export async function updateEnvironment(
     newEnv[ENV_KEYS.API_SECRET] = apiSecret;
     newEnv[ENV_KEYS.RUN_MODE] = 'aqua';
     newEnv[ENV_KEYS.ASSURANCE_EXPORT] = assuranceReportPath;
-    newEnv[ENV_KEYS.TRIVY_IDE_IDENTIFIER] = 'ide-extension';
+    newEnv[ENV_KEYS.TRIVY_IDE_IDENTIFIER] = 'vscode';
 
     // set scan settings
     if (config.get<boolean>('packageJsonScanning')) {
