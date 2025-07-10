@@ -18,6 +18,7 @@ const ENV_KEYS = Object.freeze({
   SAST: 'SAST',
   TRIVY_SKIP_REPOSITORY_UPLOAD: 'TRIVY_SKIP_REPOSITORY_UPLOAD',
   TRIVY_SKIP_RESULT_UPLOAD: 'TRIVY_SKIP_RESULT_UPLOAD',
+  TRIVY_IDE_IDENTIFIER: 'TRIVY_IDE_IDENTIFIER',
 });
 
 /**
@@ -70,6 +71,7 @@ export async function updateEnvironment(
     newEnv[ENV_KEYS.API_SECRET] = apiSecret;
     newEnv[ENV_KEYS.RUN_MODE] = 'aqua';
     newEnv[ENV_KEYS.ASSURANCE_EXPORT] = assuranceReportPath;
+    newEnv[ENV_KEYS.TRIVY_IDE_IDENTIFIER] = 'ide-extension';
 
     // set scan settings
     if (config.get<boolean>('packageJsonScanning')) {
