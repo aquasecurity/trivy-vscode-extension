@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.2
+
+- Add envvar to report to Aqua Platform the source of the request
+
 ## 1.8.1
 
 - Fix bug to ensure that problems are cleared on every scan
