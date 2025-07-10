@@ -334,6 +334,10 @@
       {
         "command": "trivy.addToIgnoreFile",
         "title": "Add to Trivy ignore file"
+      },
+      {
+        "command": "trivy.revealTreeItem",
+        "title": "Reveal in Trivy Explorer"
       }
     ],
     "viewsContainers": {

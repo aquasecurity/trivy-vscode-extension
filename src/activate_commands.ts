@@ -124,7 +124,8 @@ export function registerCommands(
   misconfigProvider: TrivyTreeViewProvider,
   assuranceProvider: TrivyTreeViewProvider,
   helpProvider: TrivyHelpProvider,
-  config: vscode.WorkspaceConfiguration
+  config: vscode.WorkspaceConfiguration,
+  findingTree?: vscode.TreeView<TrivyTreeItem>
 ): void {
   // installation commands
   registerCommand(
@@ -296,4 +297,166 @@ export function registerCommands(
       addIgnoreFileEntry(item);
     }
   );
+
+  // Command to reveal tree item from CodeLens
+  registerCommand(
+    context,
+    'trivy.revealTreeItem',
+    async (result: any) => {
+      if (!findingTree) {
+        showErrorMessage('Trivy Explorer is not available');
+        return;
+      }
+
+      console.log('Revealing tree item for result:', result);
+
+      // First ensure the tree data is refreshed
+      misconfigProvider.refresh();
+
+      // Wait a bit for the refresh to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Find the matching tree item by traversing the tree
+      const treeItem = await findMatchingTreeItem(misconfigProvider, result);
+
+      if (treeItem) {
+        console.log('Found matching tree item:', treeItem.label);
+        try {
+          // First reveal the item
+          await findingTree.reveal(treeItem, {
+            select: true,
+            focus: true,
+            expand: true,
+          });
+
+          // Wait a moment for the reveal to complete
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // Manually set the selection to trigger the selection event
+          // This is a workaround since reveal might not trigger selection change
+          const currentSelection = findingTree.selection;
+          if (!currentSelection.includes(treeItem)) {
+            // Try to force the selection by accessing the private selection property
+            (findingTree as any)._selection = [treeItem];
+
+            // Manually trigger the help provider update
+            if (
+              treeItem.collapsibleState === vscode.TreeItemCollapsibleState.None
+            ) {
+              helpProvider.update(treeItem, 'finding');
+            }
+          }
+        } catch (error) {
+          console.error('Reveal error:', error);
+          showErrorMessage(`Failed to reveal item in Trivy Explorer: ${error}`);
+        }
+      } else {
+        console.log('No matching tree item found for:', result.id);
+        // Let's also log what we're looking for vs what's available
+        const allItems = await getAllTreeItems(misconfigProvider);
+        console.log(
+          'Available tree items:',
+          allItems.map((item: TrivyTreeItem) => ({
+            id: item.properties?.check?.id,
+            filename: item.properties?.check?.filename,
+            line: item.properties?.check?.startLine,
+            workspace: item.properties?.check?.workspaceName,
+          }))
+        );
+
+        showErrorMessage(
+          `No matching item found in Trivy Explorer for ${result.id}`
+        );
+      }
+    },
+    'Failed to reveal tree item'
+  );
+
+  /**
+   * Get all tree items for debugging purposes
+   */
+  async function getAllTreeItems(
+    provider: TrivyTreeViewProvider
+  ): Promise<TrivyTreeItem[]> {
+    const allItems: TrivyTreeItem[] = [];
+    const children = await provider.getChildren();
+    if (!children) return allItems;
+
+    for (const child of children) {
+      allItems.push(child);
+      await collectAllChildren(provider, child, allItems);
+    }
+
+    return allItems;
+  }
+
+  /**
+   * Recursively collect all children for debugging
+   */
+  async function collectAllChildren(
+    provider: TrivyTreeViewProvider,
+    item: TrivyTreeItem,
+    allItems: TrivyTreeItem[]
+  ): Promise<void> {
+    if (item.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+      const children = await provider.getChildren(item);
+      if (children) {
+        for (const child of children) {
+          allItems.push(child);
+          await collectAllChildren(provider, child, allItems);
+        }
+      }
+    }
+  }
+
+  /**
+   * Find a matching tree item by traversing the tree structure
+   */
+  async function findMatchingTreeItem(
+    provider: TrivyTreeViewProvider,
+    targetResult: any
+  ): Promise<TrivyTreeItem | undefined> {
+    const children = await provider.getChildren();
+    if (!children) return undefined;
+
+    for (const child of children) {
+      const match = await searchTreeItem(provider, child, targetResult);
+      if (match) return match;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Recursively search for a matching tree item
+   */
+  async function searchTreeItem(
+    provider: TrivyTreeViewProvider,
+    item: TrivyTreeItem,
+    targetResult: any
+  ): Promise<TrivyTreeItem | undefined> {
+    // Check if this item matches what we're looking for
+    if (
+      item.properties?.check &&
+      item.properties.check.id === targetResult.id &&
+      item.properties.check.filename === targetResult.filename &&
+      item.properties.check.startLine === targetResult.startLine &&
+      item.properties.check.workspaceName === targetResult.workspaceName
+    ) {
+      return item;
+    }
+
+    // If this item has children, search them
+    if (item.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+      const children = await provider.getChildren(item);
+      if (children) {
+        for (const child of children) {
+          const match = await searchTreeItem(provider, child, targetResult);
+          if (match) return match;
+        }
+      }
+    }
+
+    return undefined;
+  }
 }

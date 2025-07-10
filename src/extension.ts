@@ -7,7 +7,7 @@ import { registerCommands } from './activate_commands';
 import { TrivyWrapper } from './command/command';
 import { verifyTrivyInstallation } from './command/install';
 import { Output } from './command/output';
-import { VulnerabilityCodeLensProvider } from './ui/codelens_provider';
+import { CodeLensProvider } from './ui/codelens_provider';
 import { TrivyHelpProvider } from './ui/helpview/helpview';
 import { showErrorMessage } from './ui/notification/notifications';
 import { TrivyTreeViewProvider } from './ui/treeview/treeview_provider';
@@ -150,7 +150,7 @@ async function activateExtension(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
       { scheme: 'file' },
-      VulnerabilityCodeLensProvider.instance()
+      CodeLensProvider.instance()
     )
   );
 
@@ -234,7 +234,8 @@ async function registerViews(
     misconfigProvider,
     assuranceProvider,
     helpProvider,
-    config
+    config,
+    findingTree
   );
 }
 

@@ -66,6 +66,54 @@ export class TrivyTreeViewProvider
   }
 
   /**
+   * Find a tree item in the tree view
+   * @param result TrivyTreeItem
+   */
+  findTreeItem(result: TrivyResult | PolicyResult): TrivyTreeItem | undefined {
+    if (!result || !result.workspaceName) {
+      return undefined;
+    }
+
+    const workspaceResults = this.resultData.getTrivyResults(
+      result.workspaceName
+    );
+    if (!workspaceResults) {
+      return undefined;
+    }
+
+    const item = workspaceResults.find(
+      (r: TrivyResult | PolicyResult) =>
+        r.filename === result.filename &&
+        r.id === result.id &&
+        r.startLine === result.startLine &&
+        r.endLine === result.endLine &&
+        r.workspaceName === result.workspaceName
+    );
+
+    if (item) {
+      let treeItemType: TrivyTreeItemType = TrivyTreeItemType.workspace;
+      if (item instanceof TrivyResult) {
+        if (item.extraData instanceof Vulnerability) {
+          treeItemType = TrivyTreeItemType.vulnerabilityCode;
+        } else if (item.extraData instanceof Secret) {
+          treeItemType = TrivyTreeItemType.secretCode;
+        } else {
+          treeItemType = TrivyTreeItemType.misconfigCode;
+        }
+      }
+
+      return new TrivyTreeItem(
+        item.workspaceName,
+        item.title,
+        vscode.TreeItemCollapsibleState.None,
+        treeItemType,
+        { check: item }
+      );
+    }
+    return undefined;
+  }
+
+  /**
    * Refresh the tree view
    * @memberof TrivyTreeViewProvider
    */
@@ -88,6 +136,18 @@ export class TrivyTreeViewProvider
     this.resultData.clear();
     this._onDidChangeTreeData.fire();
     Problems.instance.clearProblems();
+  }
+
+  getParent(element: TrivyTreeItem): vscode.ProviderResult<TrivyTreeItem> {
+    // No parent for the top level items
+    if (!element || element.itemType === TrivyTreeItemType.workspace) {
+      return null;
+    }
+
+    // For all other items, return the workspace item
+    return this.getWorkspaceNodes().find(
+      (item) => item.workspaceName === element.workspaceName
+    );
   }
 
   /**

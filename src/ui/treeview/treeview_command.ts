@@ -8,7 +8,6 @@ import {
   PolicyResult,
   TrivyResult,
 } from '../../cache/result';
-import { VulnerabilityCodeLensProvider } from '../codelens_provider';
 
 /**
  * Creates a command to open the file containing the result
@@ -63,10 +62,6 @@ export function createFileOpenCommand(
     new vscode.Position(startLine - 1, 0),
     new vscode.Position(endLine, 0)
   );
-
-  VulnerabilityCodeLensProvider.instance().updateResults([
-    result as TrivyResult,
-  ]);
 
   return {
     command: 'vscode.open',

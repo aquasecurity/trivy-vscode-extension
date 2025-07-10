@@ -2,6 +2,8 @@ import * as fs from 'fs';
 
 import * as vscode from 'vscode';
 
+import { CodeLensProvider } from '../ui/codelens_provider';
+
 import { Ignorer } from './ignorer';
 import { extractPolicyResults, processResult, TrivyResult } from './result';
 import { ResultCache } from './result_cache';
@@ -45,6 +47,8 @@ export async function loader(
     }
 
     ResultCache.instance.setTrivyResults(workspaceName, trivyResults);
+
+    CodeLensProvider.instance().updateResults(trivyResults);
 
     // process assurance policies
     if (isAssurance && assuranceReport && assuranceReport.Results) {

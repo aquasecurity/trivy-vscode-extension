@@ -7,12 +7,12 @@ import { TrivyResult, Vulnerability } from '../cache/result';
 /**
  * CodeLens provider for indirect vulnerabilities
  */
-export class VulnerabilityCodeLensProvider implements vscode.CodeLensProvider {
+export class CodeLensProvider implements vscode.CodeLensProvider {
   // create singleton instance
-  private static _instance: VulnerabilityCodeLensProvider | undefined;
-  public static instance(): VulnerabilityCodeLensProvider {
+  private static _instance: CodeLensProvider | undefined;
+  public static instance(): CodeLensProvider {
     if (!this._instance) {
-      this._instance = new VulnerabilityCodeLensProvider();
+      this._instance = new CodeLensProvider();
     }
     return this._instance;
   }
@@ -71,25 +71,39 @@ export class VulnerabilityCodeLensProvider implements vscode.CodeLensProvider {
       return fullResultPath;
     });
 
-    // Create a CodeLens for each indirect vulnerability
+    // Group results by line number to handle multiple issues on the same line
+    const resultsByLine = new Map<number, TrivyResult[]>();
     for (const result of fileResults) {
-      if (
-        result.extraData instanceof Vulnerability &&
-        result.extraData.indirect
-      ) {
+      const lineNumber = result.startLine - 1;
+      if (!resultsByLine.has(lineNumber)) {
+        resultsByLine.set(lineNumber, []);
+      }
+      resultsByLine.get(lineNumber)!.push(result);
+    }
+
+    // Create CodeLens for each line, stacking multiple results vertically
+    for (const [lineNumber, results] of resultsByLine) {
+      results.forEach((result, index) => {
+        let title = `⚠️ ${result.id ? result.id + ' - ' : ''}${result.title}`;
+
+        if (result.extraData instanceof Vulnerability) {
+          title = `ℹ️ ${result.id} in ${result.extraData.pkgName}@${result.extraData.installedVersion} ${result.extraData.rootPackage ? 'introduced by ' + result.extraData.rootPackage : ''} - ${result.title}`;
+        }
+
+        // Use different character positions to stack CodeLens entries vertically
         const range = new vscode.Range(
-          new vscode.Position(result.startLine - 1, 0),
-          new vscode.Position(result.startLine - 1, 0)
+          new vscode.Position(lineNumber, index),
+          new vscode.Position(lineNumber, index)
         );
 
         const command: vscode.Command = {
-          title: `ℹ️ ${result.id} in ${result.extraData.pkgName}@${result.extraData.installedVersion} introduced by ${result.extraData.rootPackage}`,
-          command: '',
+          title: title,
+          command: 'trivy.revealTreeItem',
           arguments: [result],
         };
 
         codeLenses.push(new vscode.CodeLens(range, command));
-      }
+      });
     }
 
     return codeLenses;
