@@ -343,6 +343,8 @@ function getWebviewContent(
                 document.getElementById('apiKey').disabled = !checked;
                 document.getElementById('apiSecret').disabled = !checked;
                 document.getElementById('aqua-platform-region').disabled = !checked;
+                document.getElementById('customApiUrl').disabled = !checked;
+                document.getElementById('custonAuthUrl').disabled = !checked;
                 const regionLabel = document.getElementById('region-label');
                 if (!checked) {
                     regionLabel.classList.add('disabled');
