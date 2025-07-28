@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.3
+
+- Fix an issue when using custom URL for the Aqua Platform
+
 ## 1.8.2
 
 - Add envvar to report to Aqua Platform the source of the request
