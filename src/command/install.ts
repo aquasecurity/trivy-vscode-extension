@@ -86,7 +86,7 @@ function getPlatformInfo(): { os: string; arch: string } {
 
   switch (arch) {
     case 'x64':
-      archName = 'AMD64';
+      archName = '64bit';
       break;
     case 'arm64':
       archName = 'ARM64';
