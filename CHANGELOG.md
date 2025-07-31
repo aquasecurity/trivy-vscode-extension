@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.4
+
+- Fix issues with install 64bit version of trivy on Windows
+
 ## 1.8.3
 
 - Fix an issue when using custom URL for the Aqua Platform
