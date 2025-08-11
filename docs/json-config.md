@@ -7,13 +7,11 @@ Advanced configuration of the Trivy VS Code Extension using JSON configuration f
 ### Accessing Settings JSON
 
 1. **Command Palette Method**:
-
    - Press `F1` or `Ctrl+Shift+P` / `Cmd+Shift+P`
    - Type "Preferences: Open Settings (JSON)"
    - Press Enter
 
 2. **Settings UI Method**:
-
    - Open Settings (`Ctrl+,` / `Cmd+,`)
    - Click the "Open Settings (JSON)" icon in the top-right
 
@@ -366,13 +364,11 @@ Settings are applied in this order (later overrides earlier):
 ### Common Issues
 
 1. **Invalid JSON Syntax**
-
    - Use JSON validators
    - Check for trailing commas
    - Ensure proper quoting
 
 2. **Invalid Setting Names**
-
    - Use IntelliSense in VS Code
    - Check spelling of setting keys
 

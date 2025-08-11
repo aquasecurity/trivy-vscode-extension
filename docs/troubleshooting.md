@@ -9,19 +9,16 @@ Comprehensive troubleshooting guide for common issues with the Trivy VS Code Ext
 Run these quick checks to identify common issues:
 
 1. **Extension Status**: Ensure extension is active
-
    - Open Extensions view (`Ctrl+Shift+X`)
    - Search for "Trivy"
    - Verify extension is enabled and up-to-date
 
 2. **Trivy Installation**: Check Trivy binary
-
    - Command Palette: "Show Version"
    - Expected: Version information in Output panel
    - If missing: Run "Install Trivy"
 
 3. **Configuration**: Verify basic settings
-
    - Open Settings (`Ctrl+,`)
    - Search for "trivy"
    - Check `trivy.binaryPath` and scan settings
@@ -122,7 +119,6 @@ Run these quick checks to identify common issues:
    ```
 
 2. **Firewall Settings**
-
    - Allow VS Code through firewall
    - Allow Trivy binary internet access
    - Check corporate network restrictions
@@ -157,7 +153,6 @@ Run these quick checks to identify common issues:
    ```
 
 2. **Verify File Types**
-
    - Ensure workspace contains scannable files
    - Check supported file formats
    - Verify files are not in .gitignore
@@ -196,7 +191,6 @@ Run these quick checks to identify common issues:
 #### Common Causes and Solutions
 
 1. **Large Workspace**
-
    - **Problem**: Timeout or memory issues
    - **Solution**: Scan specific directories
 
@@ -208,7 +202,6 @@ Run these quick checks to identify common issues:
    ```
 
 2. **Corrupted Cache**
-
    - **Problem**: Stale or corrupted scan cache
    - **Solution**: Clear cache directory
 
@@ -218,7 +211,6 @@ Run these quick checks to identify common issues:
    ```
 
 3. **Insufficient Resources**
-
    - **Problem**: System running out of memory
    - **Solution**: Close other applications, increase limits
 
@@ -291,7 +283,6 @@ Run these quick checks to identify common issues:
    ```
 
 2. **Check Settings Scope**
-
    - User vs Workspace settings
    - Multi-root workspace configuration
    - Setting precedence order
@@ -369,7 +360,6 @@ Run these quick checks to identify common issues:
 #### Solutions
 
 1. **Verify Credentials**
-
    - Check API key format
    - Verify API secret
    - Confirm region selection
@@ -421,7 +411,6 @@ Run these quick checks to identify common issues:
    ```
 
 3. **Check Tree View Focus**
-
    - Ensure tree view is visible
    - Click to focus tree view panel
    - Check if collapsed/expanded
@@ -450,7 +439,6 @@ Run these quick checks to identify common issues:
    ```
 
 2. **Check Problems Panel Filter**
-
    - Remove source filters
    - Show all severities
    - Clear text filters
@@ -537,20 +525,17 @@ trivy image --download-db-only
 When reporting issues, include:
 
 1. **Environment Information**
-
    - VS Code version
    - Extension version
    - Operating system
    - Trivy version
 
 2. **Reproduction Steps**
-
    - Exact steps to reproduce
    - Expected vs actual behavior
    - Minimal test case
 
 3. **Logs and Output**
-
    - Debug mode logs
    - Error messages
    - Console output
