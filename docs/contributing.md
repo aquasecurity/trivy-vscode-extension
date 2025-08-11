@@ -75,12 +75,10 @@ trivy-vscode-extension/
 ### VS Code Development
 
 1. **Open Extension in Development Host**
-
    - Press `F5` to launch Extension Development Host
    - Or use "Run Extension" debug configuration
 
 2. **Debug Extension**
-
    - Set breakpoints in TypeScript code
    - Use VS Code debugger
    - Check Debug Console for output
@@ -96,19 +94,16 @@ trivy-vscode-extension/
 #### Main Components
 
 1. **Extension Activation** (`extension.ts`)
-
    - Extension lifecycle management
    - Configuration synchronization
    - Provider registration
 
 2. **Command System** (`activate_commands.ts`)
-
    - Command registration
    - Configuration updates
    - Context management
 
 3. **Trivy Integration** (`command/`)
-
    - Trivy execution wrapper
    - Command option handling
    - Output processing
@@ -174,13 +169,11 @@ export interface TrivyCommandOption {
    ```
 
 2. **Implement Feature**
-
    - Write TypeScript code
    - Add necessary tests
    - Update documentation
 
 3. **Test Locally**
-
    - Run in Extension Development Host
    - Test with various workspaces
    - Verify all scan types work
@@ -194,13 +187,11 @@ export interface TrivyCommandOption {
 ### Bug Fix Workflow
 
 1. **Reproduce Issue**
-
    - Create minimal test case
    - Document expected vs actual behavior
    - Identify root cause
 
 2. **Implement Fix**
-
    - Write focused fix
    - Add regression tests
    - Verify fix works
@@ -374,13 +365,11 @@ git commit -m "refactor: simplify command handling"
 ### Documentation Types
 
 1. **Code Documentation**
-
    - JSDoc comments for public APIs
    - Inline comments for complex logic
    - README updates for new features
 
 2. **User Documentation**
-
    - Feature documentation in `docs/`
    - Configuration examples
    - Troubleshooting guides
@@ -430,7 +419,6 @@ async function runScan(
    ```
 
 3. **Make Changes**
-
    - Implement feature/fix
    - Add tests
    - Update documentation
@@ -479,14 +467,12 @@ Brief description of changes
 ### Review Process
 
 1. **Automated Checks**
-
    - CI/CD pipeline runs
    - Tests must pass
    - Linting must pass
    - Build must succeed
 
 2. **Code Review**
-
    - Maintainer reviews code
    - Feedback addressed
    - Approval granted
@@ -515,7 +501,6 @@ Follow semantic versioning (SemVer):
    ```
 
 2. **Update Changelog**
-
    - Document new features
    - List bug fixes
    - Note breaking changes

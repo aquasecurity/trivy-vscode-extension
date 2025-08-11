@@ -23,12 +23,10 @@ Aqua Platform integration provides:
 ### Step 1: Obtain Aqua Credentials
 
 1. **Log into Aqua Platform**
-
    - Navigate to your Aqua Platform instance
    - Go to **Account Management** > **Settings** > **API Keys**
 
 2. **Generate API Credentials**
-
    - Click **Generate Key**
    - Note down the **Aqua Key** and **Aqua Secret**
 
@@ -39,11 +37,9 @@ Aqua Platform integration provides:
 ### Step 2: Configure Extension
 
 1. **Open Trivy Menu**
-
    - Click on the `...` of the Trivy Findings UI
 
 2. **Select Platform Integration**
-
    - Choose **Trivy Aqua Platform Integration**
    - A configuration dialog will appear
 
@@ -56,7 +52,6 @@ Aqua Platform integration provides:
 ### Step 3: Verify Configuration
 
 1. **Run a Scan**
-
    - Execute a normal Trivy scan
    - Check the Output panel for Aqua Platform connection logs
 
