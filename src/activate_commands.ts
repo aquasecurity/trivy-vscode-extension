@@ -5,7 +5,7 @@ import { TrivyWrapper } from './command/command';
 import { installTrivy } from './command/install';
 import { setupCommercial } from './commercial/setup';
 import { addIgnoreFileEntry } from './ignore/ignore_file';
-import { installTrivyMCPServer } from './mcp/install';
+import { addMCPCodePrompt, installTrivyMCPServer } from './mcp/install';
 import { TrivyHelpProvider } from './ui/helpview/helpview';
 import { showErrorMessage } from './ui/notification/notifications';
 import { TrivyTreeItem } from './ui/treeview/treeitem';
@@ -153,6 +153,10 @@ export function registerCommands(
     },
     'Failed to install Trivy MCP server'
   );
+
+  registerCommand(context, 'trivy.mcpAddCodePrompt', async () => {
+    await addMCPCodePrompt();
+  });
 
   // Scanning commands
   registerCommand(

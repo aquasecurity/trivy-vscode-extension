@@ -7,6 +7,7 @@ import { registerCommands } from './activate_commands';
 import { TrivyWrapper } from './command/command';
 import { verifyTrivyInstallation } from './command/install';
 import { Output } from './command/output';
+import { isTrivyMCPInstalled } from './mcp/install';
 import { VulnerabilityCodeLensProvider } from './ui/codelens_provider';
 import { TrivyHelpProvider } from './ui/helpview/helpview';
 import { showErrorMessage } from './ui/notification/notifications';
@@ -259,6 +260,13 @@ function syncContextWithConfig(config: vscode.WorkspaceConfiguration): void {
     'setContext',
     'trivy.mcpSupported',
     mcpSupported
+  );
+
+  const trivyMcpInstalled = isTrivyMCPInstalled();
+  vscode.commands.executeCommand(
+    'setContext',
+    'trivy.mcpServerInstalled',
+    trivyMcpInstalled
   );
 }
 

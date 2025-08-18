@@ -5,6 +5,45 @@ import * as vscode from 'vscode';
 import { Output } from '../command/output';
 import { openSettingsJsonAtSection } from '../utils';
 
+export function isTrivyMCPInstalled(): boolean {
+  const mcpConfig = vscode.workspace.getConfiguration('mcp');
+  const mcpServers = mcpConfig.get('servers') as Record<string, object>;
+  return mcpServers && 'trivy' in mcpServers;
+}
+
+export async function addMCPCodePrompt(): Promise<void> {
+  const instructionText = `After updating packages, manifests, or infrastructure code (e.g., Terraform, Docker, Kubernetes), scan for security vulnerabilities and misconfigurations. Only apply fixes for issues directly related to your changes and as recommended by the scanner. Re-scan after applying fixes.`;
+
+  // get config at github.copilot.chat.codeGeneration.instructions
+  const github = vscode.workspace.getConfiguration('github');
+  if (github) {
+    const instructions = github.copilot.chat.codeGeneration.instructions;
+    if (instructions) {
+      for (const instruction of instructions) {
+        if (instruction.text === instructionText) {
+          // instruction already installed
+          Output.getInstance().appendLineWithTimestamp(
+            `MCP Code Prompt Instruction already installed, no further action required.`
+          );
+          return;
+        }
+      }
+    }
+
+    instructions.push({ text: instructionText });
+    vscode.workspace
+      .getConfiguration('github')
+      .update(
+        'copilot.chat.codeGeneration.instructions',
+        instructions,
+        vscode.ConfigurationTarget.Global
+      );
+    return openSettingsJsonAtSection(
+      'github.copilot.chat.codeGeneration.instructions'
+    );
+  }
+}
+
 export async function installTrivyMCPServer(): Promise<void> {
   Output.show();
 
@@ -61,20 +100,16 @@ export async function installTrivyMCPServer(): Promise<void> {
     );
     return; // Exit if plugin is not installed
   }
-
-  for (const server of Object.keys(mcpServers as Record<string, unknown>)) {
-    if (server.toLocaleLowerCase() === 'trivy') {
-      Output.getInstance().appendLineWithTimestamp(
-        'Trivy MCP server is already configured.'
-      );
-      return; // Trivy MCP server is already configured
-    }
+  const useAquaPlatform = trivyConfig.get('useAquaPlatform', false);
+  const args = ['mcp', '--trivy-binary', trivyBinary];
+  if (useAquaPlatform) {
+    args.push('--use-aqua-platform');
   }
 
   mcpServers['trivy'] = {
     type: 'stdio',
     command: 'trivy',
-    args: ['mcp', '--trivy-binary', trivyBinary],
+    args,
   };
 
   await vscode.workspace
@@ -86,7 +121,10 @@ export async function installTrivyMCPServer(): Promise<void> {
   );
 
   // Open the user configuration file to show the changes
-  await openSettingsJsonAtSection('mcp.servers');
+  await openSettingsJsonAtSection(
+    'mcp.servers',
+    'workbench.mcp.openUserMcpJson'
+  );
 }
 
 /**
