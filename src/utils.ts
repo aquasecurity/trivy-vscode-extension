@@ -183,10 +183,8 @@ export async function openSettingsAtSection(settingId: string): Promise<void> {
  * @returns A promise that resolves when the command is executed
  */
 export async function openSettingsJsonAtSection(
-  settingId: string
+  settingId: string,
+  settingsOpenAction = 'workbench.action.openSettingsJson'
 ): Promise<void> {
-  return vscode.commands.executeCommand(
-    'workbench.action.openSettingsJson',
-    settingId
-  );
+  return vscode.commands.executeCommand(settingsOpenAction, settingId);
 }

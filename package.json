@@ -171,6 +171,10 @@
         "title": "Install Trivy MCP Server"
       },
       {
+        "command": "trivy.mcpAddCodePrompt",
+        "title": "Add MCP Code Prompt"
+      },
+      {
         "command": "trivy.scan",
         "title": "Run trivy against workspace",
         "icon": {
@@ -328,10 +332,6 @@
         "title": "✓ Use Aqua Platform"
       },
       {
-        "command": "trivy.update",
-        "title": "Update Trivy"
-      },
-      {
         "command": "trivy.addToIgnoreFile",
         "title": "Add to Trivy ignore file"
       }
@@ -402,12 +402,12 @@
         {
           "command": "trivy.reset",
           "when": "view == trivyIssueViewer",
-          "group": "navigation@2"
+          "group": "navigation@3"
         },
         {
           "submenu": "trivyIgnoreMenu",
           "when": "view == trivyIssueViewer && !trivy.useAquaPlatform",
-          "group": "1_ignore"
+          "group": "1_ignore@1"
         },
         {
           "submenu": "trivyConfigMenu",
@@ -520,6 +520,11 @@
           "group": "4_aquaPlatform"
         },
         {
+          "submenu": "trivyMcpMenu",
+          "when": "view == trivyIssueViewer && trivy.mcpServerInstalled",
+          "group": "5_trivyMcp@1"
+        },
+        {
           "command": "trivy.version",
           "when": "view == trivyIssueViewer",
           "group": "5_version"
@@ -544,6 +549,13 @@
         {
           "command": "trivy.addToIgnoreFile",
           "when": "view == trivyIssueViewer && viewItem == trivy.ignorable"
+        }
+      ],
+      "trivyMcpMenu": [
+        {
+          "command": "trivy.mcpAddCodePrompt",
+          "description": "Add a helpful code completion prompt to run Trivy when some actions are performed by the agent",
+          "group": "1_mcp@1"
         }
       ],
       "trivyConfigMenu": [
@@ -747,6 +759,10 @@
       {
         "id": "trivyConfigMenu",
         "label": "Config File"
+      },
+      {
+        "id": "trivyMcpMenu",
+        "label": "Trivy MCP Server"
       }
     ],
     "walkthroughs": [
