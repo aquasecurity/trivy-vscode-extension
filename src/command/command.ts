@@ -39,6 +39,14 @@ export enum ScanType {
 }
 
 const phaseMap: Record<string, { phase: string; increment: number }> = {
+  '[vulndb]': {
+    phase: 'Downloading vulnerability database',
+    increment: 1,
+  },
+  'Installing the plugin': {
+    phase: 'Installing the plugin',
+    increment: 1,
+  },
   'Vulnerability scanning is enabled': {
     phase: 'Scanning for vulnerabilities',
     increment: 4,

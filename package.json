@@ -553,8 +553,13 @@
       ],
       "trivyMcpMenu": [
         {
+          "command": "trivy.installMcpServer",
+          "group": "1_mcp@1"
+        },
+        {
           "command": "trivy.mcpAddCodePrompt",
           "description": "Add a helpful code completion prompt to run Trivy when some actions are performed by the agent",
+          "when": "trivy.mcpServerInstalled",
           "group": "1_mcp@1"
         }
       ],
