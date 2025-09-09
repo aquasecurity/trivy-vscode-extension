@@ -251,7 +251,7 @@ function syncContextWithConfig(config: vscode.WorkspaceConfiguration): void {
   });
 
   const appName = vscode.env.appName.toLowerCase();
-  const isCursor = appName.includes('cursor');
+  const isCursor = appName === 'cursor';
 
   // Update the version specific context
   const vscodeVersion = vscode.version;
