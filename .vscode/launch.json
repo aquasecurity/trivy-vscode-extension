@@ -15,6 +15,15 @@
       "preLaunchTask": "npm: build:dev"
     },
     {
+      "name": "Run Extension (Cursor)",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "cursor", // if the `cursor` CLI is on PATH
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"]
+    },
+
+    {
       "name": "Extension Tests",
       "type": "extensionHost",
       "request": "launch",

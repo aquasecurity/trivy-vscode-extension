@@ -250,11 +250,14 @@ function syncContextWithConfig(config: vscode.WorkspaceConfiguration): void {
     vscode.commands.executeCommand('setContext', `trivy.${key}`, configVal);
   });
 
+  const appName = vscode.env.appName.toLowerCase();
+  const isCursor = appName === 'cursor';
+
   // Update the version specific context
   const vscodeVersion = vscode.version;
   const majorVersion = parseInt(vscodeVersion.split('.')[0], 10);
   const minorVersion = parseInt(vscodeVersion.split('.')[1], 10);
-  const mcpSupported = majorVersion >= 1 && minorVersion >= 99;
+  const mcpSupported = isCursor || (majorVersion >= 1 && minorVersion >= 99);
   // MCP Server support added in VS Code 1.99
   vscode.commands.executeCommand(
     'setContext',

@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.5
+
+- Add support for detecting cursor to enable MCP menu
+
 ## 1.8.4
 
 - Fix issues with install 64bit version of trivy on Windows
