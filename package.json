@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -328,6 +328,10 @@
         "title": "Use Aqua Platform"
       },
       {
+        "command": "trivy.updateAquaPlugin",
+        "title": "Update Aqua Platform Plugin"
+      },
+      {
         "command": "trivy.disableUseAquaPlatform",
         "title": "✓ Use Aqua Platform"
       },
@@ -513,6 +517,11 @@
           "command": "trivy.disableSastScanning",
           "when": "view == trivyIssueViewer && trivy.sastScanning && trivy.useAquaPlatform",
           "group": "4_aquaPlatform@7"
+        },
+        {
+          "command": "trivy.updateAquaPlugin",
+          "when": "view == trivyIssueViewer && trivy.useAquaPlatform",
+          "group": "4_aquaPlatform@8"
         },
         {
           "command": "trivy.setupCommercial",

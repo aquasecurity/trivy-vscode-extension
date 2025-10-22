@@ -219,6 +219,19 @@ export class TrivyWrapper {
   }
 
   /**
+   * Update the Aqua Platform plugin
+   */
+  async updateAquaPlugin(): Promise<void> {
+    try {
+      await this.updateAquaPluginVersion();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      showErrorMessage(`Failed to update aqua plugin: ${errorMessage}`);
+    }
+  }
+
+  /**
    * Scan a specific workspace folder
    * @param workspaceFolder The workspace folder to scan
    * @param binary Path to the Trivy binary
@@ -390,6 +403,52 @@ export class TrivyWrapper {
             resolve(output.trim());
           } else {
             reject(new Error(`Trivy exited with code ${code}`));
+          }
+        });
+
+        process.on('error', (error) => {
+          reject(error);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Update the Aqua Platform plugin version
+   * @returns Promise resolving when the update is complete
+   */
+  async updateAquaPluginVersion() {
+    if (!this.checkTrivyInstalled()) {
+      showErrorMessage('Trivy could not be found, check Output window');
+      return;
+    }
+
+    const binary = this.getBinaryPath();
+
+    return new Promise<string>((resolve, reject) => {
+      this.outputChannel.getOutputChannel().show(true);
+      try {
+        const process = child.exec(`"${binary}" plugin upgrade aqua`);
+
+        process.stdout?.on('data', (data) => {
+          this.outputChannel.appendLine(`${data.toString()}`);
+        });
+
+        process.stderr?.on('data', (data) => {
+          this.outputChannel.appendLine(`${data.toString()}`);
+          const result = data.toString();
+          if (result.includes('Plugin upgraded')) {
+            showInformationMessage(
+              'Aqua Platform plugin upgraded successfully'
+            );
+            resolve('');
+          } else if (result.includes('The plugin is up-to-date')) {
+            showInformationMessage(
+              'Aqua Platform plugin is already up-to-date'
+            );
+            resolve('');
           }
         });
 
