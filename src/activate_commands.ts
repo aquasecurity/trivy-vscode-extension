@@ -177,6 +177,12 @@ export function registerCommands(
     () => trivyWrapper.showCurrentTrivyVersion(),
     'Failed to get Trivy version'
   );
+  registerCommand(
+    context,
+    'trivy.updateAquaPlugin',
+    () => trivyWrapper.updateAquaPlugin(),
+    'Failed to update aqua plugin'
+  );
   registerCommand(context, 'trivy.refresh', () => {
     misconfigProvider.refresh();
     assuranceProvider.refresh();

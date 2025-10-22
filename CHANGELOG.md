@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.6
+
+- Add a menu option to update the version of the Aqua plugin
+
 ## 1.8.5
 
 - Add support for detecting cursor to enable MCP menu
