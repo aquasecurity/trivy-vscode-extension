@@ -35,3 +35,6 @@ jobs:
       - run: npm run publish
         env:
           PUBLISHER_TOKEN: ${{ secrets.VSCE_TOKEN }}
+      - run: npm run publishovsx
+        env:
+          OVSX_PUBLISHER_TOKEN: ${{ secrets.OVSX_TOKEN }}
