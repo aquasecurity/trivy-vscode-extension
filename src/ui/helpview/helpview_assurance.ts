@@ -66,14 +66,14 @@ export function getPolicyData(item: TrivyTreeItem, html: string): string {
     <td>${result.filename}</td>
     </tr>
     </table>
-
-
-    <h4>More Information</h4>
-    <ul>
-    <li><a href="https://cloud.aquasec.com/ah/#/supplychain/policies/${result.id}">Aqua Platform (${result.avdId})</a></li>
     `;
 
   if (result.references) {
+    html += `
+      <h4>More Information</h4>
+      <ul>
+      <li><a href="https://cloud.aquasec.com/ah/#/supplychain/policies/${result.id}">Aqua Platform (${result.avdId})</a></li>
+    `;
     for (let i = 0; i < result.references.length; i++) {
       const reference = result.references[i];
       html += `<li><a href="${reference}">${reference}</a></li>
