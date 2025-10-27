@@ -45,12 +45,13 @@ export function getPolicyData(item: TrivyTreeItem, html: string): string {
     <th>Severity</th>
     <td>${severityCalc(Number(result.severity))}</td>
     </tr>
-    ${result.pkgName
-      ? `<tr>
+    ${
+      result.pkgName
+        ? `<tr>
     <th>Package</th>
     <td>${result.pkgName}</td>
     </tr>`
-      : ''
+        : ''
     }
     <tr>
     <th>Fix</th>
