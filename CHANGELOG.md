@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.7
+
+- Tidy up the details pane when there is no additional information to show
+
 ## 1.8.6
 
 - Add a menu option to update the version of the Aqua plugin
@@ -63,7 +67,7 @@
 
 - Make order by type and severity available to all users
 
-### 1.1.0
+###  1.1.0
 
 - Configure Scanners to use for scan
 - Update the Treeview when using Aqua Platform
