@@ -25,6 +25,7 @@ import {
   RequiredSeveritiesOption,
   ResultsOutputOption,
   ScannersOption,
+  SkipDirOption,
   TrivyCommandOption,
 } from './options';
 import { Output } from './output';
@@ -487,6 +488,7 @@ export class TrivyWrapper {
         new OfflineScanOption(),
         new FixedOnlyOption(),
         new IgnoreFilePathOption(),
+        new SkipDirOption(),
         new DebugOption(),
         new ExitCodeOption(0),
         new JSONFormatOption(),

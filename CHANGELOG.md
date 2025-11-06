@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.8
+
+- Add skip directories with defaults that can be overridden in the workspace
+
 ## 1.8.7
 
 - Tidy up the details pane when there is no additional information to show
