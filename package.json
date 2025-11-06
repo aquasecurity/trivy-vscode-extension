@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.8.7",
+  "version": "1.8.8",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -154,6 +154,34 @@
           "default": true,
           "description": "Order results by type",
           "scope": "application"
+        },
+        "trivy.skipDirList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".build",
+            ".dart_tool",
+            ".egg-info",
+            ".egg",
+            ".git",
+            ".hg",
+            ".svn",
+            ".venv",
+            ".whl",
+            "bin",
+            "build",
+            "deps",
+            "node_modules",
+            "obj",
+            "pods",
+            "target",
+            "vendor",
+            "venv"
+          ],
+          "description": "List of directory names to skip during scan (e.g. node_modules, .git)",
+          "scope": "window"
         }
       }
     },

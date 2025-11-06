@@ -92,6 +92,27 @@ export class ScannersOption extends ConfigAwareOption {
   }
 }
 
+export class SkipDirOption extends ConfigAwareOption {
+  protected applyOption(
+    command: string[],
+    config: vscode.WorkspaceConfiguration
+  ): string[] {
+    const skipDirs = config.get<string[]>('skipDirList');
+    if (skipDirs && skipDirs.length > 0) {
+      // wrap the path in quotes for windows and linux
+      let dir: string;
+      if (os.platform() !== 'darwin') {
+        // comma separate multiple directories
+        dir = skipDirs.map((dir) => `"${dir}"`).join(',');
+      } else {
+        dir = skipDirs.join(',');
+      }
+      command.push(`--skip-dirs=${dir}`);
+    }
+    return command;
+  }
+}
+
 /**
  * Option to set the minimum severity level for reporting
  */
