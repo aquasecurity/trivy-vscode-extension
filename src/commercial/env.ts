@@ -19,6 +19,9 @@ const ENV_KEYS = Object.freeze({
   TRIVY_SKIP_REPOSITORY_UPLOAD: 'TRIVY_SKIP_REPOSITORY_UPLOAD',
   TRIVY_SKIP_RESULT_UPLOAD: 'TRIVY_SKIP_RESULT_UPLOAD',
   TRIVY_IDE_IDENTIFIER: 'TRIVY_IDE_IDENTIFIER',
+  CA_CERT: 'CA_CERT',
+  HTTP_PROXY: 'HTTP_PROXY',
+  HTTPS_PROXY: 'HTTPS_PROXY',
 });
 
 /**
@@ -62,6 +65,16 @@ export async function updateEnvironment(
     // Set environment variables for Aqua Platform integration
     const aquaApiUrl = config.get<string>('aquaApiUrl');
     const aquaAuthUrl = config.get<string>('aquaAuthenticationUrl');
+
+    const proxyServer = config.get<string>('proxyServer');
+    if (proxyServer) {
+      newEnv[ENV_KEYS.HTTP_PROXY] = proxyServer;
+      newEnv[ENV_KEYS.HTTPS_PROXY] = proxyServer;
+    }
+    const caCertPath = config.get<string>('caCertPath');
+    if (caCertPath) {
+      newEnv[ENV_KEYS.CA_CERT] = caCertPath;
+    }
 
     if (aquaApiUrl && aquaAuthUrl) {
       newEnv[ENV_KEYS.API_URL] = aquaApiUrl;

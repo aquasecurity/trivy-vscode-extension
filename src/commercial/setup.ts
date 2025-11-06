@@ -173,6 +173,12 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
             }
             config.update('aquaApiUrl', aquaUrl);
             config.update('aquaAuthenticationUrl', cspmUrl);
+            if (message.proxyServer && message.prxoyServer.startsWith('http')) {
+              config.update('proxyServer', message.proxyServer);
+            } else if (message.proxyServer === '') {
+              config.update('proxyServer', undefined);
+            }
+            config.update('caCertPath', message.caCertPath);
             config.update('useAquaPlatform', message.enableAquaPlatform);
             vscode.commands.executeCommand(
               'setContext',
@@ -195,6 +201,29 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
         case 'openExtenalLink':
           vscode.env.openExternal(vscode.Uri.parse(message.url));
           return;
+        case 'browseCaCert': {
+          const options: vscode.OpenDialogOptions = {
+            canSelectFiles: true,
+            canSelectFolders: false,
+            canSelectMany: false,
+            openLabel: 'Select CA Certificate',
+            filters: {
+              'Certificate Files': ['pem', 'crt', 'cer', 'der'],
+              'All Files': ['*'],
+            },
+            title: 'Select CA Certificate',
+          };
+
+          vscode.window.showOpenDialog(options).then((fileUri) => {
+            if (fileUri && fileUri[0]) {
+              panel.webview.postMessage({
+                command: 'updateCaCertPath',
+                path: fileUri[0].fsPath,
+              });
+            }
+          });
+          return;
+        }
       }
     },
     undefined,
@@ -324,6 +353,17 @@ function getWebviewContent(
               API Authentication Url
               <span slot="start" class="codicon codicon-globe"></span>
               </vscode-text-field>
+              <vscode-text-field size="48" id="proxyServer" name="proxyServer" value="${config.get<string>('proxyServer') || ''}" ${!useAquaPlatform ? 'disabled' : ''}>
+              HTTP Proxy Server
+              <span slot="start" class="codicon codicon-globe"></span>
+              </vscode-text-field>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <vscode-text-field size="48" id="caCertPath" name="caCertPath" value="${config.get<string>('caCertPath') || ''}" ${!useAquaPlatform ? 'disabled' : ''}>
+                  CA Certificate Path
+                  
+                  <span slot="end" class="codicon codicon-folder-opened" style="cursor: pointer; opacity: ${!useAquaPlatform ? '0.4' : '1'};" id="browse-cert-icon"></span>
+                </vscode-text-field>
+              </div>
             </div>
               <vscode-button id="save-button" appearance="primary" type="submit" >Save</vscode-button>
            </form>
@@ -338,6 +378,21 @@ function getWebviewContent(
             vscode.postMessage({ command: 'openExternalLink', url: target.href });
         }
     });
+
+           window.addEventListener('message', event => {
+                const message = event.data;
+                if (message && message.command) {
+                    switch (message.command) {
+                        case 'updateCaCertPath':
+                            const caCertPathElem = document.getElementById('caCertPath');
+                            if (caCertPathElem) {
+                                caCertPathElem.value = message.path;
+                            }
+                            break;
+                    }
+                }
+           });
+
            document.getElementById('enableAquaPlatform').addEventListener('change', event => {
                 const checked = event.target.checked;
                 document.getElementById('apiKey').disabled = !checked;
@@ -345,12 +400,24 @@ function getWebviewContent(
                 document.getElementById('aqua-platform-region').disabled = !checked;
                 document.getElementById('customApiUrl').disabled = !checked;
                 document.getElementById('custonAuthUrl').disabled = !checked;
+                document.getElementById('proxyServer').disabled = !checked;
+                document.getElementById('caCertPath').disabled = !checked;
+                document.getElementById('browse-cert-icon').style.opacity = checked ? '1' : '0.4';
                 const regionLabel = document.getElementById('region-label');
                 if (!checked) {
                     regionLabel.classList.add('disabled');
                 } else {
                     regionLabel.classList.remove('disabled');
                 }
+           });
+
+           document.getElementById('browse-cert-icon').addEventListener('click', (event) => {
+                if (!document.getElementById('enableAquaPlatform').checked) {
+                    return;
+                }
+                vscode.postMessage({ 
+                    command: 'browseCaCert'
+                });
            });
 
            document.getElementById('aqua-platform-region').addEventListener('change', event => {
@@ -382,8 +449,10 @@ function getWebviewContent(
                    customAuthUrl = document.getElementById('custonAuthUrl').value;
                } 
 
+               const proxyServer = document.getElementById('proxyServer').value;
+               const caCertPath = document.getElementById('caCertPath').value;
                const enableAquaPlatform = document.getElementById('enableAquaPlatform').checked;
-               vscode.postMessage({ command: 'storeSecrets', apiKey, apiSecret, aquaRegionValue, enableAquaPlatform, customApiUrl, customAuthUrl });
+               vscode.postMessage({ command: 'storeSecrets', apiKey, apiSecret, aquaRegionValue, enableAquaPlatform, customApiUrl, customAuthUrl, proxyServer, caCertPath });
            });
         </script>
      </body>
