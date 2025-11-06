@@ -92,6 +92,9 @@ export class ScannersOption extends ConfigAwareOption {
   }
 }
 
+/**
+ * Option to skip specified directories during scanning
+ */
 export class SkipDirOption extends ConfigAwareOption {
   protected applyOption(
     command: string[],
