@@ -165,6 +165,21 @@ export async function setupCommercial(context: vscode.ExtensionContext) {
               );
             });
 
+          if (!message.enableAquaPlatform) {
+            config.update('useAquaPlatform', message.enableAquaPlatform);
+            vscode.commands.executeCommand(
+              'setContext',
+              'trivy.useAquaPlatform',
+              message.enableAquaPlatform
+            );
+
+            showInformationMessage(
+              'Aqua Platform configuration saved successfully'
+            );
+            panel.dispose();
+            return;
+          }
+
           if (validCreds) {
             if (message.enableAquaPlatform) {
               vscode.window.showInformationMessage(
