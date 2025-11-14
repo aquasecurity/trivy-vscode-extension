@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.9
+
+- Add support for custom proxy server and CA certificate provision
+
 ## 1.8.8
 
 - Add skip directories with defaults that can be overridden in the workspace
