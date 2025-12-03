@@ -171,12 +171,17 @@ export async function installTrivyMCPServer(): Promise<void> {
     document.positionAt(text.length)
   );
 
-  await editor.edit((editBuilder) => {
-    editBuilder.replace(fullRange, newContent);
-  });
-
-  await document.save();
-
+  try {
+    await editor.edit((editBuilder) => {
+      editBuilder.replace(fullRange, newContent);
+    });
+    await document.save();
+  } catch (error) {
+    Output.getInstance().appendLineWithTimestamp(
+      `Failed to update MCP configuration: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return;
+  }
   Output.getInstance().appendLineWithTimestamp(
     'Trivy MCP server has been successfully installed and configured.'
   );
