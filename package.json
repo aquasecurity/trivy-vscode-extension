@@ -4,7 +4,7 @@
   "publisher": "AquaSecurityOfficial",
   "description": "Find vulnerabilities, misconfigurations and exposed secrets in your code",
   "icon": "images/icon.png",
-  "version": "1.8.9",
+  "version": "1.8.10",
   "engines": {
     "vscode": "^1.56.0"
   },
@@ -568,7 +568,7 @@
         },
         {
           "submenu": "trivyMcpMenu",
-          "when": "view == trivyIssueViewer && trivy.mcpServerInstalled",
+          "when": "view == trivyIssueViewer",
           "group": "5_trivyMcp@1"
         },
         {

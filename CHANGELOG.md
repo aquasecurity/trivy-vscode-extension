@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.10
+
+- Fix the MCP Server configuration when using a remote development config
+
 ## 1.8.9
 
 - Add support for custom proxy server and CA certificate provision
