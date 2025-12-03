@@ -136,6 +136,12 @@ export async function installTrivyMCPServer(): Promise<void> {
   }
 
   const document = editor.document;
+  if (!document.fileName.endsWith('mcp.json')) {
+    Output.getInstance().appendLineWithTimestamp(
+      'Unexpected file opened. Expected MCP configuration file.'
+    );
+    return;
+  }
   const text = document.getText();
 
   let config: McpJsonConfig = {};
