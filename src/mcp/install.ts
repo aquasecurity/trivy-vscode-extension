@@ -5,6 +5,19 @@ import * as vscode from 'vscode';
 import { Output } from '../command/output';
 import { openSettingsJsonAtSection } from '../utils';
 
+interface McpServerConfig {
+  type: string;
+  command: string;
+  args: string[];
+}
+
+interface McpJsonConfig {
+  mcp?: {
+    servers?: Record<string, McpServerConfig>;
+  };
+  servers?: Record<string, McpServerConfig>;
+}
+
 export function isTrivyMCPInstalled(): boolean {
   const mcpConfig = vscode.workspace.getConfiguration('mcp');
   const mcpServers = mcpConfig.get('servers') as Record<string, object>;
@@ -49,6 +62,16 @@ export async function installTrivyMCPServer(): Promise<void> {
 
   const trivyConfig = vscode.workspace.getConfiguration('trivy');
   const trivyBinary = trivyConfig.get<string>('binaryPath', 'trivy');
+  const isRemote = Boolean(vscode.env.remoteName);
+  const settingsTarget = isRemote
+    ? vscode.ConfigurationTarget.Workspace
+    : vscode.ConfigurationTarget.Global;
+
+  if (isRemote) {
+    Output.getInstance().appendLineWithTimestamp(
+      'Remote workspace detected. Trivy MCP settings will be written to the current workspace so they stay alongside the remote binary.'
+    );
+  }
 
   // make required changes to chat config
   const chatConfig = vscode.workspace.getConfiguration('chat');
@@ -58,11 +81,7 @@ export async function installTrivyMCPServer(): Promise<void> {
       'Enabling the agent in chat configuration to allow Trivy MCP server installation.'
     );
     // Enable the agent if it is not already enabled
-    await chatConfig.update(
-      'agent.enabled',
-      true,
-      vscode.ConfigurationTarget.Global
-    );
+    await chatConfig.update('agent.enabled', true, settingsTarget);
   }
 
   const mcpDiscoveryEnabled = chatConfig.get<boolean>(
@@ -74,22 +93,7 @@ export async function installTrivyMCPServer(): Promise<void> {
       'Enabling MCP discovery in chat configuration to allow Trivy MCP server installation.'
     );
     // Enable MCP discovery if it is not already enabled
-    await chatConfig.update(
-      'mcp.discovery.enabled',
-      true,
-      vscode.ConfigurationTarget.Global
-    );
-  }
-
-  const mcpConfig = vscode.workspace.getConfiguration('mcp');
-  let mcpServers = mcpConfig.get('servers') as Record<string, object>;
-  if (!mcpServers || typeof mcpServers !== 'object') {
-    Output.getInstance().appendLineWithTimestamp(
-      'No MCP servers configured. Initializing with an empty object.'
-    );
-    // Initialize mcpServers if it is not defined or not an object
-    await mcpConfig.update('servers', {}, vscode.ConfigurationTarget.Global);
-    mcpServers = {};
+    await chatConfig.update('mcp.discovery.enabled', true, settingsTarget);
   }
 
   // Ensure trivy plugin installed
@@ -98,32 +102,77 @@ export async function installTrivyMCPServer(): Promise<void> {
     Output.getInstance().appendLineWithTimestamp(
       'Trivy plugin is not installed. Please install it before configuring the MCP server.'
     );
-    return; // Exit if plugin is not installed
+    return;
   }
+
   const useAquaPlatform = trivyConfig.get('useAquaPlatform', false);
   const args = ['mcp', '--trivy-binary', trivyBinary];
   if (useAquaPlatform) {
     args.push('--use-aqua-platform');
   }
 
-  mcpServers['trivy'] = {
+  const trivyServer: McpServerConfig = {
     type: 'stdio',
-    command: 'trivy',
+    command: trivyBinary,
     args,
   };
 
-  await vscode.workspace
-    .getConfiguration('mcp')
-    .update('servers', mcpServers, vscode.ConfigurationTarget.Global);
+  // Open the MCP JSON file first to get the document
+  const openCommand = isRemote
+    ? 'workbench.mcp.openRemoteUserMcpJson'
+    : 'workbench.mcp.openUserMcpJson';
+
+  await vscode.commands.executeCommand(openCommand);
+
+  // Wait for the editor to open
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    Output.getInstance().appendLineWithTimestamp(
+      'Failed to open MCP configuration file.'
+    );
+    return;
+  }
+
+  const document = editor.document;
+  const text = document.getText();
+
+  let config: McpJsonConfig = {};
+  try {
+    if (text.trim()) {
+      config = JSON.parse(text);
+    }
+  } catch {
+    Output.getInstance().appendLineWithTimestamp(
+      'Failed to parse existing MCP configuration, creating new one.'
+    );
+  }
+
+  // Handle both possible structures: { servers: {} } or { mcp: { servers: {} } }
+  if (config.mcp?.servers !== undefined) {
+    config.mcp.servers['trivy'] = trivyServer;
+  } else if (config.servers !== undefined) {
+    config.servers['trivy'] = trivyServer;
+  } else {
+    config.servers = { trivy: trivyServer };
+  }
+
+  const newContent = JSON.stringify(config, null, '\t');
+
+  const fullRange = new vscode.Range(
+    document.positionAt(0),
+    document.positionAt(text.length)
+  );
+
+  await editor.edit((editBuilder) => {
+    editBuilder.replace(fullRange, newContent);
+  });
+
+  await document.save();
 
   Output.getInstance().appendLineWithTimestamp(
     'Trivy MCP server has been successfully installed and configured.'
-  );
-
-  // Open the user configuration file to show the changes
-  await openSettingsJsonAtSection(
-    'mcp.servers',
-    'workbench.mcp.openUserMcpJson'
   );
 }
 
