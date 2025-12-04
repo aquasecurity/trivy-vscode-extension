@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.11
+
+- Add the vscode client to the download link for installing Trivy through the extension
+
 ## 1.8.10
 
 - Fix the MCP Server configuration when using a remote development config

@@ -231,9 +231,7 @@ export async function installTrivy(
         const suffix = osName === 'windows' ? '.zip' : '.tar.gz';
 
         // Construct download URL for Trivy and the checksum file
-        // Example URL format: https://github.com/aquasecurity/trivy/releases/download/v0.60.0/trivy_0.60.0_macOS-ARM64.tar.gz
-        // const downloadUrl = `https://github.com/aquasecurity/trivy/releases/download/v${latestReleaseTag}/trivy_${latestReleaseTag}_${osName}-${arch}${suffix}`;
-        const downloadUrl = `https://get.trivy.dev/trivy?os=${osName.toLowerCase()}&arch=${arch.toLowerCase()}&type=${suffix === '.zip' ? 'zip' : 'tar.gz'}`;
+        const downloadUrl = `https://get.trivy.dev/trivy?client=vscode&os=${osName.toLowerCase()}&arch=${arch.toLowerCase()}&type=${suffix === '.zip' ? 'zip' : 'tar.gz'}`;
         const checksumUrl = `https://github.com/aquasecurity/trivy/releases/download/v${latestReleaseTag}/trivy_${latestReleaseTag}_checksums.txt`;
 
         // download the files to a temporary directory
