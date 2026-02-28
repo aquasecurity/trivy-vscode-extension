@@ -918,7 +918,7 @@
     "globals": "^15.14.0",
     "install": "^0.13.0",
     "js-yaml": "^4.1.0",
-    "minimatch": "^3.0.8",
+    "minimatch": "^3.1.5",
     "mocha": "^11.1.0",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
