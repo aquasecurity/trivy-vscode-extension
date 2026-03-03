@@ -3,30 +3,35 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 23.x
           cache: npm
 
       - run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION="${{ github.ref_name }}"
           # Remove 'v' prefix from tag if present
-          TAG_VERSION=${TAG_VERSION#v}
+          TAG_VERSION_CLEAN="${TAG_VERSION#v}"
 
           echo "Package version: $PKG_VERSION"
-          echo "Tag version: $TAG_VERSION"
+          echo "Tag version: $TAG_VERSION_CLEAN"
 
-          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
-            echo "Error: Version mismatch between package.json ($PKG_VERSION) and git tag ($TAG_VERSION)"
+          if [ "$PKG_VERSION" != "$TAG_VERSION_CLEAN" ]; then
+            echo "Error: Version mismatch between package.json ($PKG_VERSION) and git tag ($TAG_VERSION_CLEAN)"
             exit 1
           fi
-          echo "✅ Version check passed"
+          echo "Version check passed"
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
       - run: npm ci
       - run: npm run build
       - run: npm run package
