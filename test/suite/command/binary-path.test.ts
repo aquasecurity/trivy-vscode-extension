@@ -6,7 +6,10 @@ import * as path from 'path';
 
 import * as vscode from 'vscode';
 
-import { TrivyWrapper } from '../../../src/command/command';
+import {
+  resolveTrivyBinaryPath,
+  TrivyWrapper,
+} from '../../../src/command/command';
 
 function stubBinaryPath(binaryPath: string): () => void {
   const originalGetConfiguration = vscode.workspace.getConfiguration.bind(
@@ -62,6 +65,35 @@ function readRecordedArgs(argsFile: string): string[] {
     .map((line) => line.trim())
     .filter(Boolean);
 }
+
+suite('resolveTrivyBinaryPath', function (): void {
+  test('appends .exe on Windows for extensionless binaryPath', () => {
+    assert.strictEqual(resolveTrivyBinaryPath('trivy', 'win32'), 'trivy.exe');
+    assert.strictEqual(
+      resolveTrivyBinaryPath('C:\\tools\\trivy', 'win32'),
+      'C:\\tools\\trivy.exe'
+    );
+  });
+
+  test('preserves explicit extensions on Windows', () => {
+    assert.strictEqual(
+      resolveTrivyBinaryPath('trivy.exe', 'win32'),
+      'trivy.exe'
+    );
+    assert.strictEqual(
+      resolveTrivyBinaryPath('wrapper.cmd', 'win32'),
+      'wrapper.cmd'
+    );
+  });
+
+  test('does not modify extensionless paths on Unix', () => {
+    assert.strictEqual(resolveTrivyBinaryPath('trivy', 'linux'), 'trivy');
+    assert.strictEqual(
+      resolveTrivyBinaryPath('/usr/local/bin/trivy', 'darwin'),
+      '/usr/local/bin/trivy'
+    );
+  });
+});
 
 suite('trivy binaryPath command execution', function (): void {
   let restoreConfiguration: (() => void) | undefined;
