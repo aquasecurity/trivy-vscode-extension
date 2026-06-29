@@ -8,7 +8,9 @@
     "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "exclude": ["node_modules", ".vscode-test"],
   "include": ["./src", "./resources", "./test"]
