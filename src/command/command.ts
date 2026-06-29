@@ -1,6 +1,5 @@
 import * as child from 'child_process';
 import { unlinkSync, readdirSync, existsSync } from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 
 import * as vscode from 'vscode';
@@ -81,6 +80,23 @@ const phaseMap: Record<string, { phase: string; increment: number }> = {
     increment: 1,
   },
 };
+
+/**
+ * Resolves the configured Trivy binary for the current platform.
+ * On Windows, extensionless names are suffixed with `.exe` so spawn/execFile
+ * can launch the native binary with shell disabled. `.cmd`/`.bat` shims are
+ * not supported without a shell and Trivy ships as `trivy.exe` on Windows.
+ */
+export function resolveTrivyBinaryPath(
+  binary: string,
+  platform: NodeJS.Platform = process.platform
+): string {
+  if (platform === 'win32' && !path.extname(binary)) {
+    return `${binary}.exe`;
+  }
+
+  return binary;
+}
 
 /**
  * Wrapper for executing Trivy commands and handling results
@@ -189,8 +205,11 @@ export class TrivyWrapper {
     return new Promise<boolean>((resolve) => {
       try {
         const binary = this.getBinaryPath();
-        child.execSync(`"${binary}" --help`, { stdio: 'ignore' });
-        if (binary === `${this.extensionPath}/trivy`) {
+        child.execFileSync(binary, ['--help'], { stdio: 'ignore' });
+        if (
+          binary ===
+          resolveTrivyBinaryPath(path.join(this.extensionPath, 'trivy'))
+        ) {
           this.vscodeTrivyInstall = true;
         }
         resolve(true);
@@ -343,7 +362,7 @@ export class TrivyWrapper {
   private getBinaryPath(): string {
     const config = vscode.workspace.getConfiguration('trivy');
     const binary = config.get<string>('binaryPath', 'trivy') || 'trivy';
-    return binary;
+    return resolveTrivyBinaryPath(binary);
   }
 
   /**
@@ -354,7 +373,7 @@ export class TrivyWrapper {
     const binaryPath = this.getBinaryPath();
 
     try {
-      child.execSync(`"${binaryPath}" --help`, { stdio: 'ignore' });
+      child.execFileSync(binaryPath, ['--help'], { stdio: 'ignore' });
       return true;
     } catch (err) {
       Output.show();
@@ -382,7 +401,7 @@ export class TrivyWrapper {
 
     return new Promise<string>((resolve, reject) => {
       try {
-        const process = child.exec(`"${binary}" --version`);
+        const process = child.spawn(binary, ['--version'], { shell: false });
         let output = '';
 
         process.stdout?.on('data', (data) => {
@@ -431,7 +450,9 @@ export class TrivyWrapper {
     return new Promise<string>((resolve, reject) => {
       this.outputChannel.getOutputChannel().show(true);
       try {
-        const process = child.exec(`"${binary}" plugin upgrade aqua`);
+        const process = child.spawn(binary, ['plugin', 'upgrade', 'aqua'], {
+          shell: false,
+        });
 
         process.stdout?.on('data', (data) => {
           this.outputChannel.appendLine(`${data.toString()}`);
@@ -582,7 +603,7 @@ export class TrivyWrapper {
           const execution = child.spawn(binary, command, {
             cwd: workingPath,
             env,
-            shell: os.platform() !== 'darwin',
+            shell: false,
           });
 
           // Handle cancellation

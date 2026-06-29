@@ -194,11 +194,20 @@ export async function installTrivyMCPServer(): Promise<void> {
 async function installPlugin(binary: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
     Output.getInstance().appendLineWithTimestamp('Installing MCP Plugin');
-    child.exec(`"${binary}" plugin install mcp`, (error, _, stdErr) => {
+    const process = child.spawn(binary, ['plugin', 'install', 'mcp'], {
+      shell: false,
+    });
+    let stdErr = '';
+
+    process.stderr?.on('data', (data) => {
+      stdErr += data.toString();
+    });
+
+    process.on('close', (code) => {
       Output.getInstance().appendLineWithTimestamp(stdErr);
-      if (error) {
+      if (code !== 0) {
         Output.getInstance().appendLineWithTimestamp(
-          `Error installing MCP Plugin: ${error.message}`
+          `Error installing MCP Plugin: process exited with code ${code}`
         );
         resolve(false);
         return;
@@ -208,6 +217,14 @@ async function installPlugin(binary: string): Promise<boolean> {
         'MCP Plugin installed successfully.'
       );
       resolve(true);
+    });
+
+    process.on('error', (error) => {
+      Output.getInstance().appendLineWithTimestamp(stdErr);
+      Output.getInstance().appendLineWithTimestamp(
+        `Error installing MCP Plugin: ${error.message}`
+      );
+      resolve(false);
     });
   });
 }

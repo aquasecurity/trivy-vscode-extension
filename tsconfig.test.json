@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "out",
     "sourceMap": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "types": ["node", "mocha"]
   },
   "include": ["test/**/*"],
   "exclude": ["node_modules"]

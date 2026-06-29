@@ -139,9 +139,7 @@ export class TrivyWrapper {
 Provides data for tree views:
 
 ```typescript
-export class TrivyTreeViewProvider
-  implements vscode.TreeDataProvider<TrivyTreeItem>
-{
+export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeItem> {
   getTreeItem(element: TrivyTreeItem): vscode.TreeItem;
   getChildren(element?: TrivyTreeItem): Thenable<TrivyTreeItem[]>;
   // ... other methods
