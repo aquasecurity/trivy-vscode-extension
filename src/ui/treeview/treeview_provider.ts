@@ -45,9 +45,7 @@ export type explorerType = 'finding' | 'policy';
 /**
  * Trivy tree view provider
  */
-export class TrivyTreeViewProvider
-  implements vscode.TreeDataProvider<TrivyTreeItem>
-{
+export class TrivyTreeViewProvider implements vscode.TreeDataProvider<TrivyTreeItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<
     TrivyTreeItem | undefined | void
   > = new vscode.EventEmitter<TrivyTreeItem | undefined | void>();

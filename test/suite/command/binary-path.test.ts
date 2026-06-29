@@ -3,6 +3,7 @@ import * as assert from 'assert';
 import * as child from 'child_process';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
+import * as nodeTest from 'node:test';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -10,12 +11,23 @@ import * as vscode from 'vscode';
 
 import { TrivyWrapper } from '../../../src/command/command';
 
+const nodeTestMock = (
+  nodeTest as typeof nodeTest & {
+    mock: {
+      method: (
+        object: object,
+        methodName: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        implementation: (...args: any[]) => any
+      ) => unknown;
+      restoreAll: () => void;
+    };
+  }
+).mock;
+
 const maliciousBinaryPath = 'trivy"; id #';
 
 suite('trivy binaryPath command execution', function (): void {
-  let originalExecFileSync: typeof child.execFileSync;
-  let originalSpawn: typeof child.spawn;
-  let originalGetConfiguration: typeof vscode.workspace.getConfiguration;
   let execFileSyncCalls: Array<{
     binary: string;
     args: string[];
@@ -32,50 +44,49 @@ suite('trivy binaryPath command execution', function (): void {
     execFileSyncCalls = [];
     spawnCalls = [];
 
-    originalExecFileSync = child.execFileSync;
-    originalSpawn = child.spawn;
-    originalGetConfiguration =
-      vscode.workspace.getConfiguration.bind(vscode.workspace);
+    const originalGetConfiguration = vscode.workspace.getConfiguration.bind(
+      vscode.workspace
+    );
 
-    (child as any).execFileSync = (
-      binary: string,
-      args: string[],
-      options: child.ExecFileSyncOptions
-    ) => {
-      execFileSyncCalls.push({ binary, args, options });
-      return Buffer.from('');
-    };
-
-    (child as any).spawn = (
-      binary: string,
-      args: string[],
-      options: child.SpawnOptions
-    ) => {
-      const process = new EventEmitter() as child.ChildProcess;
-      (process as any).stdout = new EventEmitter();
-      (process as any).stderr = new EventEmitter();
-      process.kill = () => true;
-      spawnCalls.push({ binary, args, options, process });
-      return process;
-    };
-
-    vscode.workspace.getConfiguration = ((section?: string) => {
-      if (section === 'trivy') {
-        return {
-          get: <T>(key: string, defaultValue?: T) =>
-            key === 'binaryPath'
-              ? (maliciousBinaryPath as T)
-              : defaultValue,
-        } as vscode.WorkspaceConfiguration;
+    nodeTestMock.method(
+      child,
+      'execFileSync',
+      (binary: string, args: string[], options: child.ExecFileSyncOptions) => {
+        execFileSyncCalls.push({ binary, args, options });
+        return Buffer.from('');
       }
-      return originalGetConfiguration(section);
-    }) as typeof vscode.workspace.getConfiguration;
+    );
+
+    nodeTestMock.method(
+      child,
+      'spawn',
+      (binary: string, args: string[], options: child.SpawnOptions) => {
+        const process = new EventEmitter() as child.ChildProcess;
+        (process as any).stdout = new EventEmitter();
+        (process as any).stderr = new EventEmitter();
+        process.kill = () => true;
+        spawnCalls.push({ binary, args, options, process });
+        return process;
+      }
+    );
+
+    nodeTestMock.method(
+      vscode.workspace,
+      'getConfiguration',
+      (section?: string) => {
+        if (section === 'trivy') {
+          return {
+            get: <T>(key: string, defaultValue?: T) =>
+              key === 'binaryPath' ? (maliciousBinaryPath as T) : defaultValue,
+          } as vscode.WorkspaceConfiguration;
+        }
+        return originalGetConfiguration(section);
+      }
+    );
   });
 
   teardown(() => {
-    (child as any).execFileSync = originalExecFileSync;
-    (child as any).spawn = originalSpawn;
-    vscode.workspace.getConfiguration = originalGetConfiguration;
+    nodeTestMock.restoreAll();
   });
 
   test('isInstalled uses execFileSync with argument array, not shell interpolation', async () => {
@@ -113,9 +124,7 @@ suite('trivy binaryPath command execution', function (): void {
     const wrapper = new TrivyWrapper('/tmp/results', '/ext');
     const updatePromise = wrapper.updateAquaPluginVersion();
 
-    const spawnCall = spawnCalls.find((call) =>
-      call.args.includes('plugin')
-    );
+    const spawnCall = spawnCalls.find((call) => call.args.includes('plugin'));
     assert.ok(spawnCall, 'expected spawn call for plugin upgrade');
     assert.strictEqual(spawnCall.binary, maliciousBinaryPath);
     assert.deepStrictEqual(spawnCall.args, ['plugin', 'upgrade', 'aqua']);
